@@ -1,0 +1,30 @@
+{% extends "projects/base_dashboard.html" %}
+{% block dashboard_content %}
+
+<div class="ph">
+  <div class="ph-left">
+    <h1>Confirmar eliminación</h1>
+    <div class="ph-sub"><span style="color:var(--red);"><i class="fa-solid fa-triangle-exclamation"></i></span> Esta acción no se puede deshacer</div>
+  </div>
+</div>
+
+<div class="confirm-card">
+  <div class="confirm-icon">
+    <i class="fa-solid fa-trash-can"></i>
+    <h2>¿Eliminar este registro?</h2>
+    <p>Estás a punto de eliminar <strong style="color:var(--text);">{{ object }}</strong>. Esta acción es permanente y no podrá revertirse.</p>
+  </div>
+  <form method="post">
+    {% csrf_token %}
+    <div class="act-bar" style="justify-content:center;">
+      <a href="javascript:history.back()" class="btn btn-ghost">
+        <i class="fa-solid fa-arrow-left"></i> Cancelar
+      </a>
+      <button type="submit" class="btn btn-danger">
+        <i class="fa-solid fa-trash"></i> Sí, eliminar
+      </button>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

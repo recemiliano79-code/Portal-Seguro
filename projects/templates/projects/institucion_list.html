@@ -1,0 +1,466 @@
+{% extends "projects/base_dashboard.html" %}
+{% block dashboard_content %}
+<style>
+/* ══ VARS (en caso de que no hereden) ══ */
+:root{
+  --bg:#05030e;--surface:#0e0b1f;--surface2:#141028;
+  --border:rgba(130,90,255,.1);--border2:rgba(130,90,255,.22);--border3:rgba(130,90,255,.45);
+  --primary:#7c3aed;--violet:#a78bfa;--accent:#3b82f6;
+  --cyan:#67e8f9;--pink:#f472b6;--green:#34d399;--yellow:#fbbf24;
+  --red:#f87171;--orange:#fb923c;--text:#f0edff;--muted:#6d619a;
+  --font:'Outfit',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+
+/* ══ HERO ══ */
+.inst-hero{
+  background:linear-gradient(135deg,rgba(52,211,153,.14),rgba(59,130,246,.08),rgba(124,58,237,.06));
+  border:1px solid rgba(52,211,153,.22);border-radius:18px;padding:26px 30px;
+  margin-bottom:22px;position:relative;overflow:hidden;
+}
+.inst-hero::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,#34d399,#3b82f6,#7c3aed);
+}
+.inst-hero::after{
+  content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;
+  border-radius:50%;background:radial-gradient(circle,rgba(52,211,153,.12),transparent 70%);
+  pointer-events:none;
+}
+.inst-hero-inner{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.inst-hero-left h1{
+  font-size:1.85rem;font-weight:900;letter-spacing:-.5px;
+  display:flex;align-items:center;gap:11px;margin-bottom:6px;
+}
+.inst-hero-left h1 i{font-size:1.4rem;color:#34d399;}
+.inst-hero-left p{color:var(--muted);font-size:.84rem;display:flex;align-items:center;gap:6px;}
+.inst-hero-btns{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;}
+
+/* ══ BUTTONS ══ */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9px;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .16s;text-decoration:none;border:1px solid;font-family:var(--font);}
+.btn-green{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:#34d399;}
+.btn-green:hover{background:rgba(52,211,153,.2);transform:translateY(-1px);}
+.btn-ghost{background:rgba(255,255,255,.04);border-color:var(--border2);color:var(--text);}
+.btn-ghost:hover{background:rgba(124,58,237,.1);}
+.btn-violet{background:rgba(124,58,237,.1);border-color:rgba(124,58,237,.25);color:#a78bfa;}
+.btn-violet:hover{background:rgba(124,58,237,.2);}
+.btn-sm{padding:5px 12px;font-size:.7rem;}
+
+/* ══ STATS GRID ══ */
+.stat-row{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-bottom:20px;
+}
+@media(max-width:900px){.stat-row{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:500px){.stat-row{grid-template-columns:1fr 1fr;}}
+
+.sbox{
+  background:var(--surface);border:1px solid var(--border);border-radius:13px;
+  padding:16px 15px;text-align:center;position:relative;overflow:hidden;
+  transition:all .2s;cursor:default;
+}
+.sbox:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.35);}
+.sbox::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.sbox:nth-child(1)::before{background:linear-gradient(90deg,#34d399,#059669);}
+.sbox:nth-child(2)::before{background:linear-gradient(90deg,#67e8f9,#3b82f6);}
+.sbox:nth-child(3)::before{background:linear-gradient(90deg,#fbbf24,#d97706);}
+.sbox:nth-child(4)::before{background:linear-gradient(90deg,#f472b6,#db2777);}
+.sbox-icon{font-size:1.3rem;margin-bottom:7px;line-height:1;}
+.sbox-val{font-size:1.75rem;font-weight:900;line-height:1;color:var(--text);}
+.sbox-lbl{font-size:.63rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:4px;font-weight:600;}
+
+/* ══ EMERGENCY BAR ══ */
+.emerg-bar{
+  background:linear-gradient(135deg,rgba(248,113,113,.08),rgba(239,68,68,.04));
+  border:1px solid rgba(248,113,113,.2);border-radius:13px;padding:12px 18px;
+  margin-bottom:18px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+}
+.emerg-bar-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#f87171;display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.emerg-nums{display:flex;gap:8px;flex-wrap:wrap;}
+.enum-pill{
+  display:flex;align-items:center;gap:7px;padding:7px 12px;
+  border-radius:9px;border:1px solid;text-decoration:none;transition:all .14s;
+}
+.enum-pill:hover{transform:translateY(-1px);}
+.ep-red{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.22);color:#f87171;}
+.ep-red:hover{background:rgba(239,68,68,.16);}
+.ep-pink{background:rgba(244,114,182,.08);border-color:rgba(244,114,182,.22);color:#f472b6;}
+.ep-pink:hover{background:rgba(244,114,182,.16);}
+.ep-cyan{background:rgba(103,232,249,.07);border-color:rgba(103,232,249,.18);color:#67e8f9;}
+.ep-cyan:hover{background:rgba(103,232,249,.14);}
+.ep-violet{background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.2);color:#a78bfa;}
+.ep-violet:hover{background:rgba(124,58,237,.16);}
+.enum-name{font-size:.76rem;font-weight:700;}
+.enum-num{font-size:.65rem;color:var(--muted);font-family:var(--mono);}
+
+/* ══ FILTER BAR ══ */
+.filter-wrap{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:14px 16px;margin-bottom:18px;
+  display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:space-between;
+}
+.filter-left{display:flex;gap:.4rem;flex:1;min-width:0;flex-wrap:wrap;}
+.fi{
+  background:var(--surface2);border:1px solid var(--border2);border-radius:8px;
+  padding:8px 13px;color:var(--text);font-size:.8rem;font-family:var(--font);outline:none;
+}
+.fi:focus{border-color:#34d399;box-shadow:0 0 0 3px rgba(52,211,153,.1);}
+.fi::placeholder{color:var(--muted);}
+.fi-inp{flex:1;min-width:180px;}
+.view-toggle{display:flex;gap:4px;}
+.vt-btn{width:34px;height:34px;border-radius:7px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;transition:all .13s;}
+.vt-btn.on{background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.3);color:#a78bfa;}
+.dir-title{font-size:.88rem;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:14px;color:var(--text);}
+.dir-count{font-size:.7rem;color:var(--muted);font-weight:400;margin-left:4px;}
+
+/* ══ INSTITUTION CARDS ══ */
+#inst-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(305px,1fr));gap:14px;}
+#inst-grid.list-view{grid-template-columns:1fr;}
+
+.inst-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:15px;
+  overflow:hidden;transition:all .22s;display:flex;flex-direction:column;
+  position:relative;
+}
+.inst-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;background:var(--green);border-radius:3px 0 0 3px;opacity:0;transition:opacity .2s;}
+.inst-card:hover{border-color:rgba(52,211,153,.28);box-shadow:0 14px 40px rgba(0,0,0,.3);transform:translateY(-2px);}
+.inst-card:hover::before{opacity:1;}
+
+.inst-card-body{padding:18px 19px;flex:1;}
+.inst-top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;}
+.inst-icon-wrap{display:flex;align-items:flex-start;gap:12px;flex:1;min-width:0;}
+.inst-ico{
+  width:44px;height:44px;border-radius:11px;flex-shrink:0;
+  background:linear-gradient(135deg,rgba(52,211,153,.18),rgba(59,130,246,.12));
+  border:1px solid rgba(52,211,153,.2);
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+}
+.inst-name{font-size:.94rem;font-weight:800;color:var(--text);line-height:1.35;margin-bottom:3px;}
+.inst-cat-tag{font-size:.6rem;font-family:var(--mono);font-weight:700;text-transform:uppercase;color:#34d399;letter-spacing:.5px;}
+.inst-24h{
+  background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);color:#34d399;
+  font-size:.58rem;font-weight:800;padding:3px 7px;border-radius:5px;flex-shrink:0;
+  display:flex;align-items:center;gap:3px;height:fit-content;
+}
+.sdot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#34d399;animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+.inst-desc{font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:12px;}
+
+.inst-meta{display:flex;flex-direction:column;gap:5px;}
+.inst-meta-row{display:flex;align-items:center;gap:7px;font-size:.78rem;color:var(--muted);}
+.inst-meta-row i{width:14px;text-align:center;font-size:.72rem;flex-shrink:0;}
+.inst-meta-row a{color:var(--muted);text-decoration:none;transition:color .13s;}
+.inst-meta-row a:hover{color:var(--text);}
+
+.inst-card-foot{
+  padding:11px 19px;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+  background:rgba(0,0,0,.1);flex-wrap:wrap;
+}
+.inst-tags{display:flex;gap:4px;flex-wrap:wrap;}
+.inst-tag{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--muted);font-size:.6rem;padding:2px 7px;border-radius:4px;}
+.inst-actions{display:flex;gap:.3rem;}
+.ia-btn{
+  width:30px;height:30px;border-radius:7px;border:1px solid var(--border2);
+  background:rgba(255,255,255,.03);color:var(--muted);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:.75rem;
+  transition:all .13s;text-decoration:none;
+}
+.ia-btn:hover{border-color:rgba(130,90,255,.4);color:var(--violet);background:rgba(124,58,237,.1);}
+.ia-btn.red:hover{border-color:rgba(248,113,113,.4);color:#f87171;background:rgba(248,113,113,.08);}
+
+/* ══ EMPTY STATE ══ */
+.empty-state{
+  text-align:center;padding:60px 24px;
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  grid-column:1/-1;
+}
+.empty-icon{width:68px;height:68px;border-radius:50%;background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.14);display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 16px;}
+.empty-title{font-size:1.1rem;font-weight:800;margin-bottom:7px;}
+.empty-sub{font-size:.82rem;color:var(--muted);margin-bottom:20px;line-height:1.6;}
+
+/* ══ CTA SECTION ══ */
+.cta-section{
+  margin-top:28px;
+  background:linear-gradient(135deg,rgba(52,211,153,.08),rgba(59,130,246,.05));
+  border:1px solid rgba(52,211,153,.18);border-radius:15px;padding:22px 26px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+}
+.cta-section::before{content:'';position:absolute;} /* Reset */
+.cta-left i{font-size:1.5rem;color:#34d399;margin-bottom:8px;display:block;}
+.cta-title{font-size:1rem;font-weight:800;margin-bottom:4px;}
+.cta-sub{font-size:.8rem;color:var(--muted);}
+</style>
+
+<!-- ══ HERO ══ -->
+<div class="inst-hero">
+  <div class="inst-hero-inner">
+    <div class="inst-hero-left">
+      <h1>
+        <i class="fa-solid fa-building-ngo"></i>
+        Instituciones Aliadas
+      </h1>
+      <p>
+        <span class="sdot"></span>
+        Centros de apoyo, asesoría legal y atención psicológica · CDMX
+      </p>
+    </div>
+    <div class="inst-hero-btns">
+      {% if is_admin %}
+      <a href="{% url 'projects:institucion-create' %}" class="btn btn-green">
+        <i class="fa-solid fa-plus"></i> Nueva institución
+      </a>
+      <a href="{% url 'projects:sugerencias-admin' %}" class="btn btn-ghost btn-sm">
+        <i class="fa-solid fa-inbox"></i> Ver sugerencias
+      </a>
+      {% else %}
+      <a href="{% url 'projects:sugerencia-create' %}" class="btn btn-violet">
+        <i class="fa-solid fa-paper-plane"></i> Sugerir una institución
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- ══ STATS ══ -->
+<div class="stat-row">
+  <div class="sbox">
+    <div class="sbox-icon">🏛</div>
+    <div class="sbox-val">{{ instituciones.count|default:"0" }}</div>
+    <div class="sbox-lbl">Total registradas</div>
+  </div>
+  <div class="sbox">
+    <div class="sbox-icon">🕐</div>
+    <div class="sbox-val">{{ instituciones_24h|default:"5" }}</div>
+    <div class="sbox-lbl">Disponibles 24/7</div>
+  </div>
+  <div class="sbox">
+    <div class="sbox-icon">⏳</div>
+    <div class="sbox-val">{{ pendientes_global|default:"0" }}</div>
+    <div class="sbox-lbl">Sugerencias pendientes</div>
+  </div>
+  <div class="sbox">
+    <div class="sbox-icon">🗺</div>
+    <div class="sbox-val">16</div>
+    <div class="sbox-lbl">Alcaldías cubiertas</div>
+  </div>
+</div>
+
+<!-- ══ EMERGENCY BAR ══ -->
+<div class="emerg-bar">
+  <div class="emerg-bar-title">
+    <i class="fa-solid fa-phone-volume" style="animation:blink 1.5s infinite;"></i>
+    Líneas de emergencia directa:
+  </div>
+  <div class="emerg-nums">
+    <a href="tel:911" class="enum-pill ep-red">
+      <i class="fa-solid fa-phone-volume" style="font-size:.78rem;"></i>
+      <div><div class="enum-name">911</div><div class="enum-num">Emergencias · 24h</div></div>
+    </a>
+    <a href="tel:5556581111" class="enum-pill ep-pink">
+      <i class="fa-solid fa-venus" style="font-size:.78rem;"></i>
+      <div><div class="enum-name">Línea Mujeres</div><div class="enum-num">55 5658-1111 · 24h</div></div>
+    </a>
+    <a href="tel:5555757583" class="enum-pill ep-cyan">
+      <i class="fa-solid fa-scale-balanced" style="font-size:.78rem;"></i>
+      <div><div class="enum-name">CEJUR</div><div class="enum-num">55 5575-7583</div></div>
+    </a>
+    <a href="tel:8009008000" class="enum-pill ep-violet">
+      <i class="fa-solid fa-building-ngo" style="font-size:.78rem;"></i>
+      <div><div class="enum-name">CONAVIM</div><div class="enum-num">800 900-8000</div></div>
+    </a>
+  </div>
+</div>
+
+<!-- ══ FILTERS + DIRECTORY ══ -->
+<div class="filter-wrap">
+  <div class="filter-left">
+    <input class="fi fi-inp" id="inst-search" type="text" placeholder="🔍 Buscar institución por nombre o dirección…" oninput="filterInst()">
+    <select class="fi" id="inst-cat" onchange="filterInst()">
+      <option value="">Todas las categorías</option>
+      <option value="justicia">Fiscalía / Justicia</option>
+      <option value="luna">LUNA</option>
+      <option value="salud">Salud</option>
+      <option value="ong">ONG / Apoyo</option>
+      <option value="refugio">Refugio</option>
+      <option value="legal">Asesoría Legal</option>
+    </select>
+  </div>
+  <div class="view-toggle">
+    <button class="vt-btn on" id="vt-grid" onclick="setView('grid')" title="Vista cuadrícula"><i class="fa-solid fa-grip"></i></button>
+    <button class="vt-btn" id="vt-list" onclick="setView('list')" title="Vista lista"><i class="fa-solid fa-list"></i></button>
+  </div>
+</div>
+
+<!-- ══ DIRECTORIO ══ -->
+<div class="dir-title">
+  <i class="fa-solid fa-list" style="color:#a78bfa;"></i>
+  Directorio
+  <span class="dir-count" id="inst-count">{{ instituciones.count|default:"0" }} instituciones</span>
+  {% if is_admin %}
+  <a href="{% url 'projects:sugerencias-admin' %}" style="margin-left:auto;" class="btn btn-ghost btn-sm">
+    <i class="fa-solid fa-inbox"></i> Revisar sugerencias
+  </a>
+  {% endif %}
+</div>
+
+<div id="inst-grid">
+  {% for inst in instituciones %}
+  <div class="inst-card" data-name="{{ inst.nombre|lower }}" data-dir="{{ inst.direccion|lower }}" data-cat="{{ inst.tipo|default:''|lower }}">
+    <div class="inst-card-body">
+      <div class="inst-top-row">
+        <div class="inst-icon-wrap">
+          <div class="inst-ico">
+            {% if inst.tipo == 'luna' %}🌙
+            {% elif inst.tipo == 'justicia' %}⚖️
+            {% elif inst.tipo == 'salud' %}🏥
+            {% elif inst.tipo == 'ong' %}🤝
+            {% elif inst.tipo == 'refugio' %}🏠
+            {% elif inst.tipo == 'legal' %}📋
+            {% else %}🏛{% endif %}
+          </div>
+          <div>
+            <div class="inst-name">{{ inst.nombre }}</div>
+            <div class="inst-cat-tag">{{ inst.tipo|default:"Institución" }}</div>
+          </div>
+        </div>
+        {% if inst.disponible_24h %}
+        <div class="inst-24h"><span class="sdot"></span> 24h</div>
+        {% endif %}
+      </div>
+
+      {% if inst.descripcion %}
+      <div class="inst-desc">{{ inst.descripcion|truncatechars:120 }}</div>
+      {% endif %}
+
+      <div class="inst-meta">
+        {% if inst.direccion %}
+        <div class="inst-meta-row">
+          <i class="fa-solid fa-location-dot" style="color:#f472b6;"></i>
+          <span>{{ inst.direccion }}</span>
+        </div>
+        {% endif %}
+        {% if inst.telefono %}
+        <div class="inst-meta-row">
+          <i class="fa-solid fa-phone" style="color:#34d399;"></i>
+          <a href="tel:{{ inst.telefono }}">{{ inst.telefono }}</a>
+        </div>
+        {% endif %}
+        {% if inst.correo %}
+        <div class="inst-meta-row">
+          <i class="fa-solid fa-envelope" style="color:#67e8f9;"></i>
+          <a href="mailto:{{ inst.correo }}">{{ inst.correo }}</a>
+        </div>
+        {% endif %}
+        {% if inst.horario %}
+        <div class="inst-meta-row">
+          <i class="fa-solid fa-clock" style="color:#fbbf24;"></i>
+          <span>{{ inst.horario }}</span>
+        </div>
+        {% endif %}
+        {% if inst.sitio_web %}
+        <div class="inst-meta-row">
+          <i class="fa-solid fa-globe" style="color:#a78bfa;"></i>
+          <a href="{{ inst.sitio_web }}" target="_blank" rel="noopener">{{ inst.sitio_web|truncatechars:40 }}</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="inst-card-foot">
+      <div class="inst-tags">
+        {% if inst.tipo %}<span class="inst-tag">{{ inst.tipo }}</span>{% endif %}
+        {% if inst.disponible_24h %}<span class="inst-tag" style="color:#34d399;border-color:rgba(52,211,153,.2);">24h</span>{% endif %}
+      </div>
+      <div class="inst-actions">
+        {% if inst.telefono %}
+        <a href="tel:{{ inst.telefono }}" class="ia-btn" title="Llamar">
+          <i class="fa-solid fa-phone"></i>
+        </a>
+        {% endif %}
+        {% if inst.sitio_web %}
+        <a href="{{ inst.sitio_web }}" target="_blank" class="ia-btn" title="Sitio web">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </a>
+        {% endif %}
+        {% if is_admin %}
+        <a href="{% url 'projects:institucion-update' inst.pk %}" class="ia-btn" title="Editar">
+          <i class="fa-solid fa-pen"></i>
+        </a>
+        <a href="{% url 'projects:institucion-delete' inst.pk %}" class="ia-btn red" title="Eliminar">
+          <i class="fa-solid fa-trash"></i>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% empty %}
+  <!-- EMPTY STATE -->
+  <div class="empty-state">
+    <div class="empty-icon"><i class="fa-solid fa-building-ngo" style="color:#34d399;"></i></div>
+    <div class="empty-title">Sin instituciones registradas</div>
+    <div class="empty-sub">
+      Aún no hay instituciones en el directorio.<br>
+      {% if is_admin %}Como administrador puedes agregar la primera.{% else %}Puedes sugerir una institución y el equipo la revisará.{% endif %}
+    </div>
+    {% if is_admin %}
+    <a href="{% url 'projects:institucion-create' %}" class="btn btn-green">
+      <i class="fa-solid fa-plus"></i> Agregar primera institución
+    </a>
+    {% else %}
+    <a href="{% url 'projects:sugerencia-create' %}" class="btn btn-violet">
+      <i class="fa-solid fa-paper-plane"></i> Sugerir una institución
+    </a>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ══ CTA ══ -->
+{% if instituciones %}
+<div class="cta-section">
+  <div class="cta-left">
+    <i class="fa-solid fa-hand-holding-heart"></i>
+    <div class="cta-title">¿Conoces una institución que debería estar aquí?</div>
+    <div class="cta-sub">Ayuda a otras usuarias sugiriendo centros de apoyo. Tu sugerencia será revisada y publicada por el equipo.</div>
+  </div>
+  <a href="{% url 'projects:sugerencia-create' %}" class="btn btn-green">
+    <i class="fa-solid fa-paper-plane"></i> Sugerir institución
+  </a>
+</div>
+{% endif %}
+
+<script>
+function filterInst(){
+  const q=document.getElementById('inst-search').value.toLowerCase();
+  const cat=document.getElementById('inst-cat').value.toLowerCase();
+  let vis=0;
+  document.querySelectorAll('#inst-grid .inst-card').forEach(card=>{
+    const matchQ=!q||(card.dataset.name||'').includes(q)||(card.dataset.dir||'').includes(q);
+    const matchC=!cat||(card.dataset.cat||'').includes(cat);
+    const show=matchQ&&matchC;
+    card.style.display=show?'flex':'none';
+    if(show)vis++;
+  });
+  const cnt=document.getElementById('inst-count');
+  if(cnt)cnt.textContent=vis+' institución'+(vis!==1?'es':'');
+}
+
+function setView(v){
+  const grid=document.getElementById('inst-grid');
+  const btnGrid=document.getElementById('vt-grid');
+  const btnList=document.getElementById('vt-list');
+  if(v==='list'){
+    grid.classList.add('list-view');
+    btnList.classList.add('on');btnGrid.classList.remove('on');
+  }else{
+    grid.classList.remove('list-view');
+    btnGrid.classList.add('on');btnList.classList.remove('on');
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,284 @@
+{% extends "projects/base_dashboard.html" %}
+{% block dashboard_content %}
+<style>
+.page-hero{background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(59,130,246,.08));border:1px solid rgba(124,58,237,.2);border-radius:18px;padding:26px 30px;margin-bottom:24px;position:relative;overflow:hidden;}
+.page-hero::after{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,.15),transparent 70%);pointer-events:none;}
+.page-hero h1{font-size:1.9rem;font-weight:900;letter-spacing:-.5px;display:flex;align-items:center;gap:11px;margin-bottom:5px;}
+.page-hero p{color:var(--muted);font-size:.86rem;}
+.stat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-bottom:24px;}
+@media(max-width:900px){.stat-row{grid-template-columns:repeat(3,1fr);}}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;transition:all .2s;}
+.stat-box:hover{border-color:var(--border2);transform:translateY(-2px);}
+.stat-box-icon{font-size:.95rem;margin-bottom:5px;}
+.stat-box-val{font-size:1.65rem;font-weight:900;line-height:1.1;}
+.stat-box-lbl{font-size:.63rem;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-top:3px;font-weight:600;}
+.tab-row{display:flex;gap:.5rem;margin-bottom:18px;flex-wrap:wrap;}
+.tab{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9px;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .15s;border:1px solid;text-decoration:none;}
+.tab-all{background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.3);color:#a78bfa;}
+.tab-pend{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.22);color:#fbbf24;}
+.tab-apro{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.22);color:#34d399;}
+.tab-rech{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.22);color:#f87171;}
+.tab:hover{transform:translateY(-1px);}
+.tab.active{filter:brightness(1.2);box-shadow:0 2px 12px rgba(0,0,0,.3);}
+.filter-bar{display:flex;gap:.5rem;margin-bottom:18px;flex-wrap:wrap;}
+.filter-sel{background:var(--surface);border:1px solid rgba(130,90,255,.2);border-radius:9px;padding:8px 12px;color:var(--muted);font-size:.78rem;font-family:var(--font);outline:none;cursor:pointer;}
+.filter-sel:focus{border-color:#7c3aed;}
+.sg-grid{display:grid;gap:12px;}
+.sg-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:all .22s;}
+.sg-card:hover{border-color:var(--border2);box-shadow:0 10px 30px rgba(0,0,0,.28);}
+.sg-card-head{padding:17px 20px 14px;display:flex;gap:13px;align-items:flex-start;}
+.sg-icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0;}
+.sg-meta{flex:1;min-width:0;}
+.sg-type-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px;}
+.sg-title{font-size:.95rem;font-weight:800;color:var(--text);margin-bottom:5px;line-height:1.35;}
+.sg-desc{font-size:.81rem;color:var(--muted);line-height:1.6;}
+.sg-user{font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:5px;margin-top:8px;}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:5px;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+.b-pend{background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.2);}
+.b-apro{background:rgba(52,211,153,.1);color:#34d399;border:1px solid rgba(52,211,153,.2);}
+.b-rech{background:rgba(248,113,113,.1);color:#f87171;border:1px solid rgba(248,113,113,.2);}
+.b-tip{background:rgba(251,191,36,.08);color:#fbbf24;border:1px solid rgba(251,191,36,.15);}
+.b-inst{background:rgba(52,211,153,.08);color:#34d399;border:1px solid rgba(52,211,153,.15);}
+.b-glos{background:rgba(103,232,249,.08);color:#67e8f9;border:1px solid rgba(103,232,249,.15);}
+.b-otro{background:rgba(164,114,182,.08);color:#c084fc;border:1px solid rgba(164,114,182,.15);}
+.sg-card-footer{padding:11px 20px;border-top:1px solid var(--border);background:rgba(0,0,0,.14);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.sg-date{font-size:.68rem;color:var(--muted);font-family:var(--mono);}
+
+/* ── PANEL DE REVISIÓN ── */
+.sg-review{padding:16px 20px;background:rgba(0,0,0,.15);border-top:1px solid var(--border);display:none;}
+.sg-review.open{display:block;animation:fadeIn .2s ease-out;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+
+/* Preview de qué se publicará */
+.publish-preview{
+  padding:12px 14px;border-radius:10px;margin-bottom:12px;
+  background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.18);
+  font-size:.78rem;color:#6ee7b7;
+  display:flex;align-items:flex-start;gap:8px;line-height:1.5;
+}
+.publish-preview i{flex-shrink:0;margin-top:2px;}
+
+.rev-field{margin-bottom:11px;}
+.rev-field label{font-size:.76rem;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;}
+.rev-field textarea{width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(130,90,255,.18);border-radius:9px;padding:10px 13px;color:var(--text);font-family:var(--font);font-size:.82rem;outline:none;resize:vertical;}
+.rev-field textarea:focus{border-color:#7c3aed;}
+.rev-btns{display:flex;gap:.5rem;flex-wrap:wrap;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9px;font-size:.76rem;font-weight:700;cursor:pointer;transition:all .14s;text-decoration:none;border:1px solid;font-family:inherit;background:transparent;}
+.btn-approve{background:rgba(52,211,153,.12)!important;border-color:rgba(52,211,153,.28);color:#34d399;}
+.btn-approve:hover{background:rgba(52,211,153,.22)!important;transform:translateY(-1px);box-shadow:0 4px 14px rgba(52,211,153,.2);}
+.btn-reject{background:rgba(248,113,113,.1)!important;border-color:rgba(248,113,113,.25);color:#f87171;}
+.btn-reject:hover{background:rgba(248,113,113,.2)!important;transform:translateY(-1px);}
+.btn-toggle{background:rgba(124,58,237,.1)!important;border-color:rgba(124,58,237,.22);color:#a78bfa;}
+.btn-toggle:hover{background:rgba(124,58,237,.18)!important;}
+.btn-ghost{background:rgba(255,255,255,.04)!important;border-color:rgba(130,90,255,.2);color:var(--muted);}
+.btn-ghost:hover{color:var(--text);}
+.empty-state{text-align:center;padding:50px 20px;background:var(--surface);border:2px dashed var(--border);border-radius:16px;}
+.empty-icon{width:65px;height:65px;border-radius:16px;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.18);display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 15px;}
+
+/* Publicado badge */
+.published-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:5px;font-size:.62rem;font-weight:700;background:rgba(52,211,153,.1);color:#34d399;border:1px solid rgba(52,211,153,.2);}
+</style>
+
+<div class="page-hero">
+  <h1><i class="fa-solid fa-inbox" style="color:#a78bfa;"></i> Panel de Sugerencias</h1>
+  <p>Al aprobar una sugerencia se publica automáticamente · Solo visible para administradores</p>
+</div>
+
+<!-- STATS -->
+<div class="stat-row">
+  <div class="stat-box">
+    <div class="stat-box-icon" style="color:#fbbf24"><i class="fa-solid fa-hourglass"></i></div>
+    <div class="stat-box-val" style="color:#fbbf24">{{ pendientes }}</div>
+    <div class="stat-box-lbl">Pendientes</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-box-icon" style="color:#34d399"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="stat-box-val" style="color:#34d399">{{ aprobadas }}</div>
+    <div class="stat-box-lbl">Aprobadas</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-box-icon" style="color:#f87171"><i class="fa-solid fa-circle-xmark"></i></div>
+    <div class="stat-box-val" style="color:#f87171">{{ rechazadas }}</div>
+    <div class="stat-box-lbl">Rechazadas</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-box-icon" style="color:#a78bfa"><i class="fa-solid fa-comments"></i></div>
+    <div class="stat-box-val" style="color:#a78bfa">{{ sugerencias|length }}</div>
+    <div class="stat-box-lbl">Total visible</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-box-icon" style="color:#67e8f9"><i class="fa-solid fa-bolt"></i></div>
+    <div class="stat-box-val" style="color:#67e8f9;font-size:.82rem;">Auto</div>
+    <div class="stat-box-lbl">Publicación</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tab-row">
+  <div class="tab tab-all {% if not estado_actual %}active{% endif %}" onclick="filterSg('all',this)">
+    <i class="fa-solid fa-list"></i> Todas
+  </div>
+  <div class="tab tab-pend {% if estado_actual == 'pendiente' %}active{% endif %}" onclick="filterSg('pendiente',this)">
+    <i class="fa-solid fa-hourglass"></i> Pendientes
+    {% if pendientes %}<span style="background:rgba(251,191,36,.3);padding:1px 6px;border-radius:8px;">{{ pendientes }}</span>{% endif %}
+  </div>
+  <div class="tab tab-apro {% if estado_actual == 'aprobada' %}active{% endif %}" onclick="filterSg('aprobada',this)">
+    <i class="fa-solid fa-check"></i> Aprobadas
+  </div>
+  <div class="tab tab-rech {% if estado_actual == 'rechazada' %}active{% endif %}" onclick="filterSg('rechazada',this)">
+    <i class="fa-solid fa-xmark"></i> Rechazadas
+  </div>
+</div>
+
+<div class="filter-bar">
+  <select class="filter-sel" id="f-tipo" onchange="filterSg(null,null)">
+    <option value="">Todos los tipos</option>
+    <option value="tip" {% if tipo_actual == 'tip' %}selected{% endif %}>💡 Tips de Seguridad</option>
+    <option value="institucion" {% if tipo_actual == 'institucion' %}selected{% endif %}>🏢 Instituciones</option>
+    <option value="tipo_acoso" {% if tipo_actual == 'tipo_acoso' %}selected{% endif %}>📖 Glosario</option>
+    <option value="otro" {% if tipo_actual == 'otro' %}selected{% endif %}>💬 Otro</option>
+  </select>
+</div>
+
+{% if sugerencias %}
+<div class="sg-grid" id="sg-grid">
+  {% for sg in sugerencias %}
+  <div class="sg-card" data-estado="{{ sg.estado }}" data-tipo="{{ sg.tipo }}">
+    <div class="sg-card-head">
+      <div class="sg-icon" style="background:{% if sg.tipo == 'tip' %}rgba(251,191,36,.15){% elif sg.tipo == 'institucion' %}rgba(52,211,153,.15){% elif sg.tipo == 'tipo_acoso' %}rgba(103,232,249,.12){% else %}rgba(164,114,182,.12){% endif %};">
+        <i class="fa-solid {% if sg.tipo == 'tip' %}fa-lightbulb{% elif sg.tipo == 'institucion' %}fa-building-ngo{% elif sg.tipo == 'tipo_acoso' %}fa-book-open{% else %}fa-comment-dots{% endif %}"
+           style="color:{% if sg.tipo == 'tip' %}#fbbf24{% elif sg.tipo == 'institucion' %}#34d399{% elif sg.tipo == 'tipo_acoso' %}#67e8f9{% else %}#c084fc{% endif %};"></i>
+      </div>
+      <div class="sg-meta">
+        <div class="sg-type-row">
+          <span class="badge {% if sg.tipo == 'tip' %}b-tip{% elif sg.tipo == 'institucion' %}b-inst{% elif sg.tipo == 'tipo_acoso' %}b-glos{% else %}b-otro{% endif %}">
+            {{ sg.get_tipo_display }}
+          </span>
+          <span class="badge {% if sg.estado == 'pendiente' %}b-pend{% elif sg.estado == 'aprobada' %}b-apro{% else %}b-rech{% endif %}">
+            {% if sg.estado == 'pendiente' %}⏳{% elif sg.estado == 'aprobada' %}✅{% else %}❌{% endif %}
+            {{ sg.get_estado_display }}
+          </span>
+          {% if sg.estado == 'aprobada' %}
+          <span class="published-tag"><i class="fa-solid fa-rocket" style="font-size:.5rem;"></i> Publicado automáticamente</span>
+          {% endif %}
+        </div>
+        <div class="sg-title">{{ sg.titulo }}</div>
+        <div class="sg-desc">{{ sg.contenido|truncatechars:200 }}</div>
+        {% if sg.nota_admin %}
+        <div style="margin-top:8px;padding:8px 12px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.15);border-radius:8px;font-size:.78rem;color:var(--muted);">
+          <i class="fa-solid fa-comment-check" style="color:#a78bfa;margin-right:5px;"></i>{{ sg.nota_admin }}
+        </div>
+        {% endif %}
+        <div class="sg-user">
+          <i class="fa-solid fa-user" style="font-size:.6rem;"></i>
+          {{ sg.usuario.username }} · {{ sg.creado_en|date:"d/m/Y H:i" }}
+          {% if sg.revisado_por %} · revisado por <strong>{{ sg.revisado_por.username }}</strong>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    {% if sg.estado == 'pendiente' %}
+    <div class="sg-card-footer">
+      <span class="sg-date">{{ sg.creado_en|timesince }} atrás</span>
+      <button class="btn btn-toggle" onclick="toggleReview({{ sg.pk }})">
+        <i class="fa-solid fa-gavel"></i> Revisar
+      </button>
+    </div>
+
+    <!-- FORMULARIO DE REVISIÓN — name="accion" es lo correcto -->
+    <div class="sg-review" id="rev-{{ sg.pk }}">
+
+      <!-- Preview de qué se publicará -->
+      {% if sg.tipo == 'tip' %}
+      <div class="publish-preview">
+        <i class="fa-solid fa-lightbulb" style="color:#fbbf24;"></i>
+        <span>Al aprobar, se creará el <strong>Tip "{{ sg.titulo }}"</strong> y se publicará automáticamente para todas las usuarias.</span>
+      </div>
+      {% elif sg.tipo == 'institucion' %}
+      <div class="publish-preview">
+        <i class="fa-solid fa-building-ngo" style="color:#34d399;"></i>
+        <span>Al aprobar, se añadirá la <strong>Institución "{{ sg.titulo }}"</strong> al directorio automáticamente.</span>
+      </div>
+      {% elif sg.tipo == 'tipo_acoso' %}
+      <div class="publish-preview">
+        <i class="fa-solid fa-book-open" style="color:#67e8f9;"></i>
+        <span>Al aprobar, se añadirá <strong>"{{ sg.titulo }}"</strong> al glosario legal automáticamente.</span>
+      </div>
+      {% else %}
+      <div class="publish-preview" style="background:rgba(164,114,182,.06);border-color:rgba(164,114,182,.18);color:#c084fc;">
+        <i class="fa-solid fa-comment-dots"></i>
+        <span>Esta sugerencia es de tipo "Otro". Al aprobar solo cambiará su estado.</span>
+      </div>
+      {% endif %}
+
+      <form method="post" action="{% url 'projects:sugerencia-revisar' sg.pk %}">
+        {% csrf_token %}
+        <div class="rev-field">
+          <label><i class="fa-solid fa-comment-pen" style="color:#a78bfa;margin-right:4px;"></i> Nota para la usuaria (opcional)</label>
+          <textarea name="nota_admin" rows="2" placeholder="Ej: Gracias por tu sugerencia, ha sido publicada."></textarea>
+        </div>
+        <div class="rev-btns">
+          <!-- ✅ CORRECTO: name="accion" value="aprobar" -->
+          <button type="submit" name="accion" value="aprobar" class="btn btn-approve">
+            <i class="fa-solid fa-check-circle"></i> Aprobar y publicar
+          </button>
+          <!-- ✅ CORRECTO: name="accion" value="rechazar" -->
+          <button type="submit" name="accion" value="rechazar" class="btn btn-reject">
+            <i class="fa-solid fa-times-circle"></i> Rechazar
+          </button>
+          <button type="button" class="btn btn-ghost" onclick="toggleReview({{ sg.pk }})">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+
+    {% else %}
+    <div class="sg-card-footer">
+      <span class="sg-date">
+        {{ sg.creado_en|timesince }} atrás
+        {% if sg.revisado_por %} · por {{ sg.revisado_por.username }}{% endif %}
+        {% if sg.estado == 'aprobada' %} · <span style="color:#34d399;"><i class="fa-solid fa-rocket" style="font-size:.6rem;"></i> Publicado</span>{% endif %}
+      </span>
+    </div>
+    {% endif %}
+
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon"><i class="fa-solid fa-inbox" style="color:#a78bfa;"></i></div>
+  <div style="font-size:1.1rem;font-weight:800;margin-bottom:7px;">Sin sugerencias</div>
+  <div style="color:var(--muted);font-size:.84rem;max-width:300px;margin:0 auto;line-height:1.6;">No hay sugerencias que coincidan con los filtros actuales.</div>
+</div>
+{% endif %}
+
+<script>
+let currentFilter = '{{ estado_actual|default:"all" }}';
+if (!currentFilter) currentFilter = 'all';
+
+function filterSg(estado, el) {
+  if (estado) currentFilter = estado;
+  const tipo = document.getElementById('f-tipo').value;
+  if (el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  }
+  document.querySelectorAll('#sg-grid .sg-card').forEach(c => {
+    const matchE = currentFilter === 'all' || c.dataset.estado === currentFilter;
+    const matchT = !tipo || c.dataset.tipo === tipo;
+    c.style.display = matchE && matchT ? '' : 'none';
+  });
+}
+
+function toggleReview(id) {
+  const el = document.getElementById('rev-' + id);
+  el.classList.toggle('open');
+  if (el.classList.contains('open')) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+</script>
+{% endblock %}

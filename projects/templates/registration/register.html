@@ -1,0 +1,816 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Crear cuenta — Portal Seguro Sentinel{% endblock %}
+{% block navbar %}{% endblock %}
+{% block container_class %}container-fluid p-0{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#04020c;--s1:#0b0818;--s2:#100d20;--s3:#16122a;
+  --b1:rgba(120,80,255,.09);--b2:rgba(120,80,255,.2);--b3:rgba(120,80,255,.45);
+  --p:#7c3aed;--a:#3b82f6;--a2:#2563eb;
+  --vi:#a78bfa;--cy:#67e8f9;--gr:#34d399;--ye:#fbbf24;--re:#f87171;--or:#fb923c;--pk:#f472b6;
+  --tx:#ede9ff;--mu:#8b7fba;
+  --gp:rgba(124,58,237,.38);
+}
+/* ── FORCE DARK INPUTS ON ALL BROWSERS ── */
+input, select, textarea {
+  color-scheme: dark;
+}
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #0d0a1e inset !important;
+  -webkit-text-fill-color: #ede9ff !important;
+  caret-color: #ede9ff;
+  border-color: rgba(124,58,237,.4) !important;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--p);border-radius:3px}
+body{background:var(--bg);color:var(--tx);font-family:'Outfit',sans-serif;min-height:100vh}
+
+/* ── BG ── */
+.bg-mesh{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 65% 55% at 0% 25%,rgba(124,58,237,.16) 0%,transparent 65%),
+    radial-gradient(ellipse 50% 40% at 100% 5%,rgba(59,130,246,.13) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 50% at 55% 95%,rgba(124,58,237,.1) 0%,transparent 65%);}
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(124,58,237,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,.04) 1px,transparent 1px);
+  background-size:48px 48px;}
+#bg-cv{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ── LAYOUT ── */
+.page{display:grid;grid-template-columns:1fr 500px;min-height:100vh;position:relative;z-index:1}
+
+/* ── LEFT PANEL ── */
+.left{display:flex;flex-direction:column;justify-content:center;padding:56px 64px;position:relative;overflow:hidden}
+.left::after{content:'';position:absolute;top:0;right:0;bottom:0;width:1px;
+  background:linear-gradient(180deg,transparent 5%,rgba(124,58,237,.35) 30%,rgba(59,130,246,.25) 70%,transparent 95%)}
+
+/* Floating orb */
+.orb{position:absolute;border-radius:50%;filter:blur(65px);pointer-events:none}
+.orb1{width:350px;height:350px;top:-100px;right:-80px;background:rgba(124,58,237,.12);animation:orbF 9s ease-in-out infinite}
+.orb2{width:250px;height:250px;bottom:40px;left:-60px;background:rgba(59,130,246,.09);animation:orbF 12s ease-in-out infinite reverse}
+@keyframes orbF{0%,100%{transform:scale(1) translateY(0)}50%{transform:scale(1.06) translateY(-22px)}}
+
+.brand{display:flex;align-items:center;gap:13px;margin-bottom:48px;animation:up .7s ease both}
+.brand-ico{width:48px;height:48px;border-radius:13px;background:linear-gradient(135deg,var(--p),var(--a));
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:white;
+  box-shadow:0 0 26px var(--gp),inset 0 1px 0 rgba(255,255,255,.18)}
+.brand-name{font-size:1.1rem;font-weight:800;background:linear-gradient(90deg,#fff 40%,var(--vi));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.brand-ver{font-size:.59rem;color:var(--cy);font-family:'JetBrains Mono',monospace;display:block;margin-top:2px;-webkit-text-fill-color:var(--cy)}
+
+.headline{font-size:3rem;font-weight:900;line-height:1.08;letter-spacing:-1.8px;margin-bottom:18px;animation:up .7s ease .1s both}
+.headline .g{background:linear-gradient(90deg,var(--vi),var(--cy));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{font-size:.98rem;color:var(--mu);line-height:1.65;max-width:390px;margin-bottom:40px;animation:up .7s ease .18s both}
+
+/* Benefits list */
+.benefits{display:flex;flex-direction:column;gap:11px;margin-bottom:40px;animation:up .7s ease .25s both}
+.ben{display:flex;align-items:center;gap:12px;padding:11px 15px;
+  background:rgba(255,255,255,.025);border:1px solid var(--b1);border-radius:11px;transition:all .2s}
+.ben:hover{border-color:var(--b2);background:rgba(124,58,237,.06);transform:translateX(4px)}
+.ben-ico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.88rem;flex-shrink:0}
+.ben-t{font-size:.86rem;font-weight:700}
+.ben-s{font-size:.72rem;color:var(--mu);margin-top:1px}
+
+/* Social proof */
+.proof{
+  background:rgba(124,58,237,.07);border:1px solid var(--b2);border-radius:12px;padding:16px 18px;
+  display:flex;align-items:center;gap:14px;animation:up .7s ease .32s both}
+.proof-ava{display:flex}
+.pava{width:30px;height:30px;border-radius:50%;border:2px solid var(--bg);
+  display:flex;align-items:center;justify-content:center;font-size:.75rem;margin-left:-8px;color:white}
+.pava:first-child{margin-left:0}
+.proof-txt{font-size:.8rem;line-height:1.45}
+.proof-n{font-weight:700;color:var(--vi)}
+
+/* Emergency links */
+.emer{display:flex;gap:7px;margin-top:30px;animation:up .7s ease .38s both}
+.eb{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:9px;border-radius:9px;text-decoration:none;font-size:.72rem;font-weight:700;transition:all .18s}
+.eb1{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.22);color:#fca5a5}
+.eb1:hover{background:rgba(248,113,113,.18);border-color:rgba(248,113,113,.45);transform:translateY(-1px)}
+.eb2{background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);color:var(--vi)}
+.eb2:hover{background:rgba(167,139,250,.18);border-color:rgba(167,139,250,.42);transform:translateY(-1px)}
+
+/* ── RIGHT FORM PANEL ── */
+.right{
+  background:rgba(11,8,24,.82);backdrop-filter:blur(28px);
+  border-left:1px solid var(--b2);
+  display:flex;flex-direction:column;
+  overflow-y:auto;padding:36px 40px 30px;
+}
+
+/* Progress steps */
+.steps{display:flex;gap:0;margin-bottom:26px}
+.step{flex:1;display:flex;flex-direction:column;align-items:center;position:relative}
+.step:not(:last-child)::after{content:'';position:absolute;top:15px;left:55%;right:-5%;height:2px;background:var(--b2);transition:background .4s}
+.step.done:not(:last-child)::after,.step.active:not(:last-child)::after{background:linear-gradient(90deg,var(--p),var(--vi))}
+.step-n{width:30px;height:30px;border-radius:50%;background:var(--s2);border:2px solid var(--b2);
+  display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;
+  color:var(--mu);margin-bottom:5px;position:relative;z-index:1;transition:all .3s}
+.step.done .step-n{background:var(--p);border-color:var(--p);color:white}
+.step.active .step-n{background:linear-gradient(135deg,var(--p),var(--a));border-color:var(--p);color:white;box-shadow:0 0 14px var(--gp)}
+.step-l{font-size:.6rem;color:var(--mu);font-weight:700;text-transform:uppercase;letter-spacing:.5px;text-align:center}
+.step.active .step-l{color:var(--vi)}
+
+/* Security badge */
+.sbadge{display:inline-flex;align-items:center;gap:7px;
+  background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.18);
+  color:var(--gr);padding:5px 13px;border-radius:20px;
+  font-size:.63rem;font-family:'JetBrains Mono',monospace;margin-bottom:20px;-webkit-text-fill-color:var(--gr)}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--gr);box-shadow:0 0 7px var(--gr);animation:bk 2s infinite}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.2}}
+
+.form-t{font-size:1.5rem;font-weight:900;letter-spacing:-.4px;
+  background:linear-gradient(90deg,#fff 50%,var(--vi));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.form-s{font-size:.8rem;color:var(--mu);margin-bottom:22px;line-height:1.45}
+
+/* Form panels */
+.fpane{display:none}.fpane.on{display:block}
+
+/* Fields */
+.fr{margin-bottom:15px}
+.fl{display:flex;align-items:center;justify-content:space-between;
+  font-size:.71rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.9px;margin-bottom:7px}
+.fw{position:relative}
+.fic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:.87rem;pointer-events:none;transition:color .2s;z-index:1}
+.fw:focus-within .fic{color:var(--vi)}
+
+.finp{
+  width:100%;
+  background:#0d0a1e !important;
+  border:1px solid var(--b2);
+  border-radius:11px;
+  padding:12px 44px 12px 42px;
+  color:#ede9ff !important;
+  -webkit-text-fill-color:#ede9ff !important;
+  font-family:'Outfit',sans-serif;font-size:.88rem;
+  outline:none;transition:border-color .22s,box-shadow .22s,background .22s;
+  caret-color:#a78bfa;
+}
+.finp::placeholder{color:#6b5f9a !important;-webkit-text-fill-color:#6b5f9a !important;opacity:1}
+.finp:focus{border-color:var(--p) !important;background:#110e22 !important;box-shadow:0 0 0 3px rgba(124,58,237,.14)}
+.finp.ok{border-color:rgba(52,211,153,.5) !important;background:#0a1a14 !important}
+.finp.err{border-color:rgba(248,113,113,.5) !important;background:#1a0a0a !important}
+.finp.warn{border-color:rgba(251,191,36,.4) !important;background:#1a1500 !important}
+/* Select dark */
+select.finp{padding-right:14px}
+select.finp option{background:#0d0a1e !important;color:#ede9ff !important}
+
+.eye-btn{position:absolute;right:13px;top:50%;transform:translateY(-50%);
+  color:var(--mu);cursor:pointer;font-size:.87rem;background:none;border:none;padding:2px 4px;z-index:1;transition:color .15s}
+.eye-btn:hover{color:var(--vi)}
+
+.fhint{font-size:.69rem;margin-top:5px;display:none;align-items:center;gap:5px;line-height:1.3}
+.fhint.show{display:flex}
+.fhint.ok{color:var(--gr)}.fhint.err{color:var(--re)}.fhint.warn{color:var(--ye)}.fhint.info{color:var(--cy)}
+
+/* Two-col grid */
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+
+/* Password strength */
+.pstr{margin-top:8px;display:none}
+.pstr.on{display:block}
+.str-bars{display:flex;gap:3px;margin-bottom:5px}
+.sbar{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.07);transition:all .3s}
+.str-info{display:flex;justify-content:space-between;align-items:center}
+.str-lbl{font-size:.68rem;font-family:'JetBrains Mono',monospace;color:var(--mu)}
+.str-reqs{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.req{font-size:.63rem;padding:2px 7px;border-radius:4px;font-weight:600;
+  background:rgba(255,255,255,.04);border:1px solid var(--b1);color:var(--mu);transition:all .25s}
+.req.met{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:var(--gr)}
+
+/* Checkbox */
+.cbox{display:flex;align-items:flex-start;gap:9px;cursor:pointer;font-size:.79rem;color:var(--mu);margin-bottom:14px;line-height:1.45}
+.cbox input{accent-color:var(--p);width:15px;height:15px;cursor:pointer;flex-shrink:0;margin-top:2px}
+.cbox a{color:var(--vi);text-decoration:none}.cbox a:hover{color:var(--cy)}
+
+/* Avatar picker */
+.ava-pick{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.ava-opt{width:42px;height:42px;border-radius:50%;border:2px solid var(--b2);
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer;transition:all .18s;background:var(--s2)}
+.ava-opt:hover{border-color:var(--b3);transform:scale(1.08)}
+.ava-opt.sel{border-color:var(--p);box-shadow:0 0 12px rgba(124,58,237,.4);background:rgba(124,58,237,.12)}
+
+/* Emergency contact */
+.emg-tip{background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);
+  border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.78rem;line-height:1.5}
+.emg-tip strong{color:var(--re)}
+
+/* Buttons */
+.btn-main{width:100%;padding:13.5px;background:linear-gradient(135deg,var(--p),var(--a2));
+  border:none;border-radius:11px;color:white;font-family:'Outfit',sans-serif;
+  font-size:.9rem;font-weight:700;cursor:pointer;transition:all .22s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 6px 22px rgba(124,58,237,.3);position:relative;overflow:hidden}
+.btn-main::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);
+  transform:translateX(-100%);transition:transform .5s}
+.btn-main:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(124,58,237,.42)}
+.btn-main:hover::before{transform:translateX(100%)}
+.btn-main:active{transform:translateY(0)}
+.btn-main:disabled{opacity:.65;cursor:not-allowed;transform:none!important}
+
+.btn-sec{width:100%;padding:12px;background:rgba(255,255,255,.03);border:1px solid var(--b2);
+  border-radius:11px;color:var(--mu);font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:600;
+  cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:7px}
+.btn-sec:hover{background:rgba(124,58,237,.08);border-color:var(--b3);color:var(--tx)}
+
+/* Nav buttons */
+.nav-btns{display:flex;gap:8px;margin-top:6px}
+
+/* Error from Django */
+.djerr{background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.2);
+  border-radius:9px;padding:10px 13px;margin-bottom:14px;font-size:.79rem;color:#fca5a5}
+.djerr li{list-style:none;display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.djerr li:last-child{margin-bottom:0}
+
+/* Success screen */
+.success-scr{display:none;text-align:center;padding:20px 0}
+.success-scr.on{display:block}
+.success-ico{
+  width:80px;height:80px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(52,211,153,.15),rgba(52,211,153,.06));
+  border:2px solid rgba(52,211,153,.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:2rem;color:var(--gr);margin:0 auto 18px;
+  box-shadow:0 0 30px rgba(52,211,153,.15);
+  animation:popIn .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.success-title{font-size:1.5rem;font-weight:900;color:var(--gr);margin-bottom:8px}
+.success-sub{font-size:.85rem;color:var(--mu);line-height:1.6;max-width:320px;margin:0 auto 24px}
+.success-info{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.15);
+  border-radius:10px;padding:14px;margin-bottom:20px;text-align:left}
+.si-row{display:flex;align-items:center;gap:9px;font-size:.8rem;padding:5px 0}
+.si-row i{width:16px;text-align:center;flex-shrink:0}
+
+/* Divider */
+.dvdr{display:flex;align-items:center;gap:10px;margin:16px 0}
+.dl{flex:1;height:1px;background:var(--b2)}
+.dt{font-size:.68rem;color:var(--mu);font-weight:600;white-space:nowrap}
+
+/* Footer links */
+.flinks{display:flex;justify-content:center;gap:16px;padding-top:14px;border-top:1px solid var(--b1);margin-top:16px}
+.flinks a{font-size:.71rem;color:var(--mu);text-decoration:none;display:flex;align-items:center;gap:4px;transition:color .15s}
+.flinks a:hover{color:var(--vi)}
+
+/* Spinner */
+.spin{width:17px;height:17px;border:2px solid rgba(255,255,255,.25);border-top-color:white;
+  border-radius:50%;animation:spinA .6s linear infinite;display:none;flex-shrink:0}
+@keyframes spinA{to{transform:rotate(360deg)}}
+
+/* Caps lock warning */
+.caps-w{display:none;align-items:center;gap:6px;background:rgba(251,191,36,.07);
+  border:1px solid rgba(251,191,36,.2);border-radius:7px;padding:7px 11px;
+  font-size:.72rem;color:var(--ye);margin-top:7px}
+.caps-w.on{display:flex}
+
+/* Tooltip */
+.tip-wrap{position:relative;display:inline-flex;align-items:center;margin-left:5px;cursor:help}
+.tip-wrap i{color:var(--mu);font-size:.7rem}
+.tip-box{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:var(--s3);border:1px solid var(--b2);border-radius:8px;padding:8px 11px;
+  font-size:.72rem;color:var(--tx);white-space:nowrap;z-index:100;pointer-events:none;
+  opacity:0;transition:opacity .15s;max-width:220px;white-space:normal;text-align:center;line-height:1.4}
+.tip-wrap:hover .tip-box{opacity:1}
+
+/* ── ANIMATIONS ── */
+@keyframes up{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:980px){.page{grid-template-columns:1fr}.left{display:none}.right{border-left:none;padding:28px 22px 24px}}
+@media(max-width:480px){.fgrid{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg-mesh"></div>
+<div class="bg-grid"></div>
+<canvas id="bg-cv"></canvas>
+
+<div class="page">
+
+  <!-- ═══════════════ LEFT ═══════════════ -->
+  <aside class="left">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+
+    <div class="brand">
+      <div class="brand-ico"><i class="fa-solid fa-shield-halved"></i></div>
+      <div>
+        <div class="brand-name">Portal Seguro</div>
+        <span class="brand-ver">SENTINEL v9.0</span>
+      </div>
+    </div>
+
+    <h1 class="headline">Protección<br>para todas<br><span class="g">las personas.</span></h1>
+    <p class="sub">Portal Seguro es para mujeres, hombres y cualquier persona que enfrente acoso, violencia o situaciones de riesgo en la CDMX. Tu información es 100% confidencial.</p>
+
+    <div class="benefits">
+      <div class="ben">
+        <div class="ben-ico" style="background:rgba(124,58,237,.14);color:var(--vi)"><i class="fa-solid fa-robot"></i></div>
+        <div><div class="ben-t">Sentinel AI disponible 24/7</div><div class="ben-s">Asesoría legal, psicológica y de emergencia con Claude</div></div>
+      </div>
+      <div class="ben">
+        <div class="ben-ico" style="background:rgba(52,211,153,.11);color:var(--gr)"><i class="fa-solid fa-folder-shield"></i></div>
+        <div><div class="ben-t">Reportes cifrados y seguros</div><div class="ben-s">Tu expediente protegido con AES-256 sin acceso de terceros</div></div>
+      </div>
+      <div class="ben">
+        <div class="ben-ico" style="background:rgba(103,232,249,.09);color:var(--cy)"><i class="fa-solid fa-map-location-dot"></i></div>
+        <div><div class="ben-t">Red de instituciones CDMX</div><div class="ben-s">23 LUNAs, Fiscalías, Hospitales y ONGs en tu mapa personal</div></div>
+      </div>
+      <div class="ben">
+        <div class="ben-ico" style="background:rgba(248,113,113,.1);color:var(--re)"><i class="fa-solid fa-tower-broadcast"></i></div>
+        <div><div class="ben-t">SOS de emergencia con un toque</div><div class="ben-s">Activa alerta y comparte ubicación instantáneamente</div></div>
+      </div>
+      <div class="ben">
+        <div class="ben-ico" style="background:rgba(251,191,36,.1);color:var(--ye)"><i class="fa-solid fa-venus-mars"></i></div>
+        <div><div class="ben-t">Plataforma para todas las personas</div><div class="ben-s">Mujeres, hombres y cualquier persona que sufra acoso o violencia</div></div>
+      </div>
+    </div>
+
+    <!-- Social proof -->
+    <div class="proof">
+      <div class="proof-ava">
+        <div class="pava" style="background:var(--p)">A</div>
+        <div class="pava" style="background:var(--a)">M</div>
+        <div class="pava" style="background:#db2777">S</div>
+        <div class="pava" style="background:#059669">L</div>
+        <div class="pava" style="background:var(--or)">+</div>
+      </div>
+      <div class="proof-txt"><span class="proof-n">+1,200 personas</span> ya confían en Portal Seguro.<br>Registro gratuito, confidencial y sin publicidad.</div>
+    </div>
+
+    <!-- Emergency -->
+    <div class="emer">
+      <a href="tel:911" class="eb eb1"><i class="fa-solid fa-phone"></i>911 Emergencias</a>
+      <a href="tel:5556581111" class="eb eb2"><i class="fa-solid fa-venus"></i>Línea Mujeres</a>
+    </div>
+  </aside>
+
+  <!-- ═══════════════ RIGHT FORM ═══════════════ -->
+  <section class="right">
+
+    <!-- STEPS INDICATOR -->
+    <div class="steps" id="steps-bar">
+      <div class="step active" id="st1"><div class="step-n" id="sn1">1</div><div class="step-l">Tu cuenta</div></div>
+      <div class="step" id="st2"><div class="step-n" id="sn2">2</div><div class="step-l">Seguridad</div></div>
+      <div class="step" id="st3"><div class="step-n" id="sn3">3</div><div class="step-l">Perfil</div></div>
+    </div>
+
+    <div class="sbadge"><span class="sdot"></span>REGISTRO SEGURO · CIFRADO E2E · SIN PUBLICIDAD</div>
+
+    <div class="form-t" id="form-title">Crea tu cuenta</div>
+    <div class="form-s" id="form-sub">Paso 1 de 3 · Información básica de acceso</div>
+
+    {% if form.errors %}
+    <ul class="djerr">
+      {% for field, errors in form.errors.items %}{% for e in errors %}
+      <li><i class="fa-solid fa-triangle-exclamation" style="color:var(--re)"></i>{% if field != '__all__' %}{{ field }}: {% endif %}{{ e }}</li>
+      {% endfor %}{% endfor %}
+    </ul>
+    {% endif %}
+
+    <form method="post" id="reg-form" novalidate>
+      {% csrf_token %}
+
+      <!-- ══ STEP 1: Cuenta ══ -->
+      <div class="fpane on" id="fp1">
+
+        <!-- Username -->
+        <div class="fr">
+          <div class="fl">
+            <span>Nombre de usuario
+              <span class="tip-wrap"><i class="fa-solid fa-circle-info"></i><span class="tip-box">Elige un nombre único de 3–20 caracteres. Sin espacios ni caracteres especiales.</span></span>
+            </span>
+          </div>
+          <div class="fw">
+            <i class="fa-solid fa-at fic"></i>
+            <input type="text" name="username" id="f-user" class="finp"
+              placeholder="ej: maria_cdmx"
+              autocomplete="username" autocapitalize="none" spellcheck="false"
+              value="{{ form.username.value|default:'' }}">
+          </div>
+          <div class="fhint" id="h-user"></div>
+        </div>
+
+        <!-- Email -->
+        <div class="fr">
+          <div class="fl">
+            <span>Correo electrónico
+              <span class="tip-wrap"><i class="fa-solid fa-circle-info"></i><span class="tip-box">Usado para recuperar tu cuenta. No lo compartiremos con nadie.</span></span>
+            </span>
+          </div>
+          <div class="fw">
+            <i class="fa-solid fa-envelope fic"></i>
+            <input type="email" name="email" id="f-email" class="finp"
+              placeholder="tu@correo.com"
+              autocomplete="email"
+              value="{{ form.email.value|default:'' }}">
+          </div>
+          <div class="fhint" id="h-email"></div>
+        </div>
+
+        <!-- Emergency contact (extra useful field) -->
+        <div class="emg-tip">
+          <strong><i class="fa-solid fa-shield-heart"></i> Tip de seguridad:</strong> Puedes agregar un contacto de emergencia en tu perfil después del registro. Esta persona recibirá tu ubicación si activas el SOS. Funciona para cualquier tipo de acoso o violencia — sin importar tu género.
+        </div>
+
+        <button type="button" class="btn-main" onclick="goStep2()">
+          <i class="fa-solid fa-arrow-right" id="s1-ico"></i>
+          <span id="s1-txt">Continuar</span>
+        </button>
+
+        <div class="dvdr"><div class="dl"></div><div class="dt">¿Ya tienes cuenta?</div><div class="dl"></div></div>
+        <a href="{% url 'login' %}" class="btn-sec"><i class="fa-solid fa-right-to-bracket" style="color:var(--vi)"></i>Iniciar sesión</a>
+      </div>
+
+      <!-- ══ STEP 2: Contraseña ══ -->
+      <div class="fpane" id="fp2">
+
+        <!-- Password 1 -->
+        <div class="fr">
+          <div class="fl"><span>Contraseña</span></div>
+          <div class="fw">
+            <i class="fa-solid fa-lock fic"></i>
+            <input type="password" name="password1" id="f-pw1" class="finp"
+              placeholder="Mínimo 8 caracteres"
+              autocomplete="new-password"
+              oninput="checkStr(this.value)">
+            <button type="button" class="eye-btn" onclick="togPw('f-pw1','eye1')"><i class="fa-solid fa-eye" id="eye1"></i></button>
+          </div>
+          <!-- Strength meter -->
+          <div class="pstr" id="pstr">
+            <div class="str-bars"><div class="sbar" id="sb1"></div><div class="sbar" id="sb2"></div><div class="sbar" id="sb3"></div><div class="sbar" id="sb4"></div></div>
+            <div class="str-info"><span class="str-lbl" id="str-lbl">Sin contraseña</span></div>
+            <div class="str-reqs">
+              <span class="req" id="r-len"><i class="fa-solid fa-check" style="margin-right:3px"></i>8+ caracteres</span>
+              <span class="req" id="r-up"><i class="fa-solid fa-check" style="margin-right:3px"></i>Mayúscula</span>
+              <span class="req" id="r-num"><i class="fa-solid fa-check" style="margin-right:3px"></i>Número</span>
+              <span class="req" id="r-sym"><i class="fa-solid fa-check" style="margin-right:3px"></i>Símbolo</span>
+            </div>
+          </div>
+          <div class="caps-w" id="caps-w"><i class="fa-solid fa-triangle-exclamation"></i>Bloq Mayús activo — verifica tu contraseña</div>
+        </div>
+
+        <!-- Password 2 -->
+        <div class="fr">
+          <div class="fl"><span>Confirmar contraseña</span></div>
+          <div class="fw">
+            <i class="fa-solid fa-lock-open fic"></i>
+            <input type="password" name="password2" id="f-pw2" class="finp"
+              placeholder="Repite tu contraseña"
+              autocomplete="new-password"
+              oninput="chkMatch()">
+            <button type="button" class="eye-btn" onclick="togPw('f-pw2','eye2')"><i class="fa-solid fa-eye" id="eye2"></i></button>
+          </div>
+          <div class="fhint" id="h-pw2"></div>
+        </div>
+
+        <!-- Términos -->
+        <label class="cbox">
+          <input type="checkbox" id="f-terms" required>
+          <span>Acepto que mis datos están protegidos y son confidenciales. Nunca serán compartidos con terceros. <a href="{% url 'home' %}">Política de privacidad.</a></span>
+        </label>
+
+        <!-- Newsletter opcional -->
+        <label class="cbox" style="margin-bottom:18px">
+          <input type="checkbox" id="f-news" checked>
+          <span>Recibir alertas de seguridad y actualizaciones importantes de la plataforma</span>
+        </label>
+
+        <div class="nav-btns">
+          <button type="button" class="btn-sec" style="flex:.4" onclick="goStep(1)"><i class="fa-solid fa-arrow-left"></i></button>
+          <button type="button" class="btn-main" style="flex:1" onclick="goStep3()">
+            <i class="fa-solid fa-arrow-right" id="s2-ico"></i>
+            <span id="s2-txt">Continuar</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ══ STEP 3: Perfil ══ -->
+      <div class="fpane" id="fp3">
+
+        <!-- Avatar picker -->
+        <div class="fr">
+          <div class="fl"><span>Elige tu avatar</span></div>
+          <div class="ava-pick" id="ava-pick">
+            <div class="ava-opt sel" data-v="🛡️" onclick="selAva(this)">🛡️</div>
+            <div class="ava-opt" data-v="🌸" onclick="selAva(this)">🌸</div>
+            <div class="ava-opt" data-v="🦋" onclick="selAva(this)">🦋</div>
+            <div class="ava-opt" data-v="⭐" onclick="selAva(this)">⭐</div>
+            <div class="ava-opt" data-v="🌙" onclick="selAva(this)">🌙</div>
+            <div class="ava-opt" data-v="🔐" onclick="selAva(this)">🔐</div>
+            <div class="ava-opt" data-v="💜" onclick="selAva(this)">💜</div>
+            <div class="ava-opt" data-v="🌺" onclick="selAva(this)">🌺</div>
+          </div>
+          <input type="hidden" name="avatar" id="f-ava" value="🛡️">
+        </div>
+
+        <!-- Delegación (useful for CDMX) -->
+        <div class="fgrid">
+          <div class="fr" style="margin-bottom:0">
+            <div class="fl"><span>Delegación / Alcaldía</span></div>
+            <div class="fw">
+              <i class="fa-solid fa-location-dot fic"></i>
+              <select name="delegacion" id="f-del" class="finp" style="appearance:none;padding-right:14px;cursor:pointer">
+                <option value="">Selecciona...</option>
+                <option>Álvaro Obregón</option><option>Azcapotzalco</option>
+                <option>Benito Juárez</option><option>Coyoacán</option>
+                <option>Cuajimalpa</option><option>Cuauhtémoc</option>
+                <option>GAM</option><option>Iztacalco</option>
+                <option>Iztapalapa</option><option>M. Contreras</option>
+                <option>Milpa Alta</option><option>Miguel Hidalgo</option>
+                <option>Tláhuac</option><option>Tlalpan</option>
+                <option>V. Carranza</option><option>Xochimilco</option>
+                <option>Otra ciudad</option>
+              </select>
+            </div>
+          </div>
+          <div class="fr" style="margin-bottom:0">
+            <div class="fl"><span>¿Cómo nos conociste?</span></div>
+            <div class="fw">
+              <i class="fa-solid fa-share-nodes fic"></i>
+              <select name="referido" class="finp" style="appearance:none;padding-right:14px;cursor:pointer">
+                <option value="">Selecciona...</option>
+                <option>Redes sociales</option>
+                <option>Recomendación</option>
+                <option>Institución pública</option>
+                <option>ONG / Refugio</option>
+                <option>Búsqueda en internet</option>
+                <option>Otro</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Teléfono de emergencia (opcional) -->
+        <div class="fr" style="margin-top:14px">
+          <div class="fl">
+            <span>Teléfono de emergencia <span style="color:var(--mu);font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span>
+              <span class="tip-wrap"><i class="fa-solid fa-circle-info"></i><span class="tip-box">Número de alguien de confianza. Solo se usará si activas el SOS de emergencia.</span></span>
+            </span>
+          </div>
+          <div class="fw">
+            <i class="fa-solid fa-phone fic"></i>
+            <input type="tel" name="telefono_emergencia" id="f-tel" class="finp"
+              placeholder="55 1234 5678"
+              autocomplete="tel">
+          </div>
+          <div class="fhint info show" style="display:flex!important"><i class="fa-solid fa-circle-info" style="color:var(--cy)"></i>Este número recibirá tu ubicación cuando actives SOS</div>
+        </div>
+
+        <!-- Submit -->
+        <div class="nav-btns" style="margin-top:6px">
+          <button type="button" class="btn-sec" style="flex:.4" onclick="goStep(2)"><i class="fa-solid fa-arrow-left"></i></button>
+          <button type="submit" class="btn-main" style="flex:1" id="submit-btn" onclick="return validateSubmit()">
+            <div class="spin" id="submit-spin"></div>
+            <i class="fa-solid fa-user-shield" id="submit-ico"></i>
+            <span id="submit-txt">Crear mi cuenta segura</span>
+          </button>
+        </div>
+      </div>
+
+    </form><!-- /form -->
+
+    <!-- SUCCESS SCREEN -->
+    <div class="success-scr" id="success-scr">
+      <div class="success-ico"><i class="fa-solid fa-shield-check"></i></div>
+      <div class="success-title">¡Bienvenida!</div>
+      <div class="success-sub">Tu cuenta ha sido creada exitosamente. Ya eres parte de la red de mujeres protegidas en CDMX.</div>
+      <div class="success-info">
+        <div class="si-row"><i class="fa-solid fa-check-circle" style="color:var(--gr)"></i>Cuenta cifrada y verificada</div>
+        <div class="si-row"><i class="fa-solid fa-robot" style="color:var(--vi)"></i>Sentinel AI activada en tu cuenta</div>
+        <div class="si-row"><i class="fa-solid fa-map-location-dot" style="color:var(--cy)"></i>Acceso al mapa de instituciones</div>
+        <div class="si-row"><i class="fa-solid fa-tower-broadcast" style="color:var(--re)"></i>SOS de emergencia disponible</div>
+      </div>
+      <a href="{% url 'login' %}" class="btn-main" style="text-decoration:none">
+        <i class="fa-solid fa-right-to-bracket"></i>
+        Iniciar sesión ahora
+      </a>
+    </div>
+
+    <div class="flinks">
+      <a href="{% url 'login' %}"><i class="fa-solid fa-right-to-bracket" style="color:var(--vi)"></i>Iniciar sesión</a>
+      <a href="tel:911"><i class="fa-solid fa-phone" style="color:var(--re)"></i>911</a>
+      <a href="tel:5556581111"><i class="fa-solid fa-venus" style="color:var(--vi)"></i>Línea Mujeres</a>
+      <a href="{% url 'home' %}"><i class="fa-solid fa-house-chimney"></i>Inicio</a>
+    </div>
+
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ═══ CANVAS ═══
+const cv=document.getElementById('bg-cv'),ctx=cv.getContext('2d')
+let W,H,ns=[]
+function rsz(){W=cv.width=innerWidth;H=cv.height=innerHeight}
+rsz();addEventListener('resize',rsz)
+for(let i=0;i<40;i++)ns.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.28,vy:(Math.random()-.5)*.28})
+;(function loop(){
+  ctx.clearRect(0,0,W,H)
+  ns.forEach(n=>{
+    n.x+=n.vx;n.y+=n.vy
+    if(n.x<0||n.x>W)n.vx*=-1
+    if(n.y<0||n.y>H)n.vy*=-1
+    ctx.beginPath();ctx.arc(n.x,n.y,1.4,0,Math.PI*2)
+    ctx.fillStyle='rgba(124,58,237,.28)';ctx.fill()
+  })
+  for(let i=0;i<ns.length;i++)for(let j=i+1;j<ns.length;j++){
+    const dx=ns[i].x-ns[j].x,dy=ns[i].y-ns[j].y,d=Math.sqrt(dx*dx+dy*dy)
+    if(d<135){ctx.beginPath();ctx.moveTo(ns[i].x,ns[i].y);ctx.lineTo(ns[j].x,ns[j].y);ctx.strokeStyle=`rgba(124,58,237,${(1-d/135)*.11})`;ctx.lineWidth=.6;ctx.stroke()}
+  }
+  requestAnimationFrame(loop)
+})()
+
+// ═══ STEPS ═══
+let curStep=1
+function goStep(n){
+  document.querySelectorAll('.fpane').forEach((p,i)=>{p.classList.toggle('on',i===n-1)})
+  curStep=n
+  // Update step indicators
+  for(let i=1;i<=3;i++){
+    const st=document.getElementById('st'+i),sn=document.getElementById('sn'+i)
+    st.classList.remove('active','done')
+    if(i<n){st.classList.add('done');sn.innerHTML='<i class="fa-solid fa-check" style="font-size:.65rem"></i>'}
+    else if(i===n){st.classList.add('active');sn.textContent=i}
+    else{sn.textContent=i}
+  }
+  const titles=['Crea tu cuenta','Protege tu acceso','Personaliza tu perfil']
+  const subs=['Paso 1 de 3 · Información básica de acceso','Paso 2 de 3 · Crea una contraseña segura','Paso 3 de 3 · Perfil y datos opcionales']
+  document.getElementById('form-title').textContent=titles[n-1]
+  document.getElementById('form-sub').textContent=subs[n-1]
+  // Scroll to top of form
+  document.querySelector('.right').scrollTo({top:0,behavior:'smooth'})
+}
+
+function goStep2(){
+  const u=document.getElementById('f-user').value.trim()
+  const e=document.getElementById('f-email').value.trim()
+  if(u.length<3){setHint('h-user','err','<i class="fa-solid fa-circle-xmark"></i> Mínimo 3 caracteres');return}
+  if(/\s/.test(u)){setHint('h-user','err','<i class="fa-solid fa-circle-xmark"></i> Sin espacios');return}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)&&e){setHint('h-email','err','<i class="fa-solid fa-circle-xmark"></i> Correo inválido');return}
+  goStep(2)
+}
+
+function goStep3(){
+  const pw1=document.getElementById('f-pw1').value
+  const pw2=document.getElementById('f-pw2').value
+  const terms=document.getElementById('f-terms').checked
+  if(pw1.length<8){setHint(null,'err','La contraseña debe tener al menos 8 caracteres',true);return}
+  if(pw1!==pw2){setHint('h-pw2','err','<i class="fa-solid fa-circle-xmark"></i> Las contraseñas no coinciden');return}
+  if(!terms){alert('Debes aceptar la política de privacidad para continuar.');return}
+  goStep(3)
+}
+
+function validateSubmit(){
+  const btn=document.getElementById('submit-btn')
+  const spin=document.getElementById('submit-spin')
+  const ico=document.getElementById('submit-ico')
+  const txt=document.getElementById('submit-txt')
+  // Brief visual feedback then let the form actually submit
+  spin.style.display='block'
+  ico.style.display='none'
+  txt.textContent='Creando cuenta...'
+  // DON'T disable the button - let Django handle submission
+  // Re-enable after 8s as fallback in case of slow server
+  setTimeout(()=>{
+    btn.disabled=false
+    spin.style.display='none'
+    ico.style.display='inline'
+    txt.textContent='Crear mi cuenta segura'
+  },8000)
+  return true
+}
+
+// ═══ FIELD HELPERS ═══
+function setHint(id,type,html,isAlert){
+  if(isAlert){alert(html.replace(/<[^>]+>/g,''));return}
+  const el=document.getElementById(id);if(!el)return
+  el.className='fhint '+type+' show';el.innerHTML=html
+}
+
+function setFld(id,state){
+  const el=document.getElementById(id);if(!el)return
+  el.classList.remove('ok','err','warn');if(state)el.classList.add(state)
+}
+
+// ═══ USERNAME VALIDATION ═══
+document.getElementById('f-user').addEventListener('input',function(){
+  const v=this.value.trim()
+  const h=document.getElementById('h-user')
+  if(!v){h.className='fhint';setFld('f-user',null);return}
+  if(v.length<3||/\s/.test(v)){
+    h.className='fhint err show';h.innerHTML='<i class="fa-solid fa-circle-xmark"></i> Mínimo 3 caracteres, sin espacios'
+    setFld('f-user','err')
+  }else if(v.length>20){
+    h.className='fhint err show';h.innerHTML='<i class="fa-solid fa-circle-xmark"></i> Máximo 20 caracteres'
+    setFld('f-user','err')
+  }else{
+    h.className='fhint ok show';h.innerHTML='<i class="fa-solid fa-circle-check"></i> Nombre de usuario válido'
+    setFld('f-user','ok')
+  }
+})
+
+// ═══ EMAIL VALIDATION ═══
+document.getElementById('f-email').addEventListener('input',function(){
+  const v=this.value,h=document.getElementById('h-email')
+  if(!v){h.className='fhint';setFld('f-email',null);return}
+  const ok=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
+  h.className='fhint '+(ok?'ok':'err')+' show'
+  h.innerHTML=ok?'<i class="fa-solid fa-circle-check"></i> Correo válido':'<i class="fa-solid fa-circle-xmark"></i> Formato inválido'
+  setFld('f-email',ok?'ok':'err')
+})
+
+// ═══ PASSWORD STRENGTH ═══
+function checkStr(v){
+  const pstr=document.getElementById('pstr');pstr.classList.add('on')
+  const bars=['sb1','sb2','sb3','sb4'].map(id=>document.getElementById(id))
+  const lbl=document.getElementById('str-lbl')
+  bars.forEach(b=>b&&(b.style.background='rgba(255,255,255,.07)'))
+  let score=0
+  const len=v.length>=8,up=/[A-Z]/.test(v),num=/[0-9]/.test(v),sym=/[^a-zA-Z0-9]/.test(v)
+  if(len)score++;if(up)score++;if(num)score++;if(sym)score++
+  document.getElementById('r-len').classList.toggle('met',len)
+  document.getElementById('r-up').classList.toggle('met',up)
+  document.getElementById('r-num').classList.toggle('met',num)
+  document.getElementById('r-sym').classList.toggle('met',sym)
+  const cols=['#f87171','#fb923c','#fbbf24','#34d399']
+  const lbls=['Muy débil','Débil','Buena','Muy fuerte']
+  for(let i=0;i<score;i++)if(bars[i])bars[i].style.background=cols[Math.min(score-1,3)]
+  lbl.textContent=v?lbls[Math.min(score-1,3)]:'Sin contraseña'
+  lbl.style.color=v?cols[Math.min(score-1,3)]:'var(--mu)'
+  // Also validate field
+  setFld('f-pw1',v.length>=8?'ok':v?'err':null)
+}
+
+// ═══ CONFIRM MATCH ═══
+function chkMatch(){
+  const pw1=document.getElementById('f-pw1').value
+  const pw2=document.getElementById('f-pw2').value
+  const h=document.getElementById('h-pw2')
+  if(!pw2){h.className='fhint';setFld('f-pw2',null);return}
+  if(pw1===pw2){
+    h.className='fhint ok show';h.innerHTML='<i class="fa-solid fa-circle-check"></i> Las contraseñas coinciden'
+    setFld('f-pw2','ok')
+  }else{
+    h.className='fhint err show';h.innerHTML='<i class="fa-solid fa-circle-xmark"></i> No coinciden'
+    setFld('f-pw2','err')
+  }
+}
+
+// ═══ TOGGLE PASSWORD ═══
+function togPw(id,eyeId){
+  const f=document.getElementById(id),e=document.getElementById(eyeId)
+  if(!f)return
+  f.type=f.type==='password'?'text':'password'
+  e.className=f.type==='text'?'fa-solid fa-eye-slash':'fa-solid fa-eye'
+}
+
+// ═══ CAPS LOCK ═══
+document.addEventListener('keyup',e=>{
+  if(e.getModifierState){
+    const caps=e.getModifierState('CapsLock')
+    const active=document.activeElement
+    if(active&&active.type==='password')
+      document.getElementById('caps-w').classList.toggle('on',caps)
+  }
+})
+
+// ═══ AVATAR PICKER ═══
+function selAva(el){
+  document.querySelectorAll('.ava-opt').forEach(a=>a.classList.remove('sel'))
+  el.classList.add('sel')
+  document.getElementById('f-ava').value=el.dataset.v
+}
+
+// ═══ PHONE FORMAT ═══
+document.getElementById('f-tel')&&document.getElementById('f-tel').addEventListener('input',function(){
+  let v=this.value.replace(/\D/g,'')
+  if(v.length>10)v=v.slice(0,10)
+  if(v.length>=6)v=v.slice(0,2)+' '+v.slice(2,6)+' '+v.slice(6)
+  else if(v.length>=2)v=v.slice(0,2)+' '+v.slice(2)
+  this.value=v
+})
+
+// ═══ IF DJANGO SUBMITTED WITH ERRORS, STAY ON STEP 1 ═══
+{% if form.errors %}
+// Already shown step 1 with errors
+{% endif %}
+
+// ═══ SHOW SUCCESS IF REDIRECTED WITH ?created=1 ═══
+if(new URLSearchParams(location.search).get('created')==='1'){
+  document.getElementById('reg-form').style.display='none'
+  document.getElementById('steps-bar').style.display='none'
+  document.getElementById('success-scr').classList.add('on')
+}
+</script>
+{% endblock %}

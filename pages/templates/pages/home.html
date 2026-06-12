@@ -1,0 +1,1977 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Portal Seguro — Sentinel v9.0{% endblock %}
+{% block navbar %}{% endblock %}
+{% block container_class %}container-fluid p-0{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05030e;
+  --bg2:#08051a;
+  --surface:#0e0b1f;
+  --surface2:#141028;
+  --surface3:#1a1533;
+  --border:rgba(130,90,255,.09);
+  --border2:rgba(130,90,255,.2);
+  --border3:rgba(130,90,255,.45);
+  --primary:#7c3aed;
+  --primary2:#6d28d9;
+  --accent:#3b82f6;
+  --accent2:#2563eb;
+  --violet:#a78bfa;
+  --cyan:#67e8f9;
+  --pink:#f472b6;
+  --green:#34d399;
+  --yellow:#fbbf24;
+  --red:#f87171;
+  --orange:#fb923c;
+  --text:#f0edff;
+  --muted:#6d619a;
+  --sidebar-w:268px;
+  --glow-p:rgba(124,58,237,.4);
+  --glow-b:rgba(59,130,246,.3);
+  --radius:14px;
+  --radius-sm:9px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--primary);border-radius:4px}
+
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Outfit',sans-serif;
+  min-height:100vh;overflow-x:hidden;
+}
+
+/* ── BACKGROUND MESH ── */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 70% 55% at 10% 15%,rgba(124,58,237,.13) 0%,transparent 65%),
+    radial-gradient(ellipse 55% 45% at 90% 5%,rgba(59,130,246,.1) 0%,transparent 60%),
+    radial-gradient(ellipse 45% 55% at 50% 90%,rgba(124,58,237,.08) 0%,transparent 65%);
+}
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(124,58,237,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,.035) 1px,transparent 1px);
+  background-size:44px 44px;
+}
+
+/* ── LAYOUT ── */
+.app{display:flex;min-height:100vh;position:relative;z-index:1}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:var(--sidebar-w);
+  background:linear-gradient(180deg,rgba(14,11,31,.98) 0%,rgba(8,5,26,.99) 100%);
+  border-right:1px solid var(--border2);
+  position:fixed;height:100vh;
+  display:flex;flex-direction:column;
+  padding:18px 12px 14px;z-index:300;
+  transition:transform .3s cubic-bezier(.4,0,.2,1);
+  overflow-y:auto;overflow-x:hidden;
+  box-shadow:6px 0 50px rgba(0,0,0,.6);
+}
+
+.sidebar-logo{
+  display:flex;align-items:center;gap:12px;
+  padding:4px 8px 18px;
+  border-bottom:1px solid var(--border2);
+  margin-bottom:6px;flex-shrink:0;
+}
+.logo-icon{
+  width:40px;height:40px;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  border-radius:11px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.05rem;color:white;flex-shrink:0;
+  box-shadow:0 0 22px var(--glow-p),inset 0 1px 0 rgba(255,255,255,.2);
+}
+.logo-text{font-size:1.02rem;font-weight:800;letter-spacing:.2px;
+  background:linear-gradient(90deg,#fff 40%,var(--violet));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.logo-ver{font-size:.58rem;color:var(--cyan);font-family:'JetBrains Mono',monospace;
+  letter-spacing:1.5px;display:block;margin-top:1px;-webkit-text-fill-color:var(--cyan)}
+
+/* Nav sections */
+.nav-sec{font-size:.59rem;color:var(--muted);letter-spacing:2.2px;text-transform:uppercase;
+  padding:14px 10px 5px;font-weight:700;flex-shrink:0}
+
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 11px;border-radius:9px;
+  color:var(--muted);text-decoration:none;
+  font-size:.84rem;font-weight:500;
+  cursor:pointer;transition:all .16s;
+  border:1px solid transparent;margin-bottom:1px;
+  position:relative;overflow:hidden;flex-shrink:0;
+}
+.nav-item::after{
+  content:'';position:absolute;left:0;top:0;bottom:0;
+  width:3px;background:linear-gradient(180deg,var(--primary),var(--accent));
+  border-radius:0 3px 3px 0;transform:scaleY(0);transition:transform .18s;
+}
+.nav-item:hover{color:var(--text);background:rgba(124,58,237,.08);border-color:var(--border2)}
+.nav-item.active{color:#fff;background:linear-gradient(90deg,rgba(124,58,237,.22),rgba(59,130,246,.1));border-color:var(--border3)}
+.nav-item.active::after{transform:scaleY(1)}
+.nav-item.active .ni{color:var(--violet)}
+.ni{width:18px;text-align:center;font-size:.88rem;flex-shrink:0;transition:color .16s}
+.nav-badge{margin-left:auto;background:linear-gradient(135deg,var(--primary),var(--accent));
+  color:white;font-size:.6rem;padding:2px 7px;border-radius:20px;font-weight:700;flex-shrink:0}
+
+.nav-sos{
+  background:linear-gradient(90deg,rgba(248,113,113,.12),rgba(239,68,68,.06));
+  border-color:rgba(248,113,113,.22)!important;color:#fca5a5!important;
+  animation:sosBorder 2.5s ease-in-out infinite;
+}
+.nav-sos:hover{background:rgba(239,68,68,.2)!important}
+@keyframes sosBorder{0%,100%{box-shadow:none}50%{box-shadow:0 0 14px rgba(239,68,68,.18)}}
+
+.sidebar-user{
+  background:rgba(124,58,237,.08);border:1px solid var(--border2);
+  border-radius:10px;padding:10px 12px;
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.su-ava{
+  width:34px;height:34px;border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  display:flex;align-items:center;justify-content:center;
+  font-size:.82rem;color:white;flex-shrink:0;
+  box-shadow:0 0 12px var(--glow-p);
+}
+.su-name{font-size:.78rem;font-weight:700;color:var(--text);line-height:1.25}
+.su-role{font-size:.62rem;color:var(--cyan);font-family:'JetBrains Mono',monospace;-webkit-text-fill-color:var(--cyan)}
+
+.sb-footer{margin-top:auto;padding-top:12px;border-top:1px solid var(--border);flex-shrink:0}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green);display:inline-block;margin-right:5px;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── MAIN ── */
+.main{flex:1;margin-left:var(--sidebar-w);padding:26px 30px 40px;min-height:100vh;position:relative;z-index:1}
+
+/* ── PAGE HEADER ── */
+.ph{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:24px;padding-bottom:18px;
+  border-bottom:1px solid var(--border2);
+}
+.ph-title{
+  font-size:1.85rem;font-weight:900;letter-spacing:-.6px;
+  background:linear-gradient(90deg,#fff 50%,var(--violet));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.ph-sub{color:var(--muted);font-size:.74rem;font-family:'JetBrains Mono',monospace;
+  margin-top:3px;-webkit-text-fill-color:var(--muted)}
+.ph-right{display:flex;align-items:center;gap:9px}
+.hpill{
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:9px;padding:7px 13px;
+  font-size:.74rem;font-weight:600;
+  display:flex;align-items:center;gap:6px;
+  transition:all .18s;cursor:pointer;
+}
+.hpill:hover{border-color:var(--border3);background:rgba(124,58,237,.1)}
+.clock-p{font-family:'JetBrains Mono',monospace;color:var(--cyan);font-size:.92rem;letter-spacing:2px;-webkit-text-fill-color:var(--cyan)}
+.notif-wrap{position:relative}
+.notif-dot{position:absolute;top:-3px;right:-3px;background:var(--red);color:white;
+  font-size:.52rem;width:15px;height:15px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-weight:800;
+  border:2px solid var(--bg)}
+
+.mob-btn{display:none;background:none;border:1px solid var(--border2);
+  color:var(--text);padding:8px 11px;border-radius:9px;cursor:pointer;font-size:1rem}
+
+/* ── STATS GRID ── */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:13px;margin-bottom:22px}
+.sc{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px 15px;
+  position:relative;overflow:hidden;cursor:default;
+  transition:all .22s;
+}
+.sc:hover{border-color:var(--border3);transform:translateY(-3px);box-shadow:0 14px 40px rgba(0,0,0,.45)}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.sc:nth-child(1)::before{background:linear-gradient(90deg,var(--primary),var(--violet))}
+.sc:nth-child(2)::before{background:linear-gradient(90deg,var(--accent),var(--cyan))}
+.sc:nth-child(3)::before{background:linear-gradient(90deg,var(--green),#059669)}
+.sc:nth-child(4)::before{background:linear-gradient(90deg,var(--pink),#db2777)}
+.sc:nth-child(5)::before{background:linear-gradient(90deg,var(--yellow),var(--orange))}
+.sc-glow{position:absolute;top:-15px;right:-15px;width:70px;height:70px;border-radius:50%;opacity:.12;filter:blur(16px);pointer-events:none}
+.sc-icon{font-size:1.25rem;margin-bottom:7px}
+.sc-val{font-size:1.7rem;font-weight:900;line-height:1;letter-spacing:-.5px;font-family:'Outfit',sans-serif}
+.sc-lbl{font-size:.68rem;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.8px;font-weight:600}
+.sc-trend{font-size:.66rem;margin-top:5px;display:flex;align-items:center;gap:3px}
+.up{color:var(--green)}.dn{color:var(--red)}
+
+/* ── CARD BASE ── */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:19px;
+  position:relative;overflow:hidden;
+  transition:all .22s;
+}
+.card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 14px 40px rgba(0,0,0,.38)}
+.ct{
+  font-size:.67rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:1.4px;color:var(--muted);
+  display:flex;align-items:center;gap:7px;
+  margin-bottom:14px;
+}
+
+/* ── WIDGETS ROW ── */
+.widgets{display:grid;grid-template-columns:repeat(3,1fr);gap:17px;margin-bottom:22px}
+
+/* ACOSÓMETRO */
+.meter-track{
+  height:46px;
+  background:linear-gradient(90deg,#10b981,#34d399,#a3e635,#facc15,#fb923c,#ef4444,#b91c1c);
+  border-radius:23px;cursor:crosshair;
+  position:relative;overflow:hidden;touch-action:none;
+  box-shadow:inset 0 3px 10px rgba(0,0,0,.5),0 0 18px rgba(124,58,237,.12);
+}
+.meter-track::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.17),transparent 55%);
+  pointer-events:none;border-radius:23px}
+.meter-needle{position:absolute;width:3px;height:100%;background:white;top:0;left:2%;
+  transition:left .06s;box-shadow:0 0 14px white,0 0 30px rgba(255,255,255,.5);
+  pointer-events:none;z-index:2;border-radius:2px}
+.meter-lnum{position:absolute;top:50%;right:12px;transform:translateY(-50%);
+  font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:700;
+  color:white;text-shadow:0 1px 8px rgba(0,0,0,.9);pointer-events:none;z-index:3}
+.meter-out{
+  font-family:'JetBrains Mono',monospace;font-size:.76rem;
+  margin-top:11px;padding:9px 13px;
+  background:rgba(0,0,0,.35);border:1px solid var(--border2);
+  border-radius:8px;text-align:center;color:var(--cyan);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all .18s;min-height:38px;
+}
+.meter-lbls{display:flex;justify-content:space-between;margin-top:5px;padding:0 2px}
+.meter-lbl{font-size:.59rem;color:var(--muted);font-weight:600}
+
+/* TOOLS GRID */
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;height:calc(100% - 36px)}
+.tbtn{
+  background:rgba(255,255,255,.02);border:1px solid var(--border);
+  border-radius:10px;color:var(--muted);padding:13px 9px;
+  cursor:pointer;transition:all .18s;
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  font-size:.76rem;font-weight:600;text-align:center;line-height:1.3;
+}
+.tbtn i{font-size:1.3rem}
+.tbtn:hover{background:rgba(124,58,237,.12);border-color:var(--border3);color:white;transform:translateY(-2px)}
+
+/* AI CARD */
+.ai-card{
+  cursor:pointer;
+  background:linear-gradient(135deg,rgba(124,58,237,.16),rgba(59,130,246,.08));
+  border-color:rgba(124,58,237,.28)!important;
+}
+.ai-card:hover{border-color:rgba(124,58,237,.55)!important;box-shadow:0 14px 40px rgba(124,58,237,.18)!important}
+.ai-orb{
+  width:60px;height:60px;border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.5rem;color:white;margin-bottom:12px;
+  box-shadow:0 0 28px var(--glow-p),0 0 55px rgba(124,58,237,.14);
+  position:relative;
+}
+.ai-orb::before{content:'';position:absolute;inset:-5px;border-radius:50%;
+  border:2px solid rgba(124,58,237,.3);animation:orbP 2.4s ease-in-out infinite}
+.ai-orb::after{content:'';position:absolute;inset:-12px;border-radius:50%;
+  border:1px solid rgba(124,58,237,.12);animation:orbP 2.4s ease-in-out infinite .6s}
+@keyframes orbP{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.07);opacity:1}}
+.ai-name{font-size:1.45rem;font-weight:900;letter-spacing:-.5px;
+  background:linear-gradient(90deg,#fff,var(--violet));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.ai-sub{color:var(--cyan);font-size:.72rem;margin-top:2px;font-family:'JetBrains Mono',monospace;-webkit-text-fill-color:var(--cyan)}
+.ai-live{display:inline-flex;align-items:center;gap:5px;
+  background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.22);
+  color:var(--green);padding:4px 11px;border-radius:20px;
+  font-size:.66rem;font-family:'JetBrains Mono',monospace;margin-top:11px;
+  -webkit-text-fill-color:var(--green)}
+.ai-caps{margin-top:12px;display:flex;flex-wrap:wrap;gap:4px}
+.ai-cap{font-size:.6rem;padding:3px 8px;border-radius:6px;
+  background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.18);
+  color:var(--violet);font-weight:600;-webkit-text-fill-color:var(--violet)}
+
+/* ── MID SECTION: 3 cols ── */
+.mid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:17px;margin-bottom:22px}
+
+/* Plan de emergencia */
+.plan-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.plan-item:last-child{border-bottom:none}
+.plan-n{width:22px;height:22px;border-radius:6px;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  display:flex;align-items:center;justify-content:center;
+  font-size:.62rem;font-weight:800;color:white;flex-shrink:0}
+.plan-t{font-size:.79rem;line-height:1.45;color:var(--text)}
+
+/* Timeline alertas */
+.tl{position:relative}
+.tl-item{display:flex;gap:11px;padding:8px 0;position:relative}
+.tl-item:not(:last-child)::before{content:'';position:absolute;left:9px;top:22px;bottom:0;width:1px;background:var(--border)}
+.tl-dot{width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.55rem;flex-shrink:0;margin-top:2px}
+.tl-title{font-size:.79rem;font-weight:600;line-height:1.35}
+.tl-time{font-size:.66rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:1px}
+
+/* Recursos */
+.res-item{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 11px;background:rgba(255,255,255,.02);
+  border:1px solid var(--border);border-radius:9px;margin-bottom:7px;
+  cursor:pointer;transition:all .16s;text-decoration:none;
+}
+.res-item:hover{background:rgba(124,58,237,.08);border-color:var(--border2);transform:translateX(3px)}
+.res-ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.88rem;flex-shrink:0}
+.res-title{font-size:.8rem;font-weight:600;color:var(--text)}
+.res-sub{font-size:.67rem;color:var(--muted)}
+
+/* ── DERECHOS ── */
+.rights-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:22px}
+.right-card{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:13px}
+.right-tag{font-size:.67rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.right-txt{font-size:.78rem;line-height:1.5;color:rgba(240,237,255,.75)}
+
+/* ── MAP SECTION ── */
+.map-section{margin-bottom:22px}
+.map-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px}
+.map-wrap{border-radius:var(--radius);overflow:hidden;border:1px solid var(--border2);height:520px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 0 1px rgba(124,58,237,.08)}
+.map-hud{position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:flex-start;z-index:500;pointer-events:none;gap:8px}
+
+/* MAP DROPDOWN MENU */
+.map-menu-wrap{position:relative;pointer-events:auto}
+.map-menu-btn{
+  background:rgba(5,3,14,.9);border:1px solid var(--border2);
+  backdrop-filter:blur(16px);padding:8px 14px;border-radius:10px;
+  font-size:.74rem;font-weight:700;
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  color:var(--text);transition:all .16s;white-space:nowrap;
+}
+.map-menu-btn:hover{border-color:var(--border3);background:rgba(124,58,237,.15)}
+.map-menu-btn i.arr{margin-left:4px;font-size:.6rem;transition:transform .2s}
+.map-menu-btn.open i.arr{transform:rotate(180deg)}
+.map-dropdown{
+  position:absolute;top:calc(100% + 8px);left:0;
+  background:rgba(8,5,24,.97);border:1px solid var(--border2);
+  border-radius:12px;backdrop-filter:blur(20px);
+  min-width:280px;z-index:600;
+  box-shadow:0 20px 50px rgba(0,0,0,.7),0 0 0 1px rgba(124,58,237,.12);
+  overflow:hidden;
+  display:none;
+}
+.map-dropdown.show{display:block}
+.map-dd-head{padding:10px 14px;font-size:.65rem;color:var(--muted);
+  font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  border-bottom:1px solid var(--border)}
+.map-dd-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;cursor:pointer;
+  transition:background .14s;font-size:.8rem;
+  border-bottom:1px solid var(--border);
+}
+.map-dd-item:last-child{border-bottom:none}
+.map-dd-item:hover{background:rgba(124,58,237,.1)}
+.map-dd-item.active{background:rgba(124,58,237,.12)}
+.map-dd-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 8px currentColor}
+.map-dd-name{font-weight:600;color:var(--text)}
+.map-dd-count{margin-left:auto;font-size:.65rem;font-family:'JetBrains Mono',monospace;
+  background:rgba(255,255,255,.07);padding:2px 8px;border-radius:10px;color:var(--muted)}
+.map-dd-divider{height:1px;background:var(--border);margin:2px 0}
+.map-dd-all{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;transition:background .14s;font-size:.8rem;font-weight:700;color:var(--violet)}
+.map-dd-all:hover{background:rgba(124,58,237,.1)}
+
+/* Map legend right */
+.map-legend{
+  background:rgba(5,3,14,.9);border:1px solid var(--border2);
+  backdrop-filter:blur(16px);padding:8px 12px;border-radius:10px;
+  display:flex;gap:10px;font-size:.68rem;pointer-events:auto;flex-wrap:wrap;
+}
+.leg-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:3px;box-shadow:0 0 6px currentColor}
+
+.map-stats-bar{
+  position:absolute;top:60px;left:14px;
+  display:flex;gap:7px;z-index:400;flex-wrap:wrap;
+}
+.map-chip{
+  background:rgba(5,3,14,.88);border:1px solid var(--border2);
+  backdrop-filter:blur(14px);padding:5px 11px;
+  border-radius:20px;font-size:.67rem;font-weight:700;
+  display:flex;align-items:center;gap:5px;cursor:pointer;
+  transition:all .14s;
+}
+.map-chip:hover,.map-chip.active{border-color:var(--border3);background:rgba(124,58,237,.25)}
+
+.map-filter-bar{position:absolute;bottom:14px;left:14px;display:flex;gap:6px;z-index:400;flex-wrap:wrap}
+.mfb{
+  background:rgba(5,3,14,.88);border:1px solid var(--border2);
+  backdrop-filter:blur(10px);color:var(--muted);
+  padding:6px 12px;border-radius:7px;font-size:.71rem;font-weight:700;cursor:pointer;
+  transition:all .14s;
+}
+.mfb:hover,.mfb.on{background:rgba(124,58,237,.28);border-color:var(--primary);color:white}
+
+.map-ctrl{position:absolute;bottom:14px;right:14px;z-index:400;display:flex;flex-direction:column;gap:6px}
+.mctrl{
+  background:rgba(5,3,14,.88);border:1px solid var(--border2);
+  backdrop-filter:blur(10px);color:var(--violet);
+  width:36px;height:36px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .14s;font-size:.83rem;
+}
+.mctrl:hover{background:rgba(124,58,237,.2);border-color:var(--primary)}
+
+/* ── SISTEMA STATUS / BOTTOM ── */
+.bottom{display:grid;grid-template-columns:1fr 1fr;gap:17px;margin-bottom:22px}
+.sys-row{display:flex;align-items:center;justify-content:space-between;padding:8px 11px;border-radius:8px;border:1px solid;margin-bottom:7px}
+.sys-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;animation:blink 2.5s infinite}
+
+/* ── MODALS ── */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:1000;
+  align-items:center;justify-content:center;backdrop-filter:blur(10px);padding:18px}
+.ov.on{display:flex}
+.mbox{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:17px;width:100%;max-width:700px;max-height:91vh;
+  display:flex;flex-direction:column;
+  box-shadow:0 40px 80px rgba(0,0,0,.75),0 0 0 1px rgba(124,58,237,.1);
+  overflow:hidden;
+}
+.mhead{
+  padding:17px 21px;border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;
+  background:rgba(0,0,0,.22);flex-shrink:0;
+}
+.mhead-t{font-size:.92rem;font-weight:700;display:flex;align-items:center;gap:9px}
+.mclose{
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+  color:var(--muted);font-size:1.1rem;cursor:pointer;
+  width:29px;height:29px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .14s;line-height:1;
+}
+.mclose:hover{color:var(--red);background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.3)}
+.mbody{flex:1;overflow-y:auto;padding:21px}
+
+/* ── AI CHAT MODAL ── */
+.ai-mbox{max-width:650px;height:88vh}
+.ai-mhead{background:linear-gradient(135deg,rgba(124,58,237,.5),rgba(59,130,246,.28));border-bottom:1px solid rgba(124,58,237,.3)}
+.ai-chat{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:13px;background:rgba(5,3,14,.65)}
+
+/* Messages */
+.msg-ai,.msg-user,.msg-err{padding:12px 15px;border-radius:13px;font-size:.85rem;line-height:1.7;max-width:86%;animation:msgIn .22s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+.msg-ai{background:var(--surface2);border:1px solid var(--border2);border-bottom-left-radius:3px;align-self:flex-start;border-left:3px solid var(--violet)}
+.msg-user{background:linear-gradient(135deg,var(--primary),var(--accent2));border-bottom-right-radius:3px;align-self:flex-end;margin-left:auto;box-shadow:0 4px 18px rgba(124,58,237,.28)}
+.msg-err{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.22);color:#fca5a5;align-self:center;font-size:.78rem;text-align:center;max-width:90%}
+
+/* Typing */
+.typing-wrap{display:flex;gap:5px;align-items:center;padding:12px 16px}
+.tydot{width:7px;height:7px;border-radius:50%;background:var(--violet);animation:tyB 1.4s infinite}
+.tydot:nth-child(2){animation-delay:.2s}.tydot:nth-child(3){animation-delay:.4s}
+@keyframes tyB{0%,60%,100%{transform:translateY(0);opacity:.3}30%{transform:translateY(-8px);opacity:1}}
+
+/* AI Context Tabs */
+.ai-ctx{display:flex;gap:5px;padding:9px 15px;background:rgba(0,0,0,.22);border-top:1px solid var(--border);flex-shrink:0;overflow-x:auto}
+.ctx-t{padding:4px 11px;border-radius:18px;font-size:.63rem;font-weight:700;
+  border:1px solid var(--border2);background:rgba(255,255,255,.02);color:var(--muted);
+  cursor:pointer;white-space:nowrap;transition:all .14s}
+.ctx-t:hover,.ctx-t.on{background:rgba(124,58,237,.15);border-color:var(--primary);color:var(--violet)}
+
+/* AI Topic Grid */
+.ai-topics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:12px 15px;background:var(--surface2);border-top:1px solid var(--border);flex-shrink:0}
+.aitb{
+  background:rgba(255,255,255,.02);border:1px solid var(--border);
+  color:var(--muted);padding:9px 6px;border-radius:8px;
+  cursor:pointer;transition:all .14s;font-size:.67rem;font-weight:600;
+  display:flex;flex-direction:column;align-items:center;gap:5px;line-height:1.2;text-align:center;
+}
+.aitb i{font-size:.95rem}
+.aitb:hover{background:rgba(124,58,237,.12);border-color:var(--border3);color:white}
+.aitb.sos{border-color:rgba(248,113,113,.2);color:#fca5a5}
+.aitb.sos:hover{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.4);color:white}
+
+/* AI toolbar */
+.ai-tools{display:flex;gap:6px;padding:8px 15px;border-top:1px solid var(--border);background:rgba(0,0,0,.15);flex-shrink:0;overflow-x:auto}
+.ai-tool-btn{
+  display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;
+  background:rgba(255,255,255,.03);border:1px solid var(--border);
+  color:var(--muted);font-size:.67rem;font-weight:600;cursor:pointer;
+  white-space:nowrap;transition:all .14s;
+}
+.ai-tool-btn:hover{background:rgba(124,58,237,.1);border-color:var(--border2);color:white}
+
+/* AI Model bar */
+.ai-mbar{display:flex;align-items:center;justify-content:space-between;padding:7px 15px;background:rgba(0,0,0,.15);border-top:1px solid var(--border);flex-shrink:0;font-size:.67rem;color:var(--muted)}
+.ai-mbadge{background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.22);color:var(--violet);padding:2px 9px;border-radius:18px;font-family:'JetBrains Mono',monospace;font-size:.6rem;-webkit-text-fill-color:var(--violet)}
+
+.ai-inp-row{display:flex;gap:7px;padding:11px 15px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.ai-inp{flex:1;background:rgba(0,0,0,.32);border:1px solid var(--border2);
+  border-radius:9px;padding:10px 13px;color:var(--text);font-family:'Outfit',sans-serif;
+  font-size:.84rem;outline:none;transition:border-color .14s}
+.ai-inp:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
+.ai-send{background:linear-gradient(135deg,var(--primary),var(--accent));color:white;
+  border:none;border-radius:9px;width:41px;height:41px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .14s;
+  font-size:.9rem;flex-shrink:0;box-shadow:0 4px 14px rgba(124,58,237,.28)}
+.ai-send:hover{transform:scale(1.05);box-shadow:0 6px 20px rgba(124,58,237,.45)}
+
+/* ── PROFILE MODAL ── */
+.prof-hdr{background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(59,130,246,.1));border-bottom:1px solid var(--border);padding:26px;text-align:center}
+.prof-ava{width:78px;height:78px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.9rem;color:white;margin:0 auto 12px;box-shadow:0 0 38px var(--glow-p),inset 0 2px 0 rgba(255,255,255,.18);position:relative}
+.prof-ava::after{content:'';position:absolute;inset:-3px;border-radius:50%;border:2px solid rgba(124,58,237,.35);animation:orbP 3s ease-in-out infinite}
+.prof-name{font-size:1.55rem;font-weight:900;background:linear-gradient(90deg,#fff,var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.prof-id{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--cyan);margin-top:3px;-webkit-text-fill-color:var(--cyan)}
+.prof-badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:13px;justify-content:center}
+.pb{padding:3px 11px;border-radius:18px;font-size:.63rem;font-weight:700;letter-spacing:.4px}
+.prof-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:15px}
+.pf{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:9px;padding:11px}
+.pf-l{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;font-weight:700}
+.pf-v{font-size:.86rem;font-weight:600}
+
+/* Score ring */
+.score-ring-wrap{text-align:center;padding:18px;background:linear-gradient(135deg,rgba(124,58,237,.09),rgba(59,130,246,.05));border:1px solid var(--border2);border-radius:12px;margin-bottom:15px}
+.score-ring{width:96px;height:96px;margin:0 auto;position:relative}
+.score-ring svg{transform:rotate(-90deg)}
+.score-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:900;font-family:'Outfit',sans-serif;background:linear-gradient(90deg,var(--violet),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.score-lbl{font-size:.72rem;color:var(--muted);margin-top:7px;font-weight:600}
+
+/* Skill bars */
+.sk-row{display:flex;align-items:center;margin-bottom:9px}
+.sk-name{font-size:.76rem;width:108px;flex-shrink:0;font-weight:600}
+.sk-track{height:5px;background:rgba(255,255,255,.06);border-radius:3px;flex:1;margin:0 11px;overflow:hidden}
+.sk-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--primary),var(--cyan));transition:width 1.1s ease;box-shadow:0 0 8px rgba(124,58,237,.4)}
+.sk-pct{font-size:.72rem;color:var(--muted);width:33px;text-align:right;font-family:'JetBrains Mono',monospace}
+
+/* ── REPORTS ── */
+.rep-item{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:11px;margin-bottom:13px;overflow:hidden;transition:border-color .18s}
+.rep-item:hover{border-color:var(--border2)}
+.rep-top{display:flex;justify-content:space-between;align-items:center;padding:12px 17px;background:rgba(0,0,0,.22);border-bottom:1px solid var(--border)}
+.rep-num{font-family:'JetBrains Mono',monospace;color:var(--cyan);font-size:.86rem;-webkit-text-fill-color:var(--cyan)}
+.rep-body{padding:15px 17px}
+.prog-track{display:flex;gap:3px;margin-top:11px;height:4px;border-radius:2px;overflow:hidden}
+.ps{flex:1;background:rgba(255,255,255,.07);border-radius:2px}
+.ps.done{background:linear-gradient(90deg,var(--primary),var(--accent))}
+.ps.cur{background:var(--yellow);animation:psP 1.5s infinite}
+@keyframes psP{0%,100%{opacity:.5}50%{opacity:1}}
+
+/* Badges */
+.badge{padding:2px 8px;border-radius:4px;font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.b-new{background:rgba(52,211,153,.12);color:#34d399;border:1px solid rgba(52,211,153,.22)}
+.b-proc{background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.22)}
+.b-done{background:rgba(107,114,128,.12);color:var(--muted);border:1px solid rgba(107,114,128,.18)}
+.b-urg{background:rgba(248,113,113,.12);color:#f87171;border:1px solid rgba(248,113,113,.22)}
+
+/* ── ADMIN MODAL ── */
+.adm-box{max-width:1020px;max-height:94vh;border-color:rgba(124,58,237,.28)}
+.tabs{display:flex;gap:3px;padding:9px 13px;background:rgba(0,0,0,.3);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0}
+.tab{padding:7px 13px;border-radius:7px;background:transparent;border:1px solid transparent;color:var(--muted);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:.69rem;font-weight:700;transition:all .14s;white-space:nowrap}
+.tab:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.tab.on{background:rgba(124,58,237,.15);border-color:var(--primary);color:var(--violet)}
+.tp{display:none;flex:1;flex-direction:column;overflow:hidden}
+.tp.on{display:flex}
+
+/* Admin KPI */
+.adm-kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;padding:13px 15px;background:rgba(0,0,0,.22);border-bottom:1px solid var(--border);flex-shrink:0}
+.akpi{background:rgba(124,58,237,.06);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center}
+.akpi-v{font-size:1.4rem;font-weight:900;background:linear-gradient(90deg,var(--violet),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:'Outfit',sans-serif}
+.akpi-l{font-size:.6rem;color:var(--muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-top:2px}
+
+/* Table */
+.ctable{width:100%;border-collapse:collapse;font-size:.79rem}
+.ctable th{background:var(--surface2);color:var(--primary);padding:10px 13px;text-align:left;border-bottom:2px solid rgba(124,58,237,.22);font-size:.63rem;text-transform:uppercase;letter-spacing:1px;position:sticky;top:0;z-index:5}
+.ctable td{padding:9px 13px;border-bottom:1px solid var(--border);color:var(--text)}
+.ctable tr:hover td{background:rgba(124,58,237,.04)}
+.twrap{flex:1;overflow-y:auto}
+.srow{display:flex;align-items:center;gap:9px;padding:11px 15px;border-bottom:1px solid var(--border);background:rgba(0,0,0,.18);flex-shrink:0}
+.sf{flex:1;background:rgba(0,0,0,.3);border:1px solid var(--border2);border-radius:7px;padding:7px 11px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.77rem;outline:none}
+.sf:focus{border-color:var(--primary)}
+
+/* Analytics bars */
+.ab{margin-bottom:11px}
+.ab-lbl{display:flex;justify-content:space-between;margin-bottom:4px;font-size:.77rem}
+.ab-track{height:7px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+.ab-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--primary),var(--accent));transition:width 1.2s ease;width:0%}
+
+/* Log terminal */
+.log-t{flex:1;background:#030212;padding:14px;font-family:'JetBrains Mono',monospace;font-size:.71rem;overflow-y:auto;line-height:1.7}
+.ll{color:#7c3aed;margin-bottom:2px}
+.ll.g{color:#34d399}.ll.r{color:#f87171}.ll.y{color:#fbbf24}.ll.c{color:#67e8f9}
+
+/* ── FAKE CALL ── */
+#fake-call{display:none;position:fixed;inset:0;z-index:9999;background:#060010;color:white;flex-direction:column;align-items:center;justify-content:space-between;padding:55px 28px 50px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.ca{width:105px;height:105px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:2.8rem;box-shadow:0 4px 36px var(--glow-p)}
+.cn{font-size:2.1rem;font-weight:300;text-align:center}
+.cs{font-size:.88rem;color:rgba(255,255,255,.6);text-align:center;margin-top:3px}
+.cbtns{display:flex;width:100%;justify-content:space-around;align-items:center}
+.cbw{display:flex;flex-direction:column;align-items:center;gap:7px}
+.cc{width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.75rem;cursor:pointer;transition:transform .1s}
+.cc:active{transform:scale(.92)}
+.cdecline{background:#ff3b30}.caccept{background:#34c759}
+#call-active,#call-ended{display:none}
+.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:76%;margin-bottom:22px}
+.copt{display:flex;flex-direction:column;align-items:center;gap:4px}
+.copc{width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:1.25rem;backdrop-filter:blur(5px)}
+.copt span{font-size:.7rem}
+.chup{background:#ff3b30;width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;cursor:pointer;margin-top:14px;box-shadow:0 4px 18px rgba(255,59,48,.5)}
+
+/* ── WIKI ── */
+#wiki-layer{display:none;position:fixed;inset:0;z-index:99999;background:white}
+#wiki-layer iframe{width:100%;height:100%;border:none}
+#wiki-exit{position:absolute;bottom:0;right:0;width:48px;height:48px;z-index:1;cursor:pointer}
+
+/* ── RISK TEST ── */
+.rq{background:rgba(255,255,255,.03);border:1px solid var(--border2);border-radius:13px;padding:22px;min-height:88px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:.97rem;font-weight:500;margin-bottom:18px}
+.rbtn{width:100%;padding:13px;border:none;border-radius:9px;font-weight:700;cursor:pointer;font-size:.92rem;font-family:'Outfit',sans-serif;margin-bottom:9px;transition:all .14s}
+.rbtn:hover{transform:translateY(-2px)}
+.ryes{background:linear-gradient(135deg,var(--red),#dc2626);color:white;box-shadow:0 4px 18px rgba(248,113,113,.28)}
+.rno{background:linear-gradient(135deg,var(--green),#059669);color:white;box-shadow:0 4px 18px rgba(52,211,153,.28)}
+.rprog{height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-top:14px;overflow:hidden}
+.rpf{height:100%;background:linear-gradient(90deg,var(--primary),var(--cyan));border-radius:2px;transition:width .3s}
+
+/* ── VIDEOS ── */
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:16px}
+.vi{background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:11px;overflow:hidden;transition:all .18s}
+.vi:hover{transform:scale(1.02);border-color:var(--border2);box-shadow:0 8px 28px rgba(0,0,0,.4)}
+.vi iframe{width:100%;aspect-ratio:16/9;border:none;display:block}
+.vi-info{padding:11px}
+.vi-title{font-size:.86rem;font-weight:700;margin-bottom:3px}
+.vi-desc{font-size:.72rem;color:var(--muted)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1280px){.stats{grid-template-columns:repeat(3,1fr)}.widgets{grid-template-columns:1fr 1fr}.mid{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.mid{grid-template-columns:1fr}.bottom{grid-template-columns:1fr}}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);width:82%;box-shadow:20px 0 60px rgba(0,0,0,.9)}
+  .sidebar.open{transform:translateX(0)}
+  .so{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:290}
+  .so.open{display:block}
+  .main{margin-left:0;padding:14px}
+  .mob-btn{display:flex;align-items:center}
+  .widgets{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  .map-legend{display:none}
+  .ph{flex-wrap:wrap;gap:10px}
+}
+
+/* Glow on hover for key items */
+.glow-green{box-shadow:0 0 0 1px rgba(52,211,153,.2)}
+.glow-red{box-shadow:0 0 0 1px rgba(248,113,113,.2)}
+</style>
+{% endblock %}
+
+{% block content %}
+<form id="logout-form" action="{% url 'logout' %}" method="post" style="display:none">{% csrf_token %}<input type="hidden" name="next" value="/accounts/login/"></form>
+<div class="so" id="so" onclick="closeSB()"></div>
+
+<!-- FAKE CALL -->
+<div id="fake-call">
+  <div id="call-incoming" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between">
+    <div style="text-align:center;margin-top:30px"><div class="ca"><i class="fa-solid fa-user"></i></div><div class="cn">Mamá</div><div class="cs">móvil · iPhone</div></div>
+    <div class="cbtns" style="margin-bottom:28px">
+      <div class="cbw"><div class="cc cdecline" onclick="endCall()"><i class="fa-solid fa-phone-slash"></i></div><span style="font-size:.8rem">Rechazar</span></div>
+      <div class="cbw"><div class="cc caccept" onclick="answerCall()"><i class="fa-solid fa-phone"></i></div><span style="font-size:.8rem">Contestar</span></div>
+    </div>
+  </div>
+  <div id="call-active" style="width:100%;height:100%;flex-direction:column;align-items:center;justify-content:space-between">
+    <div style="text-align:center;margin-top:28px"><div class="ca" style="width:78px;height:78px;font-size:1.8rem"><i class="fa-solid fa-user"></i></div><div class="cn">Mamá</div><div class="cs" id="call-timer">00:00</div></div>
+    <div style="display:flex;flex-direction:column;align-items:center;width:100%;margin-bottom:28px">
+      <div class="cgrid">
+        <div class="copt"><div class="copc"><i class="fa-solid fa-microphone-slash"></i></div><span>Silenciar</span></div>
+        <div class="copt"><div class="copc"><i class="fa-solid fa-table-cells"></i></div><span>Teclado</span></div>
+        <div class="copt"><div class="copc" style="background:rgba(255,255,255,.32)"><i class="fa-solid fa-volume-high"></i></div><span>Altavoz</span></div>
+        <div class="copt"><div class="copc"><i class="fa-solid fa-plus"></i></div><span>Añadir</span></div>
+        <div class="copt"><div class="copc"><i class="fa-solid fa-video"></i></div><span>FaceTime</span></div>
+        <div class="copt"><div class="copc"><i class="fa-solid fa-user"></i></div><span>Contactos</span></div>
+      </div>
+      <div class="chup" onclick="endCall()"><i class="fa-solid fa-phone-slash"></i></div>
+    </div>
+  </div>
+  <div id="call-ended" style="width:100%;height:100%;flex-direction:column;align-items:center;justify-content:center">
+    <div style="text-align:center"><div class="ca" style="filter:grayscale(1);opacity:.4"><i class="fa-solid fa-user"></i></div><div class="cn" style="color:rgba(255,255,255,.4)">Mamá</div><div class="cs">Llamada finalizada</div></div>
+  </div>
+</div>
+
+<!-- WIKI CAMOUFLAGE -->
+<div id="wiki-layer"><iframe src="https://es.m.wikipedia.org/wiki/Mecánica_cuántica"></iframe><div id="wiki-exit" onclick="exitWiki()"></div></div>
+
+<div class="app">
+  <!-- ═══════════════ SIDEBAR ═══════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+      <div>
+        <div class="logo-text">Portal Seguro</div>
+        <span class="logo-ver">SENTINEL v9.0</span>
+      </div>
+    </div>
+
+    <div class="nav-sec">Principal</div>
+    <div class="nav-item active"><span class="ni"><i class="fa-solid fa-house-chimney"></i></span>Dashboard</div>
+    <div class="nav-item" onclick="openProfile()"><span class="ni"><i class="fa-solid fa-id-card-clip"></i></span>Mi Perfil Táctico</div>
+    <div class="nav-item" onclick="openReports()">
+      <span class="ni"><i class="fa-solid fa-folder-open"></i></span>Mis Reportes
+      {% if mis_reportes %}<span class="nav-badge">{{ mis_reportes.count }}</span>{% endif %}
+    </div>
+
+    <div class="nav-sec">Herramientas</div>
+    <a href="{% url 'projects:reporte-create' %}" class="nav-item"><span class="ni"><i class="fa-solid fa-file-circle-plus"></i></span>Nuevo Reporte</a>
+    <div class="nav-item" onclick="openAI()"><span class="ni"><i class="fa-solid fa-robot"></i></span>Sentinel AI</div>
+    <div class="nav-item" onclick="openVideos()"><span class="ni"><i class="fa-brands fa-youtube"></i></span>Videoteca</div>
+    <a href="{% url 'projects:tip-list' %}" class="nav-item"><span class="ni"><i class="fa-solid fa-lightbulb"></i></span>Tips de Seguridad</a>
+    <a href="{% url 'projects:institucion-list' %}" class="nav-item"><span class="ni"><i class="fa-solid fa-building-ngo"></i></span>Instituciones</a>
+    <div class="nav-item" onclick="openRisk()"><span class="ni"><i class="fa-solid fa-clipboard-question"></i></span>Test de Riesgo</div>
+    <div class="nav-item" onclick="initRecord()"><span class="ni"><i class="fa-solid fa-microphone"></i></span><span id="sb-rec-txt">Grabar Evidencia</span></div>
+    <div class="nav-item" onclick="shareLocation()"><span class="ni"><i class="fa-solid fa-location-arrow"></i></span>Enviar Ubicación</div>
+    <div class="nav-item" onclick="camouflage()"><span class="ni"><i class="fa-solid fa-eye-slash"></i></span>Modo Camuflaje</div>
+
+    {% if user.is_superuser or user.username == 'recemilian79' %}
+    <div class="nav-sec">Administración</div>
+    <div class="nav-item" onclick="openAdmin()" style="color:var(--violet);border-color:rgba(124,58,237,.18)"><span class="ni"><i class="fa-solid fa-terminal"></i></span>Panel Master</div>
+    {% endif %}
+
+    <div class="sb-footer">
+      <div class="sidebar-user" style="margin-bottom:9px">
+        <div class="su-ava"><i class="fa-solid fa-user-shield"></i></div>
+        <div>
+          <div class="su-name">{{ user.username|title }}</div>
+          <div class="su-role"><span class="sdot"></span>CLASE CIVIL_V2</div>
+        </div>
+      </div>
+      <div class="nav-item nav-sos" onclick="sosReal()"><span class="ni"><i class="fa-solid fa-tower-broadcast"></i></span>🚨 SOS EMERGENCIA</div>
+      {% if user.is_authenticated %}
+      <div class="nav-item" onclick="doLogout()" style="margin-top:5px"><span class="ni"><i class="fa-solid fa-right-from-bracket"></i></span>Desconectar</div>
+      {% endif %}
+    </div>
+  </aside>
+
+  <!-- ═══════════════ MAIN ═══════════════ -->
+  <main class="main">
+
+    <!-- PAGE HEADER -->
+    <div class="ph">
+      <div style="display:flex;align-items:center;gap:13px">
+        <button class="mob-btn" onclick="toggleSB()"><i class="fa-solid fa-bars"></i></button>
+        <div>
+          <div class="ph-title">Bienvenido, {{ user.username|title }}</div>
+          <div class="ph-sub"><span class="sdot"></span>CONEXIÓN SEGURA &bull; CDMX-METRO &bull; AES-256</div>
+        </div>
+      </div>
+      <div class="ph-right">
+        <div class="hpill notif-wrap" onclick="openNotifs()">
+          <i class="fa-solid fa-bell" style="color:var(--violet)"></i>
+          <div class="notif-dot">3</div>
+        </div>
+        <div class="hpill" style="cursor:default">
+          <i class="fa-solid fa-shield-check" style="color:var(--green)"></i>
+          <span style="font-size:.7rem;font-weight:700">SEGURO</span>
+        </div>
+        <div class="hpill clock-p" id="clock">00:00:00</div>
+      </div>
+    </div>
+
+    <!-- ALERT BANNER -->
+    <div id="alert-banner" style="background:linear-gradient(90deg,rgba(251,191,36,.09),rgba(251,191,36,.04));border:1px solid rgba(251,191,36,.22);border-radius:11px;padding:11px 17px;margin-bottom:20px;display:flex;align-items:center;gap:11px;font-size:.8rem">
+      <i class="fa-solid fa-triangle-exclamation" style="color:var(--yellow);font-size:1rem;flex-shrink:0"></i>
+      <div><strong style="color:var(--yellow)">Sistema activo:</strong> Sentinel v9.0 con IA Claude mejorada. Tu privacidad está protegida con cifrado de extremo a extremo.</div>
+      <i class="fa-solid fa-xmark" style="margin-left:auto;cursor:pointer;color:var(--muted);flex-shrink:0" onclick="document.getElementById('alert-banner').style.display='none'"></i>
+    </div>
+
+    <!-- ── STATS ── -->
+    <div class="stats">
+      <div class="sc">
+        <div class="sc-glow" style="background:var(--primary)"></div>
+        <div class="sc-icon" style="color:var(--violet)"><i class="fa-solid fa-folder-open"></i></div>
+        <div class="sc-val">{{ mis_reportes.count|default:"0" }}</div>
+        <div class="sc-lbl">Mis Reportes</div>
+        <div class="sc-trend up"><i class="fa-solid fa-arrow-trend-up"></i> En seguimiento</div>
+      </div>
+      <div class="sc">
+        <div class="sc-glow" style="background:var(--accent)"></div>
+        <div class="sc-icon" style="color:var(--cyan)"><i class="fa-solid fa-map-marker-alt"></i></div>
+        <div class="sc-val">{% if instituciones_count %}{{ instituciones_count }}{% else %}23{% endif %}</div>
+        <div class="sc-lbl">Instituciones</div>
+        <div class="sc-trend up"><i class="fa-solid fa-location-dot"></i> CDMX activas</div>
+      </div>
+      <div class="sc">
+        <div class="sc-glow" style="background:var(--green)"></div>
+        <div class="sc-icon" style="color:var(--green)"><i class="fa-solid fa-shield-halved"></i></div>
+        <div class="sc-val">Alta</div>
+        <div class="sc-lbl">Protección Digital</div>
+        <div class="sc-trend up"><i class="fa-solid fa-check-circle"></i> Sin amenazas</div>
+      </div>
+      <div class="sc">
+        <div class="sc-glow" style="background:var(--pink)"></div>
+        <div class="sc-icon" style="color:var(--pink)"><i class="fa-solid fa-users"></i></div>
+        <div class="sc-val">{% if total_usuarios %}{{ total_usuarios }}{% else %}—{% endif %}</div>
+        <div class="sc-lbl">Usuarias</div>
+        <div class="sc-trend up"><i class="fa-solid fa-star"></i> Protegidas</div>
+      </div>
+      <div class="sc">
+        <div class="sc-glow" style="background:var(--yellow)"></div>
+        <div class="sc-icon" style="color:var(--yellow)"><i class="fa-solid fa-robot"></i></div>
+        <div class="sc-val" style="font-size:1.1rem">Online</div>
+        <div class="sc-lbl">Sentinel AI</div>
+        <div class="sc-trend" style="color:var(--cyan)"><i class="fa-solid fa-bolt"></i> Claude Activo</div>
+      </div>
+    </div>
+
+    <!-- ── WIDGETS ── -->
+    <div class="widgets">
+
+      <!-- ACOSÓMETRO -->
+      <div class="card">
+        <div class="ct" style="color:var(--yellow)"><i class="fa-solid fa-gauge-high"></i>Acosómetro Neural v3.0</div>
+        <p style="font-size:.73rem;color:var(--muted);margin-bottom:12px">Desliza para identificar el nivel de violencia (1–10)</p>
+        <div class="meter-track" id="mt" onmousemove="mv(event)" ontouchmove="mv(event)" onmouseleave="mr()" ontouchend="mr()">
+          <div class="meter-needle" id="mn"></div>
+          <div class="meter-lnum" id="mln">—</div>
+        </div>
+        <div class="meter-lbls"><span class="meter-lbl">BAJO</span><span class="meter-lbl">MODERADO</span><span class="meter-lbl">ALTO</span><span class="meter-lbl">CRÍTICO</span></div>
+        <div class="meter-out" id="mo"><i class="fa-solid fa-hand-pointer" style="color:var(--muted)"></i><span>DESLIZA PARA EVALUAR</span></div>
+        <div style="display:flex;gap:7px;margin-top:10px">
+          <button onclick="openAI()" style="flex:1;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.22);color:var(--violet);padding:7px;border-radius:7px;cursor:pointer;font-size:.7rem;font-weight:700"><i class="fa-solid fa-robot"></i> Consultar IA</button>
+          <button onclick="window.location.href='{% url 'projects:reporte-create' %}'" style="flex:1;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.22);color:var(--cyan);padding:7px;border-radius:7px;cursor:pointer;font-size:.7rem;font-weight:700"><i class="fa-solid fa-file-pen"></i> Reportar</button>
+        </div>
+      </div>
+
+      <!-- TOOLS -->
+      <div class="card">
+        <div class="ct" style="color:var(--cyan)"><i class="fa-solid fa-bolt"></i>Herramientas de Campo</div>
+        <div class="tgrid">
+          <div class="tbtn" onclick="triggerCall()"><i class="fa-solid fa-mobile-screen-button" style="color:white"></i>Llamada Falsa</div>
+          <div class="tbtn" id="rec-btn" onclick="initRecord()"><i class="fa-solid fa-microphone" style="color:var(--yellow)"></i><span id="rec-txt">Grabar Audio</span></div>
+          <div class="tbtn" onclick="openRisk()"><i class="fa-solid fa-clipboard-question" style="color:var(--violet)"></i>Test de Riesgo</div>
+          <div class="tbtn" onclick="openReports()"><i class="fa-solid fa-list-check" style="color:var(--green)"></i>Estado Caso</div>
+          <div class="tbtn" onclick="sosReal()"><i class="fa-solid fa-tower-broadcast" style="color:var(--red)"></i>SOS Rápido</div>
+          <div class="tbtn" onclick="shareLocation()"><i class="fa-solid fa-location-arrow" style="color:var(--cyan)"></i>Enviar Ubicación</div>
+        </div>
+      </div>
+
+      <!-- AI CARD -->
+      <div class="card ai-card" onclick="openAI()">
+        <div class="ai-orb"><i class="fa-solid fa-robot"></i></div>
+        <div class="ai-name">SENTINEL AI</div>
+        <div class="ai-sub">v6.5 &bull; POWERED BY CLAUDE</div>
+        <div class="ai-live"><span class="sdot"></span>RED NEURONAL ACTIVA</div>
+        <div class="ai-caps">
+          <span class="ai-cap">LEGAL</span>
+          <span class="ai-cap">PSICOLÓGICO</span>
+          <span class="ai-cap">CIBERSEG.</span>
+          <span class="ai-cap">SOS</span>
+          <span class="ai-cap">PLANES</span>
+          <span class="ai-cap">DENUNCIA</span>
+          <span class="ai-cap">VICARIA</span>
+          <span class="ai-cap">RED APOYO</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MID ROW ── -->
+    <div class="mid">
+
+      <!-- PLAN DE EMERGENCIA -->
+      <div class="card">
+        <div class="ct" style="color:var(--red)"><i class="fa-solid fa-person-running"></i>Plan de Emergencia</div>
+        <div class="plan-item"><div class="plan-n">1</div><div class="plan-t">Activa SOS y comparte tu ubicación con un contacto de confianza inmediatamente</div></div>
+        <div class="plan-item"><div class="plan-n">2</div><div class="plan-t">Llama al <strong>911</strong> o Línea Mujeres CDMX <strong>(55) 5658-1111</strong></div></div>
+        <div class="plan-item"><div class="plan-n">3</div><div class="plan-t">Dirígete a la LUNA o Centro de Justicia para Mujeres más cercana</div></div>
+        <div class="plan-item"><div class="plan-n">4</div><div class="plan-t">Activa <em>Modo Camuflaje</em> si necesitas ocultar esta aplicación rápidamente</div></div>
+        <div class="plan-item"><div class="plan-n">5</div><div class="plan-t">Consulta a Sentinel AI para orientación legal y emocional inmediata</div></div>
+        <button onclick="openAI();aiQ('plan')" style="margin-top:12px;width:100%;background:linear-gradient(90deg,rgba(248,113,113,.14),rgba(239,68,68,.07));border:1px solid rgba(248,113,113,.28);color:#fca5a5;padding:9px;border-radius:8px;cursor:pointer;font-size:.76rem;font-weight:700"><i class="fa-solid fa-map-signs"></i> Crear mi Plan Personalizado con IA</button>
+      </div>
+
+      <!-- ACTIVIDAD RECIENTE -->
+      <div class="card">
+        <div class="ct" style="color:var(--violet)"><i class="fa-solid fa-clock-rotate-left"></i>Actividad Reciente</div>
+        <div class="tl">
+          {% if mis_reportes %}
+          {% for r in mis_reportes|slice:":3" %}
+          <div class="tl-item">
+            <div class="tl-dot" style="background:rgba(124,58,237,.15);border:2px solid var(--primary)"><i class="fa-solid fa-folder" style="font-size:.5rem;color:var(--violet)"></i></div>
+            <div>
+              <div class="tl-title">Reporte #{{ r.id|stringformat:"04d" }} — {{ r.tipo_acoso.nombre|default:"Sin tipo" }}</div>
+              <div class="tl-time">{{ r.creado_en|date:"d M Y · H:i" }} &bull;
+                {% if r.status == 'nuevo' %}<span style="color:var(--green)">Nuevo</span>
+                {% elif r.status == 'proceso' %}<span style="color:var(--yellow)">En proceso</span>
+                {% elif r.status == 'cerrado' %}<span style="color:var(--muted)">Cerrado</span>
+                {% else %}<span style="color:var(--red)">{{ r.status }}</span>{% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+          {% else %}
+          <div class="tl-item">
+            <div class="tl-dot" style="background:rgba(103,232,249,.12);border:2px solid var(--cyan)"><i class="fa-solid fa-info" style="font-size:.5rem;color:var(--cyan)"></i></div>
+            <div><div class="tl-title">Sin reportes activos aún</div><div class="tl-time">Puedes crear uno nuevo ahora mismo</div></div>
+          </div>
+          {% endif %}
+          <div class="tl-item">
+            <div class="tl-dot" style="background:rgba(52,211,153,.12);border:2px solid var(--green)"><i class="fa-solid fa-check" style="font-size:.5rem;color:var(--green)"></i></div>
+            <div><div class="tl-title">Sesión iniciada exitosamente</div><div class="tl-time">Hoy &bull; IP encriptada &bull; CDMX</div></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot" style="background:rgba(251,191,36,.12);border:2px solid var(--yellow)"><i class="fa-solid fa-star" style="font-size:.5rem;color:var(--yellow)"></i></div>
+            <div><div class="tl-title">Mapa actualizado — {% if instituciones_count %}{{ instituciones_count }}{% else %}23{% endif %} instituciones</div><div class="tl-time">Sincronización automática activa</div></div>
+          </div>
+        </div>
+        <a href="{% url 'projects:reporte-create' %}" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;background:linear-gradient(90deg,rgba(124,58,237,.14),rgba(59,130,246,.08));border:1px solid rgba(124,58,237,.25);color:var(--violet);padding:9px;border-radius:8px;font-size:.76rem;font-weight:700;text-decoration:none"><i class="fa-solid fa-plus"></i> Nuevo Reporte</a>
+      </div>
+
+      <!-- RECURSOS DE EMERGENCIA -->
+      <div class="card">
+        <div class="ct" style="color:var(--green)"><i class="fa-solid fa-phone-flip"></i>Líneas de Emergencia</div>
+        <a href="tel:911" class="res-item">
+          <div class="res-ico" style="background:rgba(248,113,113,.12);color:var(--red)"><i class="fa-solid fa-phone-volume"></i></div>
+          <div><div class="res-title">911 — Emergencias</div><div class="res-sub">Línea de emergencias nacional 24/7</div></div>
+          <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--muted);font-size:.72rem"></i>
+        </a>
+        <a href="tel:5556581111" class="res-item">
+          <div class="res-ico" style="background:rgba(244,114,182,.12);color:var(--pink)"><i class="fa-solid fa-venus"></i></div>
+          <div><div class="res-title">Línea Mujeres CDMX</div><div class="res-sub">55 5658-1111 &bull; 24/7 gratuita</div></div>
+          <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--muted);font-size:.72rem"></i>
+        </a>
+        <a href="tel:8009008000" class="res-item">
+          <div class="res-ico" style="background:rgba(124,58,237,.12);color:var(--violet)"><i class="fa-solid fa-building-ngo"></i></div>
+          <div><div class="res-title">CONAVIM Nacional</div><div class="res-sub">800 900-8000 &bull; Sin costo</div></div>
+          <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--muted);font-size:.72rem"></i>
+        </a>
+        <a href="tel:5555335533" class="res-item">
+          <div class="res-ico" style="background:rgba(52,211,153,.12);color:var(--green)"><i class="fa-solid fa-house-heart"></i></div>
+          <div><div class="res-title">Red Nacional de Refugios</div><div class="res-sub">55 5533-5533 &bull; Confidencial</div></div>
+          <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--muted);font-size:.72rem"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- ── TIPS SECTION ── -->
+    {% if tips %}
+    <div class="card" style="margin-bottom:22px">
+      <div class="ct" style="color:var(--yellow)"><i class="fa-solid fa-lightbulb"></i>Tips de Seguridad — De nuestra plataforma</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:11px">
+        {% for tip in tips|slice:":6" %}
+        <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:9px;padding:13px;transition:all .18s;cursor:pointer" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:.7rem;color:var(--yellow);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px"><i class="fa-solid fa-lightbulb"></i> Tip</div>
+          <div style="font-size:.82rem;font-weight:600;margin-bottom:4px">{{ tip.titulo|default:tip.title|default:"Consejo de seguridad" }}</div>
+          <div style="font-size:.76rem;color:var(--muted);line-height:1.5">{{ tip.descripcion|default:tip.description|default:""|truncatewords:14 }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      <a href="{% url 'projects:tip-list' %}" style="display:inline-flex;align-items:center;gap:5px;margin-top:12px;font-size:.76rem;color:var(--violet);font-weight:700;text-decoration:none"><i class="fa-solid fa-arrow-right"></i> Ver todos los tips</a>
+    </div>
+    {% endif %}
+
+    <!-- ── MAP ── -->
+    <div class="map-section">
+      <div class="map-hdr">
+        <div style="font-family:'Outfit',sans-serif;font-size:1.03rem;font-weight:700;display:flex;align-items:center;gap:7px"><i class="fa-solid fa-map-location-dot" style="color:var(--primary)"></i>Red de Seguridad CDMX — En Vivo</div>
+        <a href="{% url 'projects:institucion-list' %}" style="display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border2);color:var(--violet);padding:7px 13px;border-radius:8px;font-size:.73rem;font-weight:700;text-decoration:none;transition:all .16s" onmouseover="this.style.borderColor='var(--border3)'" onmouseout="this.style.borderColor='var(--border2)'"><i class="fa-solid fa-list"></i> Ver lista completa</a>
+      </div>
+      <div class="map-wrap">
+        <!-- HUD TOP -->
+        <div class="map-hud">
+          <!-- DROPDOWN MENU -->
+          <div class="map-menu-wrap">
+            <div class="map-menu-btn" id="mapMenuBtn" onclick="toggleMapMenu()">
+              <i class="fa-solid fa-layer-group" style="color:var(--violet)"></i>
+              Capas del Mapa
+              <i class="fa-solid fa-chevron-down arr"></i>
+            </div>
+            <div class="map-dropdown" id="mapDropdown">
+              <div class="map-dd-head">Filtrar por tipo de institución</div>
+              <div class="map-dd-all" onclick="filterMap('all');closeMapMenu()">
+                <i class="fa-solid fa-globe" style="color:var(--violet)"></i>
+                <span>Mostrar Todo</span>
+                <span class="map-dd-count">23</span>
+              </div>
+              <div class="map-dd-item" onclick="filterMap('justice');closeMapMenu()">
+                <span class="map-dd-dot" style="color:#ef4444;background:#ef4444"></span>
+                <div><div class="map-dd-name">Fiscalías & MP</div><div style="font-size:.66rem;color:var(--muted)">Ministerios Públicos y CJM</div></div>
+                <span class="map-dd-count">8</span>
+              </div>
+              <div class="map-dd-item" onclick="filterMap('luna');closeMapMenu()">
+                <span class="map-dd-dot" style="color:#a855f7;background:#a855f7"></span>
+                <div><div class="map-dd-name">Unidades LUNA</div><div style="font-size:.66rem;color:var(--muted)">Centros especializados en VG</div></div>
+                <span class="map-dd-count">7</span>
+              </div>
+              <div class="map-dd-item" onclick="filterMap('health');closeMapMenu()">
+                <span class="map-dd-dot" style="color:#10b981;background:#10b981"></span>
+                <div><div class="map-dd-name">Hospitales</div><div style="font-size:.66rem;color:var(--muted)">Atención médica especializada</div></div>
+                <span class="map-dd-count">4</span>
+              </div>
+              <div class="map-dd-item" onclick="filterMap('ong');closeMapMenu()">
+                <span class="map-dd-dot" style="color:#f59e0b;background:#f59e0b"></span>
+                <div><div class="map-dd-name">ONGs & Refugios</div><div style="font-size:.66rem;color:var(--muted)">Organizaciones de apoyo civil</div></div>
+                <span class="map-dd-count">4</span>
+              </div>
+              <div style="padding:8px 14px;border-top:1px solid var(--border)">
+                <div style="font-size:.64rem;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:7px">Acciones</div>
+                <div style="display:flex;gap:6px">
+                  <button onclick="locateUser();closeMapMenu()" style="flex:1;background:rgba(103,232,249,.08);border:1px solid rgba(103,232,249,.2);color:var(--cyan);padding:6px;border-radius:6px;cursor:pointer;font-size:.68rem;font-weight:700"><i class="fa-solid fa-crosshairs"></i> Mi ubicación</button>
+                  <button onclick="window.open('{% url 'projects:institucion-list' %}','_blank');closeMapMenu()" style="flex:1;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);color:var(--violet);padding:6px;border-radius:6px;cursor:pointer;font-size:.68rem;font-weight:700"><i class="fa-solid fa-list"></i> Lista completa</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- LEGEND RIGHT -->
+          <div class="map-legend">
+            <span><span class="leg-dot" style="color:#ef4444;background:#ef4444"></span>Fiscalía</span>
+            <span><span class="leg-dot" style="color:#a855f7;background:#a855f7"></span>LUNAs</span>
+            <span><span class="leg-dot" style="color:#10b981;background:#10b981"></span>Salud</span>
+            <span><span class="leg-dot" style="color:#f59e0b;background:#f59e0b"></span>ONG</span>
+          </div>
+        </div>
+
+        <!-- CHIPS -->
+        <div class="map-stats-bar">
+          <div class="map-chip on" onclick="filterChip('all',this)"><i class="fa-solid fa-layer-group" style="color:var(--violet)"></i>Todas: 23</div>
+          <div class="map-chip" onclick="filterChip('justice',this)" style="color:#ef4444"><span class="leg-dot" style="color:#ef4444;background:#ef4444"></span>8 Fiscalías</div>
+          <div class="map-chip" onclick="filterChip('luna',this)" style="color:#a855f7"><span class="leg-dot" style="color:#a855f7;background:#a855f7"></span>7 LUNAs</div>
+          <div class="map-chip" onclick="filterChip('health',this)" style="color:#10b981"><span class="leg-dot" style="color:#10b981;background:#10b981"></span>4 Salud</div>
+          <div class="map-chip" onclick="filterChip('ong',this)" style="color:#f59e0b"><span class="leg-dot" style="color:#f59e0b;background:#f59e0b"></span>4 ONGs</div>
+        </div>
+
+        <!-- FILTER BAR (bottom) -->
+        <div class="map-filter-bar">
+          <div class="mfb on" onclick="filterMap('all',this)">Todo</div>
+          <div class="mfb" onclick="filterMap('justice',this)">Fiscalía</div>
+          <div class="mfb" onclick="filterMap('luna',this)">LUNAs</div>
+          <div class="mfb" onclick="filterMap('health',this)">Salud</div>
+          <div class="mfb" onclick="filterMap('ong',this)">ONG</div>
+        </div>
+
+        <!-- MAP CONTROLS -->
+        <div class="map-ctrl">
+          <div class="mctrl" onclick="locateUser()" title="Mi ubicación"><i class="fa-solid fa-crosshairs"></i></div>
+          <div class="mctrl" onclick="mapObj&&mapObj.setView([19.4326,-99.1332],12)" title="Centrar CDMX"><i class="fa-solid fa-compress"></i></div>
+          <div class="mctrl" onclick="mapObj&&mapObj.zoomIn()" title="Acercar"><i class="fa-solid fa-plus"></i></div>
+          <div class="mctrl" onclick="mapObj&&mapObj.zoomOut()" title="Alejar"><i class="fa-solid fa-minus"></i></div>
+        </div>
+
+        <div id="map" style="height:100%;width:100%"></div>
+      </div>
+    </div>
+
+    <!-- ── DERECHOS ── -->
+    <div class="card" style="margin-bottom:22px">
+      <div class="ct" style="color:var(--cyan)"><i class="fa-solid fa-scale-balanced"></i>Tus Derechos Fundamentales</div>
+      <div class="rights-grid">
+        <div class="right-card">
+          <div class="right-tag" style="color:var(--violet)"><i class="fa-solid fa-gavel"></i>Derecho a Denunciar</div>
+          <div class="right-txt">Tienes derecho a presentar una denuncia en cualquier Ministerio Público sin costo alguno. La denuncia no te pone en peligro adicional y es confidencial.</div>
+        </div>
+        <div class="right-card">
+          <div class="right-tag" style="color:var(--cyan)"><i class="fa-solid fa-home"></i>Acceso a Refugio</div>
+          <div class="right-txt">Tienes derecho a ingresar a un refugio seguro con tus hijos e hijas sin necesidad de presentar documentos de identidad.</div>
+        </div>
+        <div class="right-card">
+          <div class="right-tag" style="color:var(--green)"><i class="fa-solid fa-stethoscope"></i>Atención Médica Gratuita</div>
+          <div class="right-txt">Cualquier hospital público está obligado a brindarte atención médica y psicológica gratuita si sufriste violencia.</div>
+        </div>
+        <div class="right-card">
+          <div class="right-tag" style="color:var(--pink)"><i class="fa-solid fa-child"></i>Protección de Hijos</div>
+          <div class="right-txt">Tienes derecho a medidas de protección para tus hijos en situaciones de violencia familiar, incluyendo custodia temporal de emergencia.</div>
+        </div>
+      </div>
+      <button onclick="openAI();aiQ('legal')" style="margin-top:13px;width:100%;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.22);color:var(--violet);padding:10px;border-radius:9px;cursor:pointer;font-size:.78rem;font-weight:700"><i class="fa-solid fa-robot"></i> Pregúntale a Sentinel AI sobre tu situación legal</button>
+    </div>
+
+    <!-- ── BOTTOM ── -->
+    <div class="bottom">
+
+      <!-- SISTEMA STATUS -->
+      <div class="card">
+        <div class="ct" style="color:var(--violet)"><i class="fa-solid fa-microchip"></i>Estado del Sistema</div>
+        <div class="sys-row" style="background:rgba(52,211,153,.05);border-color:rgba(52,211,153,.15)">
+          <span style="font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-circle sys-dot" style="color:var(--green)"></i>Motor IA Claude</span>
+          <span style="font-size:.69rem;color:var(--green);font-family:'JetBrains Mono',monospace">ACTIVO</span>
+        </div>
+        <div class="sys-row" style="background:rgba(103,232,249,.05);border-color:rgba(103,232,249,.15)">
+          <span style="font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-circle sys-dot" style="color:var(--cyan)"></i>Encriptación E2E</span>
+          <span style="font-size:.69rem;color:var(--cyan);font-family:'JetBrains Mono',monospace">AES-256</span>
+        </div>
+        <div class="sys-row" style="background:rgba(124,58,237,.05);border-color:rgba(124,58,237,.15)">
+          <span style="font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-circle sys-dot" style="color:var(--violet)"></i>Base de Datos</span>
+          <span style="font-size:.69rem;color:var(--violet);font-family:'JetBrains Mono',monospace">CONECTADA</span>
+        </div>
+        <div class="sys-row" style="background:rgba(251,191,36,.05);border-color:rgba(251,191,36,.15)">
+          <span style="font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-circle sys-dot" style="color:var(--yellow)"></i>Mapa en Tiempo Real</span>
+          <span style="font-size:.69rem;color:var(--yellow);font-family:'JetBrains Mono',monospace">LIVE</span>
+        </div>
+        <div class="sys-row" style="background:rgba(248,113,113,.05);border-color:rgba(248,113,113,.15)">
+          <span style="font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-circle sys-dot" style="color:var(--red)"></i>SOS Emergencia</span>
+          <span style="font-size:.69rem;color:var(--red);font-family:'JetBrains Mono',monospace">LISTO</span>
+        </div>
+        <div style="margin-top:11px;font-size:.68rem;color:var(--muted);text-align:center;font-family:'JetBrains Mono',monospace;background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:7px;padding:8px">
+          UPTIME: 99.97% &bull; PING: <span id="ping">12ms</span> &bull; VER: 9.0.2
+        </div>
+      </div>
+
+      <!-- INSTITUCIONES DESTAC. -->
+      <div class="card">
+        <div class="ct" style="color:var(--cyan)"><i class="fa-solid fa-building-ngo"></i>Instituciones Destacadas</div>
+        {% if instituciones %}
+          {% for inst in instituciones|slice:":5" %}
+          <div class="res-item" onclick="window.location.href='{% url 'projects:institucion-list' %}'">
+            <div class="res-ico" style="background:rgba(124,58,237,.1);color:var(--violet)"><i class="fa-solid fa-building"></i></div>
+            <div>
+              <div class="res-title">{{ inst.nombre }}</div>
+              <div class="res-sub">{{ inst.tipo|default:"Institución" }} &bull; {{ inst.delegacion|default:inst.colonia|default:"CDMX" }}</div>
+            </div>
+            <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--muted);font-size:.72rem"></i>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="res-item" onclick="window.location.href='{% url 'projects:institucion-list' %}'">
+            <div class="res-ico" style="background:rgba(248,113,113,.1);color:var(--red)"><i class="fa-solid fa-landmark"></i></div>
+            <div><div class="res-title">Fiscalía General CDMX (Bunker)</div><div class="res-sub">Fiscalía &bull; Cuauhtémoc</div></div>
+            <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--muted);font-size:.72rem"></i>
+          </div>
+          <div class="res-item" onclick="window.location.href='{% url 'projects:institucion-list' %}'">
+            <div class="res-ico" style="background:rgba(168,85,247,.1);color:#a855f7"><i class="fa-solid fa-moon"></i></div>
+            <div><div class="res-title">LUNA Benito Juárez</div><div class="res-sub">LUNA &bull; Benito Juárez</div></div>
+            <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--muted);font-size:.72rem"></i>
+          </div>
+          <div class="res-item" onclick="window.location.href='{% url 'projects:institucion-list' %}'">
+            <div class="res-ico" style="background:rgba(52,211,153,.1);color:var(--green)"><i class="fa-solid fa-hospital"></i></div>
+            <div><div class="res-title">Hospital de la Mujer</div><div class="res-sub">Salud &bull; Cuauhtémoc</div></div>
+            <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--muted);font-size:.72rem"></i>
+          </div>
+          <div class="res-item" onclick="window.location.href='{% url 'projects:institucion-list' %}'">
+            <div class="res-ico" style="background:rgba(251,191,36,.1);color:var(--yellow)"><i class="fa-solid fa-people-group"></i></div>
+            <div><div class="res-title">Red Nacional de Refugios</div><div class="res-sub">ONG &bull; CDMX</div></div>
+            <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--muted);font-size:.72rem"></i>
+          </div>
+        {% endif %}
+        <a href="{% url 'projects:institucion-list' %}" style="display:flex;align-items:center;justify-content:center;gap:5px;margin-top:10px;font-size:.75rem;color:var(--violet);font-weight:700;text-decoration:none"><i class="fa-solid fa-arrow-right"></i> Ver todas las instituciones</a>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══════════════════════════════════════
+     MODALS
+══════════════════════════════════════ -->
+
+<!-- ── AI CHAT MODAL ── -->
+<div class="ov" id="ov-ai">
+  <div class="mbox ai-mbox">
+    <div class="mhead ai-mhead">
+      <div style="display:flex;align-items:center;gap:11px">
+        <div style="width:35px;height:35px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:.95rem;box-shadow:0 0 14px rgba(255,255,255,.18)"><i class="fa-solid fa-robot"></i></div>
+        <div>
+          <div style="font-size:.92rem;font-weight:800;color:white">SENTINEL AI v6.5</div>
+          <div style="font-size:.6rem;color:rgba(255,255,255,.58);font-family:'JetBrains Mono',monospace"><span class="sdot" style="background:var(--green)"></span>EN LÍNEA &bull; powered by Claude &bull; Conversación cifrada</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button id="ai-voice-btn" onclick="toggleVoice()" title="Modo voz" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:white;width:29px;height:29px;border-radius:7px;cursor:pointer;font-size:.78rem;display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-microphone"></i></button>
+        <button onclick="clearChat()" title="Limpiar chat" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:white;width:29px;height:29px;border-radius:7px;cursor:pointer;font-size:.76rem;display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-trash"></i></button>
+        <button class="mclose" onclick="closeModal('ov-ai')" style="color:white;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18)">&times;</button>
+      </div>
+    </div>
+
+    <!-- Context tags -->
+    <div class="ai-ctx">
+      <div class="ctx-t on" onclick="setCtx('general',this)">General</div>
+      <div class="ctx-t" onclick="setCtx('crisis',this)">Crisis Activa</div>
+      <div class="ctx-t" onclick="setCtx('legal',this)">Marco Legal CDMX</div>
+      <div class="ctx-t" onclick="setCtx('psico',this)">Apoyo Emocional</div>
+      <div class="ctx-t" onclick="setCtx('ciber',this)">Ciberseguridad</div>
+      <div class="ctx-t" onclick="setCtx('recursos',this)">Recursos CDMX</div>
+    </div>
+
+    <div id="ai-chat" class="ai-chat">
+      <div class="msg-ai" style="border-left-color:var(--cyan)">
+        <strong>Hola.</strong> Soy Sentinel, tu asistente de seguridad avanzado. Estoy aquí para brindarte orientación legal, apoyo emocional, consejos de ciberseguridad y ayuda en situaciones de emergencia.<br><br>
+        Toda nuestra conversación es <strong>100% confidencial y cifrada</strong>. ¿En qué te puedo ayudar hoy?
+      </div>
+    </div>
+
+    <!-- Topic grid -->
+    <div class="ai-topics">
+      <div class="aitb" onclick="aiQ('legal')"><i class="fa-solid fa-scale-balanced" style="color:var(--violet)"></i>Legal</div>
+      <div class="aitb" onclick="aiQ('psico')"><i class="fa-solid fa-brain" style="color:var(--pink)"></i>Psicológico</div>
+      <div class="aitb" onclick="aiQ('ciber')"><i class="fa-solid fa-laptop-code" style="color:var(--cyan)"></i>Ciberseg.</div>
+      <div class="aitb sos" onclick="aiQ('sos')"><i class="fa-solid fa-triangle-exclamation"></i>🚨 Emergencia</div>
+      <div class="aitb" onclick="aiQ('plan')"><i class="fa-solid fa-person-walking-arrow-right" style="color:var(--green)"></i>Plan Escape</div>
+      <div class="aitb" onclick="aiQ('vicaria')"><i class="fa-solid fa-children" style="color:var(--yellow)"></i>Viol. Vicaria</div>
+      <div class="aitb" onclick="aiQ('red')"><i class="fa-solid fa-people-group" style="color:var(--accent)"></i>Red Apoyo</div>
+      <div class="aitb" onclick="aiQ('denuncia')"><i class="fa-solid fa-file-pen" style="color:var(--orange)"></i>Denuncia</div>
+    </div>
+
+    <!-- AI Tools -->
+    <div class="ai-tools">
+      <div class="ai-tool-btn" onclick="aiQ('derechos')"><i class="fa-solid fa-gavel" style="color:var(--violet)"></i>Mis Derechos</div>
+      <div class="ai-tool-btn" onclick="aiQ('refugios')"><i class="fa-solid fa-house-heart" style="color:var(--pink)"></i>Refugios CDMX</div>
+      <div class="ai-tool-btn" onclick="aiQ('ciberacoso')"><i class="fa-solid fa-shield-virus" style="color:var(--cyan)"></i>Ciberacoso</div>
+      <div class="ai-tool-btn" onclick="aiQ('pasos_denuncia')"><i class="fa-solid fa-list-ol" style="color:var(--yellow)"></i>Pasos Denuncia</div>
+      <div class="ai-tool-btn" onclick="aiQ('autoestima')"><i class="fa-solid fa-heart" style="color:var(--red)"></i>Autoestima</div>
+      <div class="ai-tool-btn" onclick="aiQ('hijos')"><i class="fa-solid fa-baby" style="color:var(--orange)"></i>Proteger Hijos</div>
+    </div>
+
+    <div class="ai-mbar">
+      <span>Conversación cifrada E2E &bull; Sin almacenamiento de datos personales</span>
+      <span class="ai-mbadge">claude-3-5-sonnet</span>
+    </div>
+
+    <div class="ai-inp-row">
+      <input id="ai-inp" class="ai-inp" placeholder="Escribe tu consulta aquí..." onkeypress="if(event.key==='Enter')sendMsg()">
+      <button class="ai-send" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PROFILE MODAL ── -->
+<div class="ov" id="ov-profile">
+  <div class="mbox" style="max-width:510px">
+    <div class="mhead">
+      <div class="mhead-t" style="color:var(--violet)"><i class="fa-solid fa-id-card-clip"></i>Dossier Táctico</div>
+      <button class="mclose" onclick="closeModal('ov-profile')">&times;</button>
+    </div>
+    <div style="overflow-y:auto">
+      <div class="prof-hdr">
+        <div class="prof-ava"><i class="fa-solid fa-user-shield"></i></div>
+        <div class="prof-name">{{ user.username|title }}</div>
+        <div class="prof-id">ID-{{ user.id|stringformat:"06d" }} &bull; CLASE CIVIL_V2 &bull; CDMX</div>
+        <div class="prof-badges">
+          <span class="pb" style="background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.2)"><i class="fa-solid fa-check-circle"></i> Verificada</span>
+          <span class="pb" style="background:rgba(124,58,237,.1);color:var(--violet);border:1px solid rgba(124,58,237,.2)"><i class="fa-solid fa-shield"></i> Protegida</span>
+          <span class="pb" style="background:rgba(103,232,249,.1);color:var(--cyan);border:1px solid rgba(103,232,249,.2)"><i class="fa-solid fa-lock"></i> Cifrada</span>
+        </div>
+        <div class="prof-grid">
+          <div class="pf"><div class="pf-l">Estado</div><div class="pf-v" style="color:var(--green)">Activo / Seguro</div></div>
+          <div class="pf"><div class="pf-l">Zona Base</div><div class="pf-v">CDMX, México</div></div>
+          <div class="pf"><div class="pf-l">Nivel Alerta</div><div class="pf-v" style="color:var(--cyan)">DEFCON 5 — Normal</div></div>
+          <div class="pf"><div class="pf-l">Contacto EMG</div><div class="pf-v" style="color:var(--muted)">No configurado</div></div>
+          <div class="pf"><div class="pf-l">Reportes activos</div><div class="pf-v">{{ mis_reportes.count|default:"0" }}</div></div>
+          <div class="pf"><div class="pf-l">Miembro desde</div><div class="pf-v">{{ user.date_joined|date:"M Y" }}</div></div>
+        </div>
+      </div>
+      <div class="mbody">
+        <div class="score-ring-wrap">
+          <div class="score-ring">
+            <svg width="96" height="96" viewBox="0 0 96 96">
+              <circle cx="48" cy="48" r="38" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="8"/>
+              <circle cx="48" cy="48" r="38" fill="none" stroke="url(#sg)" stroke-width="8" stroke-linecap="round" stroke-dasharray="238.8" stroke-dashoffset="28"/>
+              <defs><linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#67e8f9"/></linearGradient></defs>
+            </svg>
+            <div class="score-num">88</div>
+          </div>
+          <div class="score-lbl">ÍNDICE DE SEGURIDAD PERSONAL</div>
+        </div>
+
+        <div class="ct" style="color:var(--muted);margin-bottom:12px"><i class="fa-solid fa-chart-radar"></i>Radar de Protección</div>
+        <canvas id="pChart" height="165"></canvas>
+
+        <div style="margin-top:18px">
+          <div class="ct" style="color:var(--muted);margin-bottom:12px"><i class="fa-solid fa-bars-progress"></i>Niveles de Protección</div>
+          {% for item in "12345"|make_list %}
+          <div class="sk-row">
+            <span class="sk-name">{% if forloop.counter == 1 %}Física{% elif forloop.counter == 2 %}Digital{% elif forloop.counter == 3 %}Legal{% elif forloop.counter == 4 %}Psicológica{% else %}Red Apoyo{% endif %}</span>
+            <div class="sk-track"><div class="sk-fill" style="width:{% if forloop.counter == 1 %}80{% elif forloop.counter == 2 %}90{% elif forloop.counter == 3 %}60{% elif forloop.counter == 4 %}75{% else %}85{% endif %}%"></div></div>
+            <span class="sk-pct">{% if forloop.counter == 1 %}80{% elif forloop.counter == 2 %}90{% elif forloop.counter == 3 %}60{% elif forloop.counter == 4 %}75{% else %}85{% endif %}%</span>
+          </div>
+          {% endfor %}
+        </div>
+        <button onclick="openAI();aiQ('red')" style="margin-top:15px;width:100%;background:linear-gradient(90deg,rgba(124,58,237,.14),rgba(59,130,246,.08));border:1px solid rgba(124,58,237,.28);color:var(--violet);padding:10px;border-radius:9px;cursor:pointer;font-size:.8rem;font-weight:700"><i class="fa-solid fa-robot"></i> Mejorar mi Perfil con Sentinel AI</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── REPORTS MODAL ── -->
+<div class="ov" id="ov-reports">
+  <div class="mbox" style="max-width:830px">
+    <div class="mhead">
+      <div class="mhead-t" style="color:var(--violet)"><i class="fa-solid fa-folder-open"></i>Expediente: {{ user.username }}</div>
+      <div style="display:flex;gap:7px;align-items:center">
+        <a href="{% url 'projects:reporte-create' %}" style="background:rgba(124,58,237,.14);border:1px solid rgba(124,58,237,.28);color:var(--violet);padding:5px 13px;border-radius:7px;font-size:.7rem;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:5px"><i class="fa-solid fa-plus"></i> Nuevo</a>
+        <button class="mclose" onclick="closeModal('ov-reports')">&times;</button>
+      </div>
+    </div>
+    <div class="mbody">
+      {% if mis_reportes %}
+        {% for r in mis_reportes %}
+        <div class="rep-item" data-rid="{{ r.id }}">
+          <div class="rep-top">
+            <span class="rep-num">CASO #{{ r.id|stringformat:"04d" }}</span>
+            <div style="display:flex;align-items:center;gap:9px">
+              {% if r.status == 'nuevo' %}<span class="badge b-new">Nuevo</span>
+              {% elif r.status == 'proceso' %}<span class="badge b-proc">En proceso</span>
+              {% elif r.status == 'cerrado' %}<span class="badge b-done">Cerrado</span>
+              {% else %}<span class="badge b-urg">{{ r.status }}</span>{% endif %}
+              <span style="font-size:.72rem;color:var(--muted)">{{ r.creado_en|date:"d M Y, H:i" }}</span>
+            </div>
+          </div>
+          <div class="rep-body">
+            <div style="font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.3px">{{ r.tipo_acoso.nombre|default:"Sin Clasificación" }}</div>
+            <div style="color:var(--muted);font-size:.8rem;margin-top:3px">{{ r.descripcion|truncatewords:20 }}</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:9px">
+              <span style="font-size:.66rem;color:var(--muted)">Progreso:</span>
+              <div class="prog-track" style="flex:1;margin:0">
+                <div class="ps done"></div>
+                <div class="ps {% if r.status == 'revision' or r.status == 'proceso' or r.status == 'cerrado' %}done{% elif r.status == 'nuevo' %}cur{% endif %}"></div>
+                <div class="ps {% if r.status == 'proceso' or r.status == 'cerrado' %}done{% elif r.status == 'revision' %}cur{% endif %}"></div>
+                <div class="ps {% if r.status == 'cerrado' %}done{% elif r.status == 'proceso' %}cur{% endif %}"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div style="text-align:center;padding:55px 20px;color:var(--muted)">
+          <i class="fa-solid fa-folder-dashed" style="font-size:3.2rem;margin-bottom:14px;display:block;color:var(--border3)"></i>
+          <p style="margin-bottom:14px">No tienes expedientes activos.</p>
+          <a href="{% url 'projects:reporte-create' %}" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--primary),var(--accent));color:white;padding:10px 22px;border-radius:9px;font-weight:700;text-decoration:none;font-size:.86rem"><i class="fa-solid fa-plus"></i> Iniciar Reporte</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- ── ADMIN MODAL ── -->
+<div class="ov" id="ov-admin" style="padding:10px">
+  <div class="mbox adm-box">
+    <div class="mhead" style="background:rgba(8,5,24,.9);border-color:rgba(124,58,237,.22)">
+      <div class="mhead-t" style="color:var(--violet);font-family:'JetBrains Mono',monospace"><i class="fa-solid fa-terminal"></i>PANEL MASTER — ROOT ACCESS v9.0</div>
+      <button class="mclose" onclick="closeModal('ov-admin')" style="color:var(--violet)">&times;</button>
+    </div>
+
+    <!-- Admin KPIs -->
+    <div class="adm-kpi">
+      <div class="akpi"><div class="akpi-v">{{ todos_los_reportes.count|default:"0" }}</div><div class="akpi-l">Reportes Total</div></div>
+      <div class="akpi"><div class="akpi-v">{{ usuarios_registrados.count|default:"0" }}</div><div class="akpi-l">Usuarias</div></div>
+      <div class="akpi"><div class="akpi-v" id="adm-nuevos">—</div><div class="akpi-l">Nuevos hoy</div></div>
+      <div class="akpi"><div class="akpi-v">99.97%</div><div class="akpi-l">Uptime</div></div>
+      <div class="akpi"><div class="akpi-v">23</div><div class="akpi-l">Instituciones</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab on" onclick="swTab('global',this)">REPORTES</button>
+      <button class="tab" onclick="swTab('users',this)">USUARIOS</button>
+      <button class="tab" onclick="swTab('analytics',this)">ANALYTICS</button>
+      <button class="tab" onclick="swTab('logs',this)">SYSTEM LOGS</button>
+      <button class="tab" onclick="swTab('config',this)">CONFIG</button>
+    </div>
+
+    <!-- Tab: Reportes -->
+    <div id="tp-global" class="tp on" style="overflow:hidden;flex:1">
+      <div class="srow">
+        <i class="fa-solid fa-search" style="color:var(--muted)"></i>
+        <input class="sf" placeholder="BUSCAR REPORTES..." onkeyup="ftable('atbl',this.value)">
+        <select onchange="ftable('atbl',this.value)" style="background:rgba(0,0,0,.3);border:1px solid var(--border2);color:var(--muted);padding:6px 10px;border-radius:7px;font-size:.74rem">
+          <option value="">Todos los estados</option>
+          <option value="nuevo">Nuevo</option>
+          <option value="proceso">En proceso</option>
+          <option value="cerrado">Cerrado</option>
+        </select>
+        <span style="font-size:.7rem;color:var(--muted);font-family:'JetBrains Mono',monospace;white-space:nowrap">{{ todos_los_reportes.count|default:"0" }} registros</span>
+      </div>
+      <div class="twrap">
+        <table class="ctable" id="atbl">
+          <thead><tr><th>ID</th><th>Fecha</th><th>Reportante</th><th>Correo</th><th>Tipo</th><th>Estado</th><th>Acción</th></tr></thead>
+          <tbody>
+            {% for rep in todos_los_reportes %}
+            <tr>
+              <td style="font-family:'JetBrains Mono',monospace;color:var(--cyan)">#{{ rep.id }}</td>
+              <td style="color:var(--muted);font-size:.76rem">{{ rep.creado_en|date:"d/m/Y" }}</td>
+              <td style="font-weight:700">{% if rep.user %}{{ rep.user.username }}{% else %}{{ rep.nombre_reportante|default:"ANÓNIMO" }}{% endif %}</td>
+              <td style="color:var(--muted);font-size:.74rem">{{ rep.correo_reportante|default:"—" }}</td>
+              <td style="font-size:.74rem;color:var(--muted)">{{ rep.tipo_acoso.nombre|default:"—" }}</td>
+              <td>{% if rep.status == 'nuevo' %}<span class="badge b-new">Nuevo</span>{% elif rep.status == 'proceso' %}<span class="badge b-proc">Proceso</span>{% elif rep.status == 'cerrado' %}<span class="badge b-done">Cerrado</span>{% else %}<span class="badge b-urg">{{ rep.status }}</span>{% endif %}</td>
+              <td><button onclick="admAction('{{ rep.id }}','{{ rep.status }}','{{ rep.correo_reportante|default:'' }}')" style="background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.22);color:var(--violet);cursor:pointer;padding:4px 11px;font-size:.67rem;border-radius:6px;font-weight:700"><i class="fa-solid fa-pen-to-square"></i> Gestionar</button></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab: Usuarios -->
+    <div id="tp-users" class="tp" style="overflow:hidden;flex:1">
+      <div class="srow">
+        <i class="fa-solid fa-search" style="color:var(--muted)"></i>
+        <input class="sf" placeholder="BUSCAR USUARIO..." onkeyup="ftable('utbl',this.value)">
+        <span style="font-size:.7rem;color:var(--muted);font-family:'JetBrains Mono',monospace">{{ usuarios_registrados.count|default:"0" }} usuarias</span>
+      </div>
+      <div class="twrap">
+        <table class="ctable" id="utbl">
+          <thead><tr><th>ID</th><th>Usuario</th><th>Email</th><th>Registro</th><th>Reportes</th><th>Rol</th></tr></thead>
+          <tbody>
+            {% for u in usuarios_registrados %}
+            <tr>
+              <td style="font-family:'JetBrains Mono',monospace;color:var(--muted)">U-{{ u.id|stringformat:"04d" }}</td>
+              <td style="font-weight:700">{{ u.username }}</td>
+              <td style="color:var(--muted);font-size:.76rem">{{ u.email|default:"—" }}</td>
+              <td style="font-size:.76rem">{{ u.date_joined|date:"Y-m-d" }}</td>
+              <td style="color:var(--cyan);font-family:'JetBrains Mono',monospace">{{ u.reporte_set.count }}</td>
+              <td>{% if u.is_superuser %}<span class="badge" style="background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.22)"><i class="fa-solid fa-star"></i> Admin</span>{% else %}<span class="badge b-new">Usuaria</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab: Analytics -->
+    <div id="tp-analytics" class="tp" style="padding:18px;overflow-y:auto;flex:1">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div>
+          <div style="font-size:.67rem;color:var(--violet);font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:1px;margin-bottom:13px">DISTRIBUCIÓN POR TIPO DE CASO</div>
+          <div class="ab"><div class="ab-lbl"><span>Acoso callejero</span><span style="color:var(--violet)">34%</span></div><div class="ab-track"><div class="ab-fill" data-w="34"></div></div></div>
+          <div class="ab"><div class="ab-lbl"><span>Violencia doméstica</span><span style="color:var(--violet)">28%</span></div><div class="ab-track"><div class="ab-fill" data-w="28"></div></div></div>
+          <div class="ab"><div class="ab-lbl"><span>Ciberacoso</span><span style="color:var(--violet)">19%</span></div><div class="ab-track"><div class="ab-fill" data-w="19"></div></div></div>
+          <div class="ab"><div class="ab-lbl"><span>Acoso laboral</span><span style="color:var(--violet)">12%</span></div><div class="ab-track"><div class="ab-fill" data-w="12"></div></div></div>
+          <div class="ab"><div class="ab-lbl"><span>Otros</span><span style="color:var(--violet)">7%</span></div><div class="ab-track"><div class="ab-fill" data-w="7"></div></div></div>
+        </div>
+        <div>
+          <div style="font-size:.67rem;color:var(--cyan);font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:1px;margin-bottom:13px">REPORTES POR MES</div>
+          <canvas id="admChart" height="145"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Logs -->
+    <div id="tp-logs" class="tp" style="flex:1;overflow:hidden">
+      <div class="log-t" id="logbox">
+        <div class="ll g">[BOOT] SENTINEL SYSTEM v9.0 INITIALIZED</div>
+        <div class="ll c">[DB] POSTGRESQL CONNECTED</div>
+        <div class="ll g">[AI] CLAUDE ENGINE ACTIVE</div>
+        <div class="ll g">[SEC] AES-256 ENCRYPTION ENABLED</div>
+        <div class="ll">[FW] FIREWALL ACTIVE — 0 THREATS</div>
+      </div>
+    </div>
+
+    <!-- Tab: Config -->
+    <div id="tp-config" class="tp" style="padding:18px;overflow-y:auto;flex:1">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div style="background:rgba(124,58,237,.06);border:1px solid var(--border2);border-radius:10px;padding:15px">
+          <div style="font-size:.68rem;color:var(--violet);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:11px"><i class="fa-solid fa-robot"></i> IA CONFIG</div>
+          <label style="font-size:.73rem;color:var(--muted);display:block;margin-bottom:4px">Modelo activo</label>
+          <select style="width:100%;background:rgba(0,0,0,.3);border:1px solid var(--border2);color:var(--text);padding:8px;border-radius:7px;font-size:.79rem;margin-bottom:10px"><option>claude-3-5-sonnet</option><option>claude-3-haiku</option></select>
+          <label style="font-size:.73rem;color:var(--muted);display:block;margin-bottom:4px">Max tokens respuesta</label>
+          <input type="number" value="1000" style="width:100%;background:rgba(0,0,0,.3);border:1px solid var(--border2);color:var(--text);padding:8px;border-radius:7px;font-size:.79rem">
+        </div>
+        <div style="background:rgba(59,130,246,.06);border:1px solid var(--border2);border-radius:10px;padding:15px">
+          <div style="font-size:.68rem;color:var(--cyan);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:11px"><i class="fa-solid fa-shield"></i> SEGURIDAD</div>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <label style="display:flex;align-items:center;gap:8px;font-size:.79rem;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--primary)"> Encriptación E2E activa</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.79rem;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--primary)"> Logs de auditoría del sistema</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.79rem;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--primary)"> Alertas de seguridad activas</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.79rem;cursor:pointer"><input type="checkbox" style="accent-color:var(--primary)"> Modo mantenimiento</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── VIDEOS MODAL ── -->
+<div class="ov" id="ov-videos">
+  <div class="mbox" style="max-width:1000px">
+    <div class="mhead">
+      <div class="mhead-t" style="color:#f87171"><i class="fa-brands fa-youtube"></i>Videoteca Táctica</div>
+      <button class="mclose" onclick="closeModal('ov-videos')">&times;</button>
+    </div>
+    <div class="mbody"><div class="vgrid" id="vgrid"></div></div>
+  </div>
+</div>
+
+<!-- ── RISK TEST MODAL ── -->
+<div class="ov" id="ov-risk">
+  <div class="mbox" style="max-width:440px">
+    <div class="mhead">
+      <div class="mhead-t" style="color:var(--yellow)"><i class="fa-solid fa-clipboard-question"></i>Evaluación de Riesgo</div>
+      <button class="mclose" onclick="closeModal('ov-risk')">&times;</button>
+    </div>
+    <div class="mbody">
+      <div id="risk-ui">
+        <div style="font-size:.7rem;color:var(--muted);text-align:center;margin-bottom:13px;font-family:'JetBrains Mono',monospace">PREGUNTA <span id="rq-n">1</span> DE 6 &bull; Responde con honestidad</div>
+        <div class="rq" id="rq-txt">Cargando...</div>
+        <button class="rbtn ryes" onclick="ansRisk(true)"><i class="fa-solid fa-check"></i> Sí / A veces</button>
+        <button class="rbtn rno" onclick="ansRisk(false)"><i class="fa-solid fa-xmark"></i> No / Nunca</button>
+        <div class="rprog"><div class="rpf" id="rpf"></div></div>
+      </div>
+      <div id="risk-res" style="display:none;text-align:center;padding:8px">
+        <i id="ri-icon" class="fa-solid" style="font-size:3.2rem;margin-bottom:13px;display:block"></i>
+        <h3 id="ri-title" style="font-size:1.15rem;margin-bottom:7px"></h3>
+        <p id="ri-desc" style="color:var(--muted);font-size:.84rem;line-height:1.6"></p>
+        <div style="display:flex;gap:7px;margin-top:15px">
+          <button onclick="openAI();closeModal('ov-risk')" style="flex:1;background:rgba(124,58,237,.14);border:1px solid rgba(124,58,237,.28);color:var(--violet);padding:9px;border-radius:8px;cursor:pointer;font-weight:700;font-size:.78rem"><i class="fa-solid fa-robot"></i> Hablar con IA</button>
+          <button onclick="closeModal('ov-risk')" style="flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border2);padding:9px;border-radius:8px;cursor:pointer;font-weight:700;font-size:.78rem">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════ -->
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// ── SIDEBAR ──
+function toggleSB(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('so').classList.toggle('open')}
+function closeSB(){document.getElementById('sidebar').classList.remove('open');document.getElementById('so').classList.remove('open')}
+
+// ── CLOCK & PING ──
+setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString(),1000)
+setInterval(()=>{const p=document.getElementById('ping');if(p)p.textContent=(8+Math.floor(Math.random()*9))+'ms'},5000)
+
+// ── MODALS ──
+function closeModal(id){document.getElementById(id).classList.remove('on')}
+function openReports(){document.getElementById('ov-reports').classList.add('on')}
+function openVideos(){document.getElementById('ov-videos').classList.add('on');loadVideos()}
+function openRisk(){rIdx=0;rScore=0;document.getElementById('ov-risk').classList.add('on');document.getElementById('risk-ui').style.display='block';document.getElementById('risk-res').style.display='none';nextRisk()}
+function openAI(){document.getElementById('ov-ai').classList.add('on')}
+function openAdmin(){document.getElementById('ov-admin').classList.add('on');startLogs();setTimeout(animAnalytics,400)}
+function openProfile(){document.getElementById('ov-profile').classList.add('on');setTimeout(renderPChart,150)}
+function openNotifs(){Swal.fire({title:'Notificaciones',html:`<div style="text-align:left">
+  <div style="padding:10px 0;border-bottom:1px solid #141028;font-size:.84rem"><strong style="color:#a78bfa"><i class="fa-solid fa-bell"></i> Sistema actualizado v9.0</strong><br><span style="color:#6d619a;font-size:.76rem">Hoy · Mejoras en IA y mapa</span></div>
+  <div style="padding:10px 0;border-bottom:1px solid #141028;font-size:.84rem"><strong style="color:#67e8f9"><i class="fa-solid fa-map-location-dot"></i> Nueva LUNA activa en Tlalpan</strong><br><span style="color:#6d619a;font-size:.76rem">Ayer · 14:30</span></div>
+  <div style="padding:10px 0;font-size:.84rem"><strong style="color:#fbbf24"><i class="fa-solid fa-lightbulb"></i> Completa tu test de riesgo</strong><br><span style="color:#6d619a;font-size:.76rem">Recomendado · 5 minutos</span></div>
+</div>`,background:'#0e0b1f',color:'#f0edff',confirmButtonColor:'#7c3aed'})}
+
+// ── MAP DROPDOWN ──
+function toggleMapMenu(){
+  const btn=document.getElementById('mapMenuBtn')
+  const dd=document.getElementById('mapDropdown')
+  btn.classList.toggle('open')
+  dd.classList.toggle('show')
+}
+function closeMapMenu(){
+  document.getElementById('mapMenuBtn').classList.remove('open')
+  document.getElementById('mapDropdown').classList.remove('show')
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.map-menu-wrap'))closeMapMenu()
+})
+
+// ── TABS (Admin) ──
+function swTab(n,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'))
+  document.querySelectorAll('.tp').forEach(p=>{p.classList.remove('on');p.style.display='none'})
+  el.classList.add('on')
+  const p=document.getElementById('tp-'+n)
+  p.classList.add('on');p.style.display='flex'
+  if(n==='analytics')setTimeout(animAnalytics,100)
+}
+
+// ── FILTER TABLE ──
+function ftable(id,q){
+  const t=document.getElementById(id),f=q.toUpperCase()
+  Array.from(t.getElementsByTagName('tr')).slice(1).forEach(r=>{
+    r.style.display=[...r.getElementsByTagName('td')].some(td=>td.textContent.toUpperCase().includes(f))?'':'none'
+  })
+}
+
+// ── MAP ──
+let mapObj,allMarkers=[]
+
+setTimeout(()=>{
+  mapObj=L.map('map',{zoomControl:false}).setView([19.4326,-99.1332],12)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'&copy;CARTO',maxZoom:19}).addTo(mapObj)
+  L.control.zoom({position:'bottomright'}).addTo(mapObj)
+
+  const pts=[
+    // Fiscalías / Justice
+    {lat:19.4891,lng:-99.1915,type:'justice',title:'CJM Azcapotzalco',addr:'Av. San Pablo Xalpa 396',phone:'55 5345 5000'},
+    {lat:19.3456,lng:-99.0912,type:'justice',title:'CJM Iztapalapa',addr:'Calle 20 de Noviembre s/n'},
+    {lat:19.2912,lng:-99.1678,type:'justice',title:'CJM Tlalpan',addr:'Calle Moneda 1'},
+    {lat:19.4206,lng:-99.1488,type:'justice',title:'Fiscalía General (Bunker)',addr:'Gral. Gabriel Hernández 56',phone:'55 5346 0000'},
+    {lat:19.3142,lng:-99.2198,type:'justice',title:'CJM Magdalena Contreras',addr:'Av. San Francisco 333'},
+    {lat:19.3620,lng:-99.1890,type:'justice',title:'CDHCDMX',addr:'Av. Universidad 1449',phone:'55 5229 5600'},
+    {lat:19.4240,lng:-99.1500,type:'justice',title:'Fiscalía Esp. Feminicidios',addr:'Dr. Río de la Loza 114'},
+    {lat:19.4320,lng:-99.1650,type:'justice',title:'MP CUH-2',addr:'Aldama y Mina s/n'},
+    // LUNAs
+    {lat:19.3987,lng:-99.1567,type:'luna',title:'LUNA Benito Juárez',addr:'Av. Cuauhtémoc 1240',phone:'55 5200 9000'},
+    {lat:19.3498,lng:-99.1623,type:'luna',title:'LUNA Coyoacán',addr:'Santa Catarina 4'},
+    {lat:19.4398,lng:-99.1456,type:'luna',title:'LUNA Cuauhtémoc',addr:'Aldama y Mina s/n'},
+    {lat:19.4440,lng:-99.1920,type:'luna',title:'LUNA Miguel Hidalgo',addr:'Parque Lira 94'},
+    {lat:19.3950,lng:-99.1020,type:'luna',title:'LUNA Iztacalco',addr:'Av. Río Churubusco s/n'},
+    {lat:19.4270,lng:-99.0950,type:'luna',title:'LUNA Venustiano Carranza',addr:'Francisco del Paso 219'},
+    {lat:19.4820,lng:-99.1120,type:'luna',title:'LUNA Gustavo A. Madero',addr:'5 de Febrero s/n'},
+    // Salud
+    {lat:19.4522,lng:-99.1688,type:'health',title:'H.G. Rubén Leñero',addr:'Plan de San Luis s/n'},
+    {lat:19.4123,lng:-99.1543,type:'health',title:'Hospital General México',addr:'Dr. Balmis 148',phone:'55 2789 2000'},
+    {lat:19.4530,lng:-99.1670,type:'health',title:'Hospital de la Mujer',addr:'Prol. Salvador Díaz Mirón 374',phone:'55 5566 0033'},
+    {lat:19.3580,lng:-99.1680,type:'health',title:'Hospital General Xoco',addr:'Av. México Coyoacán s/n'},
+    // ONGs
+    {lat:19.4321,lng:-99.1333,type:'ong',title:'Red Nacional de Refugios',addr:'Oficina Central CDMX',phone:'55 5533 5533'},
+    {lat:19.4100,lng:-99.1700,type:'ong',title:'Casa Gaviota',addr:'Atención Psicológica Gratuita'},
+    {lat:19.4200,lng:-99.1550,type:'ong',title:'Centro de Terapia de Apoyo',addr:'Puebla 123, Roma Norte'},
+    {lat:19.4320,lng:-99.1650,type:'ong',title:'Consejo Ciudadano CDMX',addr:'Amberes 54, Zona Rosa',phone:'55 5533 5533'},
+  ]
+
+  const colors={justice:'#ef4444',luna:'#a855f7',health:'#10b981',ong:'#f59e0b'}
+  const emojis={justice:'⚖️',luna:'🌙',health:'🏥',ong:'🤝'}
+
+  pts.forEach(p=>{
+    const c=colors[p.type]||'#fff'
+    const m=L.circleMarker([p.lat,p.lng],{
+      color:c,fillColor:c,fillOpacity:.82,
+      radius:10,weight:2,
+    }).addTo(mapObj)
+    m.bindPopup(`
+      <div style="font-family:'Outfit',sans-serif;padding:5px;min-width:210px">
+        <div style="font-size:.9rem;font-weight:700;margin-bottom:3px">${emojis[p.type]} ${p.title}</div>
+        <div style="font-size:.74rem;color:#888;margin-bottom:6px">${p.addr}</div>
+        ${p.phone?`<div style="font-size:.74rem;color:${c};margin-bottom:8px;font-weight:700">📞 ${p.phone}</div>`:''}
+        <div style="display:flex;gap:5px">
+          <a href="https://maps.google.com/?q=${p.lat},${p.lng}" target="_blank" style="flex:1;display:block;background:${c};color:white;padding:6px 8px;border-radius:6px;text-decoration:none;font-size:.7rem;font-weight:700;text-align:center"><i class="fa-solid fa-location-arrow"></i> Ir ahora</a>
+          ${p.phone?`<a href="tel:${p.phone.replace(/\s/g,'')}" style="display:block;background:rgba(255,255,255,.08);color:white;padding:6px 9px;border-radius:6px;text-decoration:none;font-size:.7rem;font-weight:700;border:1px solid rgba(255,255,255,.15)"><i class="fa-solid fa-phone"></i></a>`:''}
+        </div>
+      </div>`,{maxWidth:250})
+    allMarkers.push({m,type:p.type})
+  })
+},700)
+
+function filterMap(type,el){
+  document.querySelectorAll('.mfb').forEach(b=>b.classList.remove('on'))
+  if(el&&el.classList)el.classList.add('on')
+  allMarkers.forEach(({m,type:t})=>{
+    const show=type==='all'||t===type
+    if(show&&!mapObj.hasLayer(m))mapObj.addLayer(m)
+    else if(!show&&mapObj.hasLayer(m))mapObj.removeLayer(m)
+  })
+}
+function filterChip(type,el){
+  document.querySelectorAll('.map-chip').forEach(c=>c.classList.remove('on'))
+  el.classList.add('on')
+  filterMap(type)
+}
+function locateUser(){
+  if(!navigator.geolocation)return
+  navigator.geolocation.getCurrentPosition(p=>{
+    mapObj.setView([p.coords.latitude,p.coords.longitude],15)
+    const icon=L.divIcon({html:`<div style="width:14px;height:14px;background:#7c3aed;border-radius:50%;border:3px solid white;box-shadow:0 0 14px rgba(124,58,237,.8)"></div>`,iconAnchor:[7,7]})
+    L.marker([p.coords.latitude,p.coords.longitude],{icon}).addTo(mapObj).bindPopup('<strong style="font-family:Outfit,sans-serif">📍 Tu ubicación actual</strong>').openPopup()
+    L.circle([p.coords.latitude,p.coords.longitude],{radius:220,color:'#7c3aed',fillOpacity:.05,weight:1}).addTo(mapObj)
+  })
+}
+
+// ── ACOSÓMETRO ──
+function mv(e){
+  const cx=e.type==='touchmove'?e.touches[0].clientX:e.clientX
+  const r=e.currentTarget.getBoundingClientRect()
+  const pct=Math.min(100,Math.max(0,(cx-r.left)/r.width*100))
+  document.getElementById('mn').style.left=pct+'%'
+  const lvl=Math.max(1,Math.ceil(pct/10))
+  document.getElementById('mln').textContent=lvl
+  const lbl=['BROMAS HIRIENTES','CHANTAJE / MANIPULACIÓN','CELOS / LEY DEL HIELO','CULPABILIZAR / STALKING','RIDICULIZAR / OFENDER','HUMILLAR EN PÚBLICO','AMENAZAS / INTIMIDAR','GOLPES / AGRESIÓN FÍSICA','SECUESTRO / VIOLACIÓN','PELIGRO MORTAL 🚨']
+  const clr=['#10b981','#34d399','#a3e635','#facc15','#fb923c','#f97316','#ef4444','#dc2626','#b91c1c','#7f1d1d']
+  const o=document.getElementById('mo')
+  o.innerHTML=`<i class="fa-solid fa-gauge-high"></i><span>NIVEL ${lvl}: ${lbl[lvl-1]}</span>`
+  o.style.color=clr[lvl-1];o.style.borderColor=clr[lvl-1]
+  if(navigator.vibrate)navigator.vibrate(lvl>7?80:lvl>4&&Math.random()>.7?20:0)
+}
+function mr(){
+  document.getElementById('mn').style.left='2%'
+  document.getElementById('mln').textContent='—'
+  const o=document.getElementById('mo')
+  o.innerHTML='<i class="fa-solid fa-hand-pointer" style="color:var(--muted)"></i><span>DESLIZA PARA EVALUAR</span>'
+  o.style.color='var(--cyan)';o.style.borderColor='var(--border2)'
+}
+
+// ── AI CHAT ──
+let aiHist=[],aiTyping=false,aiCtxVal='general'
+
+function setCtx(c,el){aiCtxVal=c;document.querySelectorAll('.ctx-t').forEach(t=>t.classList.remove('on'));el.classList.add('on')}
+
+function fmtMd(t){
+  return t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+         .replace(/\*(.*?)\*/g,'<em>$1</em>')
+         .replace(/\n/g,'<br>')
+         .replace(/^[-•] (.*)/gm,'• $1')
+         .replace(/📞\s*(.*)/g,'📞 <strong style="color:#34d399">$1</strong>')
+}
+
+function addMsg(txt,type){
+  const b=document.getElementById('ai-chat')
+  const d=document.createElement('div');d.className='msg-'+type;d.innerHTML=fmtMd(txt)
+  b.appendChild(d);b.scrollTop=b.scrollHeight
+}
+function showTy(){
+  const b=document.getElementById('ai-chat')
+  const d=document.createElement('div');d.id='tyind';d.className='msg-ai'
+  d.innerHTML='<div class="typing-wrap"><div class="tydot"></div><div class="tydot"></div><div class="tydot"></div></div>'
+  b.appendChild(d);b.scrollTop=b.scrollHeight
+}
+function hideTy(){const el=document.getElementById('tyind');if(el)el.remove()}
+
+async function toAI(msg,topic){
+  if(aiTyping)return
+  if(msg)addMsg(msg,'user')
+  showTy();aiTyping=true
+  try{
+    const res=await fetch('/ai/chat/',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message:msg||'',topic,context:aiCtxVal,history:aiHist})})
+    const data=await res.json()
+    hideTy();aiTyping=false
+    if(data.success){
+      const reply=data.data.response
+      addMsg(reply,'ai')
+      if(msg)aiHist.push({role:'user',content:msg})
+      aiHist.push({role:'assistant',content:reply})
+      if(aiHist.length>14)aiHist=aiHist.slice(-14)
+    }else{
+      addMsg('Error: '+(data.error||'Respuesta inválida'),'err')
+      if(data.fallback)addMsg(data.fallback,'ai')
+    }
+  }catch(e){hideTy();aiTyping=false;addMsg('Error de conexión. Verifica tu internet.','err')}
+}
+
+const qLabels={
+  legal:'⚖️ ORIENTACIÓN LEGAL',psico:'🧠 APOYO PSICOLÓGICO',
+  ciber:'💻 CIBERSEGURIDAD',sos:'🚨 EMERGENCIA',
+  plan:'🏃 PLAN DE ESCAPE',vicaria:'👨‍👩‍👧 VIOLENCIA VICARIA',
+  red:'🤝 RED DE APOYO',denuncia:'📄 PROCESO DE DENUNCIA',
+  derechos:'⚖️ MIS DERECHOS',refugios:'🏠 REFUGIOS CDMX',
+  ciberacoso:'🛡️ CIBERACOSO',pasos_denuncia:'📋 PASOS PARA DENUNCIAR',
+  autoestima:'💜 AUTOESTIMA Y RECUPERACIÓN',hijos:'👶 CÓMO PROTEGER A MIS HIJOS'
+}
+function aiQ(t){addMsg(qLabels[t]||t,'user');toAI('',t)}
+function sendMsg(){const i=document.getElementById('ai-inp');if(i.value.trim()){toAI(i.value.trim(),null);i.value=''}}
+function clearChat(){if(!confirm('¿Reiniciar conversación?'))return;aiHist=[];document.getElementById('ai-chat').innerHTML='<div class="msg-ai">Hola de nuevo. ¿En qué puedo ayudarte hoy?</div>'}
+
+// Voice input (if supported)
+let SRX=null
+function toggleVoice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition
+  if(!SR){Swal.fire({icon:'info',title:'Sin soporte',text:'Tu navegador no soporta entrada de voz.',background:'#0e0b1f',color:'#fff'});return}
+  if(SRX&&SRX.running){SRX.stop();document.getElementById('ai-voice-btn').style.color='white';return}
+  SRX=new SR();SRX.lang='es-MX';SRX.running=true
+  SRX.onresult=e=>{document.getElementById('ai-inp').value=e.results[0][0].transcript}
+  SRX.onend=()=>{SRX.running=false;document.getElementById('ai-voice-btn').style.color='white'}
+  SRX.start();document.getElementById('ai-voice-btn').style.color='var(--yellow)'
+}
+
+// ── PROFILE CHART ──
+function renderPChart(){
+  const c=document.getElementById('pChart')
+  if(!c)return
+  if(window._pc)window._pc.destroy()
+  window._pc=new Chart(c,{
+    type:'radar',
+    data:{labels:['Física','Digital','Legal','Psicológica','Red Apoyo'],
+      datasets:[{label:'Protección',data:[80,90,60,75,85],
+        backgroundColor:'rgba(124,58,237,.12)',
+        borderColor:'rgba(124,58,237,.65)',
+        pointBackgroundColor:'#67e8f9',pointBorderColor:'rgba(124,58,237,.5)',pointRadius:5}]},
+    options:{scales:{r:{grid:{color:'rgba(255,255,255,.04)'},
+      pointLabels:{color:'rgba(240,237,255,.5)',font:{size:11,family:'Outfit'}},
+      ticks:{display:false},angleLines:{color:'rgba(255,255,255,.04)'}}},
+      plugins:{legend:{display:false}}}
+  })
+}
+
+// ── ADMIN ──
+function admAction(id,status,email){
+  Swal.fire({
+    title:`Gestionar Reporte #${id}`,
+    html:`<div style="text-align:left;color:#f0edff">
+      <label style="font-size:.78rem;color:#6d619a;display:block;margin-bottom:5px">Nuevo Estado:</label>
+      <select id="sw-s" style="width:100%;background:#141028;color:#f0edff;border:1px solid rgba(124,58,237,.28);padding:9px;border-radius:8px;font-size:.83rem;margin-bottom:11px">
+        <option value="nuevo" ${status=='nuevo'?'selected':''}>NUEVO</option>
+        <option value="revision" ${status=='revision'?'selected':''}>EN REVISIÓN</option>
+        <option value="proceso" ${status=='proceso'?'selected':''}>EN PROCESO</option>
+        <option value="cerrado" ${status=='cerrado'?'selected':''}>CERRADO</option>
+      </select>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+        <input type="checkbox" id="sw-m" ${email?'checked':'disabled'} style="accent-color:#7c3aed">
+        <label for="sw-m" style="font-size:.8rem">Notificar por email</label>
+      </div>
+      <div style="font-size:.7rem;color:#4a4060;font-family:monospace">${email?'→ '+email:'Sin email registrado'}</div>
+    </div>`,
+    background:'#0e0b1f',showCancelButton:true,
+    confirmButtonText:'ACTUALIZAR',cancelButtonText:'CANCELAR',confirmButtonColor:'#7c3aed',
+    preConfirm:()=>{
+      const ns=document.getElementById('sw-s').value
+      localStorage.setItem('rs_'+id,ns)
+      return fetch(`/projects/reporte/${id}/update_status/`,{
+        method:'POST',
+        headers:{'X-CSRFToken':document.querySelector('[name=csrfmiddlewaretoken]').value},
+        body:new URLSearchParams({report_id:id,status:ns,send_mail:document.getElementById('sw-m').checked})
+      }).then(()=>({ns})).catch(()=>({ns}))
+    }
+  }).then(r=>{if(r.isConfirmed)Swal.fire({icon:'success',title:'Actualizado',background:'#0e0b1f',color:'#fff',timer:1800}).then(()=>location.reload())})
+}
+
+const logMsgs=[
+  {t:'USER_AUTH VERIFIED',c:'g'},{t:'AI REQUEST PROCESSED 11ms',c:'c'},
+  {t:'DB QUERY EXECUTED',c:''},{t:'ENCRYPTION CHECK PASSED',c:'g'},
+  {t:'FIREWALL SCAN — NO THREATS',c:'g'},{t:'MAP DATA REFRESHED',c:'c'},
+  {t:'SESSION HEARTBEAT OK',c:''},{t:'CACHE UPDATED',c:''},
+  {t:'BACKUP SYNC COMPLETE',c:'y'},{t:'REPORT INDEXED',c:''}
+]
+let logI
+function startLogs(){
+  clearInterval(logI)
+  logI=setInterval(()=>{
+    if(!document.getElementById('ov-admin').classList.contains('on'))return
+    const b=document.getElementById('logbox')
+    const m=logMsgs[Math.floor(Math.random()*logMsgs.length)]
+    const d=document.createElement('div');d.className='ll '+(m.c||'')
+    d.textContent=`[${new Date().toLocaleTimeString()}] > ${m.t}`
+    b.appendChild(d);b.scrollTop=b.scrollHeight
+  },1700)
+}
+
+function animAnalytics(){
+  document.querySelectorAll('.ab-fill').forEach(el=>{const w=el.dataset.w;el.style.width='0%';setTimeout(()=>el.style.width=w+'%',80)})
+  const c=document.getElementById('admChart')
+  if(c&&!window._ac){
+    window._ac=new Chart(c,{type:'bar',
+      data:{labels:['Ene','Feb','Mar','Abr','May','Jun'],
+        datasets:[{label:'Reportes',data:[12,19,8,24,17,22],
+          backgroundColor:'rgba(124,58,237,.45)',borderColor:'rgba(124,58,237,.75)',borderWidth:1,borderRadius:5}]},
+      options:{plugins:{legend:{labels:{color:'#6d619a',font:{family:'Outfit'}}}},
+        scales:{x:{ticks:{color:'#6d619a'},grid:{color:'rgba(255,255,255,.04)'}},
+                y:{ticks:{color:'#6d619a'},grid:{color:'rgba(255,255,255,.04)'}}}}
+    })
+  }
+}
+
+// ── RISK TEST ──
+const rQs=['¿Tu pareja te cela excesivamente sin motivo?','¿Revisa tu celular, cuentas o mensajes sin permiso?','¿Te prohíbe ver a tu familia o amigos?','¿Te ha empujado, golpeado o amenazado físicamente?','¿Te amenaza con hacerse daño o hacerte daño a ti?','¿Controla tu dinero o te impide trabajar / estudiar?']
+let rIdx=0,rScore=0
+function nextRisk(){
+  if(rIdx>=rQs.length){showRiskRes();return}
+  document.getElementById('rq-txt').textContent=rQs[rIdx]
+  document.getElementById('rq-n').textContent=rIdx+1
+  document.getElementById('rpf').style.width=(rIdx/rQs.length*100)+'%'
+}
+function ansRisk(y){if(y)rScore++;rIdx++;nextRisk()}
+function showRiskRes(){
+  document.getElementById('risk-ui').style.display='none'
+  document.getElementById('risk-res').style.display='block'
+  const high=rScore>2,mid=rScore>0&&rScore<=2
+  document.getElementById('ri-icon').className='fa-solid '+(high?'fa-triangle-exclamation':mid?'fa-circle-exclamation':'fa-check-circle')
+  document.getElementById('ri-icon').style.color=high?'var(--red)':mid?'var(--yellow)':'var(--green)'
+  document.getElementById('ri-title').textContent=high?'RIESGO ALTO DETECTADO':mid?'RIESGO MODERADO DETECTADO':'RIESGO BAJO'
+  document.getElementById('ri-title').style.color=high?'var(--red)':mid?'var(--yellow)':'var(--green)'
+  document.getElementById('ri-desc').textContent=high?'Hay indicadores claros de violencia. Te recomendamos contactar una LUNA o activar el SOS de emergencia de inmediato. No estás sola.':mid?'Existen señales de alerta. Considera hablar con un profesional y activar tu red de apoyo para protegerte.':'El riesgo parece bajo actualmente, pero mantente informada. La violencia puede escalar gradualmente.'
+}
+
+// ── VIDEOS ──
+function loadVideos(){
+  const g=document.getElementById('vgrid')
+  if(g.children.length>0)return
+  const vs=[
+    {id:'dQw4w9WgXcQ',t:'Autodefensa Básica',d:'Técnicas esenciales de protección personal'},
+    {id:'dQw4w9WgXcQ',t:'Derechos Legales en México',d:'Conoce tus derechos ante la ley'},
+    {id:'dQw4w9WgXcQ',t:'Psicología del Agresor',d:'Identificar patrones y señales de alerta'},
+    {id:'dQw4w9WgXcQ',t:'Cómo Presentar una Denuncia',d:'Guía paso a paso para denunciar'},
+    {id:'dQw4w9WgXcQ',t:'Seguridad Digital y Privacidad',d:'Protégete del acoso cibernético'},
+    {id:'dQw4w9WgXcQ',t:'Plan de Seguridad Familiar',d:'Prepara un plan con tus seres queridos'}
+  ]
+  g.innerHTML=vs.map(v=>`<div class="vi"><iframe class="vi iframe" src="https://www.youtube.com/embed/${v.id}" allowfullscreen></iframe><div class="vi-info"><div class="vi-title">${v.t}</div><div class="vi-desc">${v.d}</div></div></div>`).join('')
+}
+
+// ── FAKE CALL ──
+let cTimer
+function triggerCall(){
+  document.getElementById('fake-call').style.display='flex'
+  document.getElementById('call-incoming').style.display='flex'
+  document.getElementById('call-active').style.display='none'
+  document.getElementById('call-ended').style.display='none'
+}
+function answerCall(){
+  document.getElementById('call-incoming').style.display='none'
+  document.getElementById('call-active').style.display='flex'
+  let s=0;clearInterval(cTimer)
+  cTimer=setInterval(()=>{s++;const m=String(Math.floor(s/60)).padStart(2,'0'),sc=String(s%60).padStart(2,'0');document.getElementById('call-timer').textContent=m+':'+sc},1000)
+}
+function endCall(){
+  clearInterval(cTimer)
+  document.getElementById('call-incoming').style.display='none'
+  document.getElementById('call-active').style.display='none'
+  document.getElementById('call-ended').style.display='flex'
+  setTimeout(()=>document.getElementById('fake-call').style.display='none',2000)
+}
+
+// ── SOS ──
+function sosReal(){
+  Swal.fire({title:'🚨 ALERTA MÁXIMA',html:'<p style="color:#f0edff">Conectando con <strong>911</strong> y enviando ubicación...</p>',icon:'warning',background:'#0e0b1f',color:'#fff',timer:2200,showConfirmButton:false})
+  setTimeout(()=>window.location.href='tel:911',900)
+  if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>{
+    setTimeout(()=>window.open(`https://wa.me/?text=${encodeURIComponent('🚨 NECESITO AYUDA. Mi ubicación: https://maps.google.com/?q='+p.coords.latitude+','+p.coords.longitude)}`,'_blank'),2400)
+  })
+}
+
+// ── SHARE LOCATION ──
+function shareLocation(){
+  if(!navigator.geolocation){Swal.fire({icon:'error',title:'Sin acceso',text:'Activa la ubicación en tu dispositivo.',background:'#0e0b1f',color:'#fff'});return}
+  navigator.geolocation.getCurrentPosition(p=>{
+    const url=`https://maps.google.com/?q=${p.coords.latitude},${p.coords.longitude}`
+    const wa=`https://wa.me/?text=${encodeURIComponent('📍 Mi ubicación actual: '+url)}`
+    Swal.fire({title:'Compartir Ubicación',html:`<div style="text-align:left"><p style="font-size:.82rem;color:#6d619a;margin-bottom:10px">Tu ubicación actual:</p><div style="background:#141028;border:1px solid rgba(124,58,237,.25);border-radius:8px;padding:9px;font-family:monospace;font-size:.75rem;color:#67e8f9;word-break:break-all">${url}</div></div>`,background:'#0e0b1f',color:'#fff',showCancelButton:true,confirmButtonText:'<i class="fa-brands fa-whatsapp"></i> Enviar por WhatsApp',confirmButtonColor:'#25D366',cancelButtonText:'Copiar enlace'}).then(r=>{if(r.isConfirmed)window.open(wa,'_blank');else if(r.dismiss==='cancel')navigator.clipboard&&navigator.clipboard.writeText(url)})
+  },()=>Swal.fire({icon:'error',title:'Sin acceso',text:'Permite el acceso a tu ubicación.',background:'#0e0b1f',color:'#fff'}))
+}
+
+// ── AUDIO RECORDER ──
+let mRec,aChunks=[],rInt
+function initRecord(){
+  if(mRec&&mRec.state==='recording'){
+    mRec.stop();clearInterval(rInt)
+    document.getElementById('rec-txt').textContent='Grabar Audio'
+    document.getElementById('sb-rec-txt').textContent='Grabar Evidencia'
+    document.getElementById('rec-btn').querySelector('i').style.color='var(--yellow)'
+    return
+  }
+  navigator.mediaDevices&&navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    mRec=new MediaRecorder(stream);aChunks=[]
+    mRec.ondataavailable=e=>aChunks.push(e.data)
+    mRec.onstop=()=>{
+      const b=new Blob(aChunks,{type:'audio/webm'})
+      const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='evidencia_'+Date.now()+'.webm';a.click()
+      Swal.fire({icon:'success',title:'Audio guardado',text:'El archivo de evidencia se ha descargado.',background:'#0e0b1f',color:'#fff',timer:2500})
+    }
+    mRec.start()
+    let t=0
+    rInt=setInterval(()=>{t++;const ts=`${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;document.getElementById('rec-txt').textContent='● REC '+ts;document.getElementById('sb-rec-txt').textContent='● REC '+ts;document.getElementById('rec-btn').querySelector('i').style.color='var(--red)'},1000)
+  }).catch(()=>Swal.fire({icon:'error',title:'Sin acceso',text:'Permite el acceso al micrófono.',background:'#0e0b1f',color:'#fff'}))
+}
+
+// ── CAMOUFLAGE ──
+function camouflage(){
+  Swal.fire({title:'Modo Camuflaje',text:'Toca 3 veces en la esquina inferior derecha para volver.',icon:'info',background:'#0e0b1f',color:'#fff',confirmButtonColor:'#7c3aed'}).then(()=>document.getElementById('wiki-layer').style.display='block')
+}
+let wClicks=0
+function exitWiki(){if(++wClicks>=3){document.getElementById('wiki-layer').style.display='none';wClicks=0}}
+
+// ── LOGOUT ──
+function doLogout(){Swal.fire({title:'¿Desconectar?',text:'Finalizar sesión segura.',icon:'warning',showCancelButton:true,confirmButtonColor:'#ef4444',cancelButtonColor:'#1a1533',background:'#0e0b1f',color:'#fff'}).then(r=>{if(r.isConfirmed)document.getElementById('logout-form').submit()})}
+
+// ── LOCAL STATUS ──
+document.addEventListener('DOMContentLoaded',()=>{
+  if(localStorage.getItem('report_updated')==='true'){
+    Swal.fire({toast:true,position:'top-end',icon:'success',title:'Reporte actualizado',showConfirmButton:false,timer:3000,background:'#0e0b1f',color:'#fff'})
+    localStorage.removeItem('report_updated')
+  }
+  document.querySelectorAll('[data-rid]').forEach(card=>{
+    const id=card.dataset.rid,st=localStorage.getItem('rs_'+id)
+    if(!st)return
+    const segs=card.querySelectorAll('.ps')
+    segs.forEach(s=>s.className='ps')
+    const m={nuevo:[0,'done',1,'cur'],revision:[0,'done',1,'done',2,'cur'],proceso:[0,'done',1,'done',2,'done',3,'cur'],cerrado:[0,'done',1,'done',2,'done',3,'done']}
+    const steps=m[st]||[]
+    for(let i=0;i<steps.length;i+=2)if(segs[steps[i]])segs[steps[i]].classList.add(steps[i+1])
+  })
+})
+</script>
+{% endblock %}

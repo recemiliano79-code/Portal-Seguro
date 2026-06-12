@@ -1,0 +1,190 @@
+{% extends "projects/base_dashboard.html" %}
+{% block dashboard_content %}
+<style>
+.page-hero{background:linear-gradient(135deg,rgba(52,211,153,.12),rgba(59,130,246,.07));border:1px solid rgba(52,211,153,.2);border-radius:18px;padding:26px 30px;margin-bottom:24px;position:relative;overflow:hidden;}
+.page-hero::after{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(52,211,153,.15),transparent 70%);pointer-events:none;}
+.page-hero h1{font-size:1.9rem;font-weight:900;letter-spacing:-.5px;display:flex;align-items:center;gap:11px;margin-bottom:5px;}
+.page-hero p{color:var(--muted);font-size:.86rem;margin-bottom:14px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9px;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .16s;text-decoration:none;border:1px solid;}
+.btn-green{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.22);color:#34d399;}
+.btn-green:hover{background:rgba(52,211,153,.2);transform:translateY(-1px);}
+.btn-ghost{background:rgba(255,255,255,.04);border-color:rgba(130,90,255,.2);color:var(--text);}
+.btn-ghost:hover{background:rgba(124,58,237,.1);}
+.btn-sm{padding:6px 12px;font-size:.71rem;}
+.btn-primary{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:white;border-color:transparent;}
+.btn-primary:hover{transform:translateY(-1px);}
+
+/* Stats */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:24px;}
+@media(max-width:800px){.stat-row{grid-template-columns:repeat(2,1fr);}}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;transition:all .2s;}
+.stat-box:hover{border-color:var(--border2);transform:translateY(-2px);}
+.stat-box-icon{font-size:.95rem;margin-bottom:5px;}
+.stat-box-val{font-size:1.65rem;font-weight:900;line-height:1.1;}
+.stat-box-lbl{font-size:.63rem;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-top:3px;font-weight:600;}
+
+/* Emergency bar */
+.emerg-bar{background:linear-gradient(90deg,rgba(248,113,113,.1),rgba(239,68,68,.06));border:1px solid rgba(248,113,113,.22);border-radius:12px;padding:13px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.emerg-num{display:flex;align-items:center;gap:9px;text-decoration:none;}
+.emerg-num-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.88rem;flex-shrink:0;}
+.emerg-num-title{font-size:.82rem;font-weight:700;color:var(--text);}
+.emerg-num-sub{font-size:.68rem;color:var(--muted);}
+
+/* Filter bar */
+.filter-bar{display:flex;gap:.5rem;margin-bottom:18px;flex-wrap:wrap;}
+.filter-inp{flex:1;min-width:200px;background:var(--surface);border:1px solid rgba(130,90,255,.2);border-radius:9px;padding:9px 14px;color:var(--text);font-size:.82rem;font-family:var(--font);outline:none;}
+.filter-inp:focus{border-color:#34d399;box-shadow:0 0 0 3px rgba(52,211,153,.1);}
+.filter-inp::placeholder{color:var(--muted);}
+.filter-sel{background:var(--surface);border:1px solid rgba(130,90,255,.2);border-radius:9px;padding:8px 12px;color:var(--muted);font-size:.78rem;font-family:var(--font);outline:none;cursor:pointer;}
+
+/* Cards */
+.inst-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:13px;}
+.inst-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:all .22s;display:flex;flex-direction:column;}
+.inst-card:hover{border-color:rgba(52,211,153,.3);box-shadow:0 14px 40px rgba(0,0,0,.3);transform:translateY(-2px);}
+.inst-card-head{padding:18px 19px;flex:1;}
+.inst-icon-row{display:flex;align-items:flex-start;gap:13px;margin-bottom:12px;}
+.inst-icon-box{width:44px;height:44px;border-radius:11px;background:linear-gradient(135deg,rgba(52,211,153,.18),rgba(59,130,246,.12));border:1px solid rgba(52,211,153,.2);display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;}
+.inst-name{font-size:.95rem;font-weight:800;color:var(--text);line-height:1.3;margin-bottom:3px;}
+.inst-tag{font-size:.62rem;font-family:var(--mono);font-weight:700;text-transform:uppercase;color:#34d399;letter-spacing:.6px;}
+.inst-info{font-size:.8rem;color:var(--muted);margin-top:8px;display:flex;flex-direction:column;gap:4px;}
+.inst-info-row{display:flex;align-items:center;gap:6px;}
+.inst-info-row i{width:12px;text-align:center;color:#a78bfa;font-size:.72rem;}
+.inst-card-footer{padding:10px 18px;border-top:1px solid var(--border);background:rgba(0,0,0,.15);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:7px;}
+
+/* Empty */
+.empty-state{text-align:center;padding:50px 20px;background:var(--surface);border:2px dashed var(--border);border-radius:16px;}
+.empty-icon{width:65px;height:65px;border-radius:16px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.18);display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 15px;}
+
+.cta-card{background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(59,130,246,.07));border:1px solid rgba(124,58,237,.2);border-radius:16px;padding:24px;text-align:center;margin-top:22px;}
+.cta-orb{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin:0 auto 12px;}
+</style>
+
+<div class="page-hero">
+  <h1><i class="fa-solid fa-building-ngo" style="color:#34d399;"></i> Instituciones Aliadas</h1>
+  <p>Centros de apoyo, asesoría legal y atención psicológica · CDMX · Red verificada</p>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+    <a href="{% url 'projects:sugerencia-create' %}" class="btn btn-green"><i class="fa-solid fa-paper-plane"></i> Sugerir institución</a>
+    {% if is_admin %}<a href="{% url 'projects:institucion-create' %}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nueva Institución</a>{% endif %}
+    <a href="{% url 'projects:home' %}" class="btn btn-ghost"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat-box">
+    <div class="stat-box-icon" style="color:#34d399"><i class="fa-solid fa-building-ngo"></i></div>
+    <div class="stat-box-val" style="color:#34d399">{{ instituciones.count|default:"0" }}</div>
+    <div class="stat-box-lbl">Total registradas</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-box-icon" style="color:#67e8f9"><i class="fa-solid fa-clock"></i></div>
+    <div class="stat-box-val" style="color:#67e8f9">5</div>
+    <div class="stat-box-lbl">Disponibles 24/7</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-box-icon" style="color:#a78bfa"><i class="fa-solid fa-hourglass"></i></div>
+    <div class="stat-box-val" style="color:#a78bfa">0</div>
+    <div class="stat-box-lbl">Sugerencias pendientes</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-box-icon" style="color:#f472b6"><i class="fa-solid fa-phone-flip"></i></div>
+    <div class="stat-box-val" style="color:#f472b6;font-size:.9rem;">800</div>
+    <div class="stat-box-lbl">Línea Mujeres</div>
+  </div>
+</div>
+
+<!-- Líneas de emergencia rápidas -->
+<div class="emerg-bar">
+  <a href="tel:911" class="emerg-num">
+    <div class="emerg-num-icon" style="background:rgba(248,113,113,.12);color:#f87171;"><i class="fa-solid fa-phone-volume"></i></div>
+    <div><div class="emerg-num-title">911 — Emergencias</div><div class="emerg-num-sub">Nacional 24/7</div></div>
+  </a>
+  <a href="tel:5556581111" class="emerg-num">
+    <div class="emerg-num-icon" style="background:rgba(244,114,182,.12);color:#f472b6;"><i class="fa-solid fa-venus"></i></div>
+    <div><div class="emerg-num-title">Línea Mujeres CDMX</div><div class="emerg-num-sub">55 5658-1111 · 24/7 Gratis</div></div>
+  </a>
+  <a href="tel:8009008000" class="emerg-num">
+    <div class="emerg-num-icon" style="background:rgba(124,58,237,.12);color:#a78bfa;"><i class="fa-solid fa-building-ngo"></i></div>
+    <div><div class="emerg-num-title">CONAVIM Nacional</div><div class="emerg-num-sub">800 900-8000 · Sin costo</div></div>
+  </a>
+  <a href="tel:5555335533" class="emerg-num">
+    <div class="emerg-num-icon" style="background:rgba(52,211,153,.12);color:#34d399;"><i class="fa-solid fa-house-heart"></i></div>
+    <div><div class="emerg-num-title">Red de Refugios</div><div class="emerg-num-sub">55 5533-5533 · Confidencial</div></div>
+  </a>
+</div>
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:.7rem;">
+  <div style="font-size:1rem;font-weight:800;display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-list" style="color:#34d399;"></i> Directorio <span style="font-size:.74rem;font-weight:400;color:var(--muted);">{{ instituciones.count }} institución{{ instituciones.count|pluralize:"es" }}</span></div>
+</div>
+
+<div class="filter-bar">
+  <input class="filter-inp" id="inst-srch" placeholder="🔍  Buscar institución..." oninput="filterInst()">
+  <select class="filter-sel" id="inst-cat" onchange="filterInst()">
+    <option value="">Todas las categorías</option>
+    <option value="legal">Legal / Fiscal</option>
+    <option value="salud">Salud</option>
+    <option value="apoyo">Apoyo psicológico</option>
+    <option value="refugio">Refugio</option>
+  </select>
+</div>
+
+{% if instituciones %}
+<div class="inst-grid" id="inst-grid">
+  {% for inst in instituciones %}
+  <div class="inst-card" data-txt="{{ inst.nombre|lower }} {{ inst.notas|lower|default:'' }}">
+    <div class="inst-card-head">
+      <div class="inst-icon-row">
+        <div class="inst-icon-box"><i class="fa-solid fa-building-ngo" style="color:#34d399;"></i></div>
+        <div>
+          <div class="inst-name">{{ inst.nombre }}</div>
+          <span class="inst-tag">Institución aliada</span>
+        </div>
+      </div>
+      <div class="inst-info">
+        {% if inst.direccion %}<div class="inst-info-row"><i class="fa-solid fa-location-dot"></i> {{ inst.direccion }}</div>{% endif %}
+        {% if inst.telefono %}<div class="inst-info-row"><i class="fa-solid fa-phone"></i> <a href="tel:{{ inst.telefono|cut:' '|cut:'-' }}" style="color:#34d399;text-decoration:none;">{{ inst.telefono }}</a></div>{% endif %}
+        {% if inst.email %}<div class="inst-info-row"><i class="fa-solid fa-envelope"></i> <a href="mailto:{{ inst.email }}" style="color:#67e8f9;text-decoration:none;">{{ inst.email }}</a></div>{% endif %}
+        {% if inst.sitio_web %}<div class="inst-info-row"><i class="fa-solid fa-globe"></i> <a href="{{ inst.sitio_web }}" target="_blank" style="color:#a78bfa;text-decoration:none;">Sitio web</a></div>{% endif %}
+        {% if inst.notas %}<div class="inst-info-row" style="margin-top:4px;align-items:flex-start;"><i class="fa-solid fa-circle-info" style="margin-top:2px;"></i> <span>{{ inst.notas|truncatechars:80 }}</span></div>{% endif %}
+      </div>
+    </div>
+    <div class="inst-card-footer">
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+        {% if inst.telefono %}<a href="tel:{{ inst.telefono|cut:' '|cut:'-' }}" class="btn btn-green btn-sm"><i class="fa-solid fa-phone"></i> Llamar</a>{% endif %}
+        {% if inst.sitio_web %}<a href="{{ inst.sitio_web }}" target="_blank" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-up-right-from-square"></i> Web</a>{% endif %}
+      </div>
+      {% if is_admin %}
+      <div style="display:flex;gap:.4rem;">
+        <a href="{% url 'projects:institucion-update' inst.pk %}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-pen"></i></a>
+        <a href="{% url 'projects:institucion-delete' inst.pk %}" class="btn btn-sm" style="background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.18);color:#f87171;"><i class="fa-solid fa-trash"></i></a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon"><i class="fa-solid fa-building-ngo" style="color:#34d399;"></i></div>
+  <div style="font-size:1.1rem;font-weight:800;margin-bottom:7px;">Sin instituciones registradas</div>
+  <div style="color:var(--muted);font-size:.84rem;max-width:300px;margin:0 auto 18px;line-height:1.6;">¿Conoces alguna? Sugiérela y la revisaremos antes de publicarla.</div>
+  <a href="{% url 'projects:sugerencia-create' %}" class="btn btn-green"><i class="fa-solid fa-paper-plane"></i> Sugerir institución</a>
+</div>
+{% endif %}
+
+<div class="cta-card">
+  <div class="cta-orb"><i class="fa-solid fa-paper-plane"></i></div>
+  <div style="font-size:1rem;font-weight:800;margin-bottom:6px;">¿Conoces una institución de apoyo?</div>
+  <div style="color:var(--muted);font-size:.83rem;margin-bottom:14px;max-width:320px;margin-left:auto;margin-right:auto;line-height:1.6;">Ayuda a completar la red. Envíanos la información y la publicaremos si es verificada.</div>
+  <a href="{% url 'projects:sugerencia-create' %}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Sugerir Institución</a>
+</div>
+
+<script>
+function filterInst(){
+  const q=document.getElementById('inst-srch').value.toLowerCase();
+  document.querySelectorAll('#inst-grid .inst-card').forEach(c=>{
+    c.style.display=!q||c.dataset.txt.includes(q)?'':'none';
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,1216 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Acceso Seguro — Portal Seguro Sentinel{% endblock %}
+{% block navbar %}{% endblock %}
+{% block container_class %}container-fluid p-0{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#04020c;
+  --s1:#0b0818;
+  --s2:#100d20;
+  --s3:#16122a;
+  --b1:rgba(120,80,255,.09);
+  --b2:rgba(120,80,255,.2);
+  --b3:rgba(120,80,255,.45);
+  --b4:rgba(120,80,255,.7);
+  --p:#7c3aed;
+  --p2:#6d28d9;
+  --a:#3b82f6;
+  --a2:#2563eb;
+  --vi:#a78bfa;
+  --cy:#67e8f9;
+  --gr:#34d399;
+  --ye:#fbbf24;
+  --re:#f87171;
+  --or:#fb923c;
+  --tx:#ede9ff;
+  --mu:#6b5f9a;
+  --gp:rgba(124,58,237,.38);
+  --ga:rgba(59,130,246,.3);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--p);border-radius:3px}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--tx);font-family:'Outfit',sans-serif}
+
+/* ═══ BG LAYERS ═══ */
+.bg-mesh{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 60% at 8% 18%,rgba(124,58,237,.16) 0%,transparent 68%),
+    radial-gradient(ellipse 55% 45% at 92% 8%,rgba(59,130,246,.13) 0%,transparent 62%),
+    radial-gradient(ellipse 45% 55% at 50% 92%,rgba(124,58,237,.1) 0%,transparent 65%),
+    radial-gradient(ellipse 30% 40% at 80% 60%,rgba(103,232,249,.07) 0%,transparent 55%);
+}
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(124,58,237,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(124,58,237,.04) 1px,transparent 1px);
+  background-size:48px 48px;
+}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ═══ LAYOUT ═══ */
+.page{display:grid;grid-template-columns:1fr 480px;height:100vh;position:relative;z-index:1}
+
+/* ═══ LEFT SHOWCASE ═══ */
+.showcase{
+  display:flex;flex-direction:column;justify-content:center;
+  padding:56px 64px;position:relative;overflow:hidden;
+}
+.showcase::after{
+  content:'';position:absolute;top:0;right:0;bottom:0;width:1px;
+  background:linear-gradient(180deg,transparent 5%,rgba(124,58,237,.35) 30%,rgba(59,130,246,.25) 70%,transparent 95%);
+}
+
+/* Floating orb decoration */
+.orb{position:absolute;border-radius:50%;filter:blur(70px);pointer-events:none;animation:orbFloat ease-in-out infinite}
+@keyframes orbFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-20px) scale(1.05)}}
+
+.sc-logo{display:flex;align-items:center;gap:13px;margin-bottom:52px;animation:up .7s ease both}
+.sc-logo-ico{
+  width:48px;height:48px;border-radius:13px;
+  background:linear-gradient(135deg,var(--p),var(--a));
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;color:white;flex-shrink:0;
+  box-shadow:0 0 26px var(--gp),inset 0 1px 0 rgba(255,255,255,.18);
+}
+.sc-logo-txt{font-size:1.1rem;font-weight:800;
+  background:linear-gradient(90deg,#fff 40%,var(--vi));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sc-logo-ver{font-size:.59rem;color:var(--cy);font-family:'JetBrains Mono',monospace;
+  display:block;margin-top:2px;-webkit-text-fill-color:var(--cy)}
+
+.sc-headline{
+  font-size:3.1rem;font-weight:900;line-height:1.08;
+  letter-spacing:-1.8px;margin-bottom:20px;
+  animation:up .7s ease .1s both;
+}
+.sc-headline .grad{
+  background:linear-gradient(90deg,var(--vi) 0%,var(--cy) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.sc-sub{font-size:1rem;color:var(--mu);line-height:1.65;max-width:400px;
+  margin-bottom:44px;animation:up .7s ease .18s both}
+
+/* Feature pills */
+.feats{display:flex;flex-direction:column;gap:13px;animation:up .7s ease .26s both}
+.feat{
+  display:flex;align-items:center;gap:13px;
+  padding:13px 16px;
+  background:rgba(255,255,255,.025);
+  border:1px solid var(--b1);
+  border-radius:12px;
+  transition:all .2s;
+}
+.feat:hover{border-color:var(--b2);background:rgba(124,58,237,.06);transform:translateX(4px)}
+.feat-ico{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.88rem;flex-shrink:0}
+.feat-lbl{font-size:.88rem;font-weight:700;line-height:1.2}
+.feat-desc{font-size:.74rem;color:var(--mu);margin-top:1px}
+
+/* Live stats */
+.live-stats{
+  display:flex;gap:0;margin-top:44px;
+  padding:18px 0;border-top:1px solid var(--b2);border-bottom:1px solid var(--b2);
+  animation:up .7s ease .35s both;
+}
+.lst{flex:1;text-align:center;position:relative}
+.lst:not(:last-child)::after{content:'';position:absolute;right:0;top:10%;bottom:10%;width:1px;background:var(--b2)}
+.lst-n{
+  font-size:1.85rem;font-weight:900;letter-spacing:-1px;
+  background:linear-gradient(90deg,var(--vi),var(--cy));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.lst-l{font-size:.68rem;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-top:3px}
+
+/* Emergency bar */
+.emer-bar{
+  display:flex;gap:8px;margin-top:20px;
+  animation:up .7s ease .42s both;
+}
+.emer-btn{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
+  padding:10px;border-radius:9px;text-decoration:none;
+  font-size:.76rem;font-weight:700;transition:all .18s;cursor:pointer;
+}
+.emer-911{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25);color:#fca5a5}
+.emer-911:hover{background:rgba(248,113,113,.18);border-color:rgba(248,113,113,.5);transform:translateY(-1px)}
+.emer-lm{background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.22);color:var(--vi)}
+.emer-lm:hover{background:rgba(167,139,250,.18);border-color:rgba(167,139,250,.45);transform:translateY(-1px)}
+.emer-map{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);color:var(--gr)}
+.emer-map:hover{background:rgba(52,211,153,.15);border-color:rgba(52,211,153,.4);transform:translateY(-1px)}
+
+/* ═══ RIGHT AUTH PANEL ═══ */
+.auth-panel{
+  background:rgba(11,8,24,.78);
+  backdrop-filter:blur(28px);
+  border-left:1px solid var(--b2);
+  display:flex;flex-direction:column;
+  overflow:hidden;position:relative;
+}
+
+/* Tab switcher */
+.auth-tabs{
+  display:flex;gap:0;
+  border-bottom:1px solid var(--b2);
+  flex-shrink:0;
+}
+.auth-tab{
+  flex:1;padding:16px 10px;
+  background:transparent;border:none;
+  color:var(--mu);font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:700;
+  cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  position:relative;letter-spacing:.3px;
+}
+.auth-tab::after{
+  content:'';position:absolute;bottom:0;left:10%;right:10%;height:2px;
+  background:linear-gradient(90deg,var(--p),var(--a));
+  border-radius:2px;transform:scaleX(0);transition:transform .25s;
+}
+.auth-tab:hover{color:var(--tx);background:rgba(255,255,255,.03)}
+.auth-tab.on{color:white;background:rgba(124,58,237,.08)}
+.auth-tab.on::after{transform:scaleX(1)}
+
+/* Panels container */
+.panels-wrap{flex:1;overflow:hidden;position:relative}
+.auth-pane{
+  position:absolute;inset:0;
+  overflow-y:auto;padding:32px 36px 28px;
+  transition:all .35s cubic-bezier(.4,0,.2,1);
+  opacity:0;transform:translateX(30px);pointer-events:none;
+}
+.auth-pane.on{opacity:1;transform:translateX(0);pointer-events:auto}
+.auth-pane.out-left{transform:translateX(-30px)}
+
+/* Security badge */
+.sec-badge{
+  display:inline-flex;align-items:center;gap:7px;
+  background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.18);
+  color:var(--gr);padding:5px 13px;border-radius:20px;
+  font-size:.64rem;font-family:'JetBrains Mono',monospace;
+  margin-bottom:22px;-webkit-text-fill-color:var(--gr);
+}
+.sec-dot{width:6px;height:6px;border-radius:50%;background:var(--gr);
+  box-shadow:0 0 7px var(--gr);animation:bk 2s infinite;flex-shrink:0}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.2}}
+
+.pane-title{
+  font-size:1.65rem;font-weight:900;letter-spacing:-.5px;
+  background:linear-gradient(90deg,#fff 50%,var(--vi));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:5px;
+}
+.pane-sub{font-size:.82rem;color:var(--mu);margin-bottom:26px;line-height:1.5}
+
+/* ═══ FORM ELEMENTS ═══ */
+.frow{margin-bottom:16px}
+.frow.anim1{animation:up .5s ease .05s both}
+.frow.anim2{animation:up .5s ease .12s both}
+.frow.anim3{animation:up .5s ease .19s both}
+.frow.anim4{animation:up .5s ease .26s both}
+
+.flabel{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:.73rem;font-weight:700;color:var(--mu);
+  text-transform:uppercase;letter-spacing:.9px;margin-bottom:7px;
+}
+.flabel a{
+  font-size:.72rem;color:var(--vi);text-decoration:none;
+  font-weight:600;text-transform:none;letter-spacing:0;
+  transition:color .15s;
+}
+.flabel a:hover{color:var(--cy)}
+
+.fw{position:relative}
+.fic{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  color:var(--mu);font-size:.88rem;pointer-events:none;transition:color .2s;z-index:1;
+}
+.fw:focus-within .fic{color:var(--vi)}
+
+.finp{
+  width:100%;
+  background:rgba(0,0,0,.38);
+  border:1px solid var(--b2);
+  border-radius:11px;
+  padding:12px 44px 12px 42px;
+  color:var(--tx);
+  font-family:'Outfit',sans-serif;font-size:.9rem;
+  outline:none;transition:all .22s;
+  -webkit-text-fill-color:var(--tx);
+}
+.finp::placeholder{color:var(--mu)}
+.finp:focus{
+  border-color:var(--p);
+  background:rgba(124,58,237,.07);
+  box-shadow:0 0 0 3px rgba(124,58,237,.12);
+}
+.finp.ok{border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.04)}
+.finp.err{border-color:rgba(248,113,113,.4);background:rgba(248,113,113,.04)}
+
+.pw-eye{
+  position:absolute;right:13px;top:50%;transform:translateY(-50%);
+  color:var(--mu);cursor:pointer;font-size:.88rem;
+  transition:color .15s;background:none;border:none;padding:2px 4px;z-index:1;
+}
+.pw-eye:hover{color:var(--vi)}
+
+/* Field hint */
+.fhint{font-size:.69rem;margin-top:5px;display:none;align-items:center;gap:5px}
+.fhint.show{display:flex}
+.fhint.ok{color:var(--gr)}.fhint.err{color:var(--re)}.fhint.warn{color:var(--ye)}
+
+/* Password strength */
+.pw-str{margin-top:8px;display:none}
+.pw-str.show{display:block}
+.str-bars{display:flex;gap:3px;margin-bottom:4px}
+.sbar{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.07);transition:all .3s}
+.str-lbl{font-size:.67rem;font-family:'JetBrains Mono',monospace}
+
+/* Caps lock */
+.caps-w{
+  display:none;align-items:center;gap:6px;
+  background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);
+  border-radius:7px;padding:7px 11px;
+  font-size:.72rem;color:var(--ye);margin-top:7px;
+}
+.caps-w.show{display:flex}
+
+/* Checkbox row */
+.chk-row{
+  display:flex;align-items:center;gap:8px;
+  font-size:.79rem;color:var(--mu);cursor:pointer;margin-bottom:16px;
+}
+.chk-row input{accent-color:var(--p);width:14px;height:14px;cursor:pointer;flex-shrink:0}
+.chk-row span{line-height:1.4}
+.chk-row a{color:var(--vi);text-decoration:none}
+.chk-row a:hover{color:var(--cy)}
+
+/* Submit */
+.btn-go{
+  width:100%;padding:13.5px;
+  background:linear-gradient(135deg,var(--p),var(--a2));
+  border:none;border-radius:11px;
+  color:white;font-family:'Outfit',sans-serif;font-size:.92rem;font-weight:700;
+  cursor:pointer;transition:all .22s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 6px 22px rgba(124,58,237,.3);
+  position:relative;overflow:hidden;
+}
+.btn-go::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);
+  transform:translateX(-100%);transition:transform .5s;
+}
+.btn-go:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(124,58,237,.42)}
+.btn-go:hover::before{transform:translateX(100%)}
+.btn-go:active{transform:translateY(0)}
+.btn-go:disabled{opacity:.65;cursor:not-allowed;transform:none}
+
+/* Error list */
+.errlist{list-style:none;margin-bottom:14px}
+.errlist li{
+  background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.2);
+  border-radius:8px;padding:9px 12px;font-size:.79rem;color:#fca5a5;
+  display:flex;align-items:center;gap:7px;margin-bottom:6px;
+}
+.errlist li i{flex-shrink:0;color:var(--re)}
+
+/* Success box */
+.success-box{
+  background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.22);
+  border-radius:11px;padding:18px;text-align:center;
+  display:none;
+}
+.success-box.show{display:block}
+.success-box i{font-size:2.2rem;color:var(--gr);margin-bottom:10px;display:block}
+.success-box h4{font-size:1rem;font-weight:700;margin-bottom:6px;color:var(--gr)}
+.success-box p{font-size:.8rem;color:var(--mu);line-height:1.55}
+
+/* Divider */
+.divr{display:flex;align-items:center;gap:10px;margin:18px 0}
+.dl{flex:1;height:1px;background:var(--b2)}
+.dt{font-size:.69rem;color:var(--mu);font-weight:600;white-space:nowrap}
+
+/* Social-style quick access */
+.alt-actions{display:flex;flex-direction:column;gap:7px}
+.alt-btn{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 14px;
+  background:rgba(255,255,255,.025);
+  border:1px solid var(--b2);border-radius:10px;
+  color:var(--mu);font-family:'Outfit',sans-serif;
+  font-size:.8rem;font-weight:600;cursor:pointer;
+  transition:all .18s;text-decoration:none;width:100%;
+}
+.alt-btn:hover{border-color:var(--b3);background:rgba(124,58,237,.08);color:var(--tx);transform:translateX(2px)}
+.alt-btn i{width:20px;text-align:center;font-size:.9rem}
+.alt-btn span{flex:1}
+.alt-btn .arrow{margin-left:auto;font-size:.7rem;color:var(--mu);transition:color .15s}
+.alt-btn:hover .arrow{color:var(--vi)}
+
+/* Recovery steps */
+.rec-steps{display:flex;gap:0;margin-bottom:22px}
+.rstep{flex:1;text-align:center;position:relative}
+.rstep:not(:last-child)::after{content:'';position:absolute;top:14px;right:0;left:50%;height:2px;background:var(--b2)}
+.rstep.done::after,.rstep.act::after{background:linear-gradient(90deg,var(--p),var(--vi))}
+.rs-num{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--s2);border:2px solid var(--b2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.7rem;font-weight:800;color:var(--mu);
+  margin:0 auto 5px;position:relative;z-index:1;transition:all .3s;
+}
+.rstep.done .rs-num{background:var(--p);border-color:var(--p);color:white}
+.rstep.act .rs-num{background:linear-gradient(135deg,var(--p),var(--a));border-color:var(--p);color:white;box-shadow:0 0 12px var(--gp)}
+.rs-lbl{font-size:.62rem;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+
+/* Recovery method cards */
+.rec-methods{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px}
+.rec-card{
+  padding:14px 12px;text-align:center;
+  background:rgba(255,255,255,.02);border:2px solid var(--b2);
+  border-radius:11px;cursor:pointer;transition:all .2s;
+}
+.rec-card:hover{border-color:var(--b3);background:rgba(124,58,237,.08)}
+.rec-card.sel{border-color:var(--p);background:rgba(124,58,237,.12);box-shadow:0 0 0 1px var(--p)}
+.rec-card i{font-size:1.4rem;margin-bottom:7px;display:block}
+.rec-card-lbl{font-size:.77rem;font-weight:700;color:var(--tx)}
+.rec-card-sub{font-size:.67rem;color:var(--mu);margin-top:2px}
+
+/* Clock widget */
+.auth-clock{
+  font-family:'JetBrains Mono',monospace;font-size:.69rem;color:var(--mu);
+  display:flex;align-items:center;gap:5px;margin-bottom:18px;
+}
+
+/* Footer links */
+.pane-footer{
+  display:flex;justify-content:center;gap:18px;
+  padding-top:16px;border-top:1px solid var(--b1);margin-top:18px;
+}
+.pane-footer a{
+  font-size:.72rem;color:var(--mu);text-decoration:none;
+  display:flex;align-items:center;gap:4px;transition:color .15s;
+}
+.pane-footer a:hover{color:var(--vi)}
+
+/* Loading spinner */
+.spin{width:17px;height:17px;border:2px solid rgba(255,255,255,.25);
+  border-top-color:white;border-radius:50%;animation:spinA .6s linear infinite;display:none}
+@keyframes spinA{to{transform:rotate(360deg)}}
+
+/* ═══ ANIMATIONS ═══ */
+@keyframes up{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:960px){
+  .page{grid-template-columns:1fr}
+  .showcase{display:none}
+  .auth-panel{border-left:none;width:100%;max-width:100%}
+  html,body{overflow:auto}
+  .page{height:auto;min-height:100vh}
+  .auth-pane{position:relative;inset:auto;transform:none!important}
+  .panels-wrap{overflow:visible}
+  .auth-pane:not(.on){display:none}
+}
+@media(max-width:480px){.auth-pane{padding:24px 18px 22px}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg-mesh"></div>
+<div class="bg-grid"></div>
+<canvas id="bg-canvas"></canvas>
+
+<div class="page">
+
+  <!-- ════════════════════════════
+       LEFT SHOWCASE
+  ════════════════════════════ -->
+  <aside class="showcase">
+    <!-- Orbs -->
+    <div class="orb" style="width:320px;height:320px;top:-80px;right:-60px;background:rgba(124,58,237,.12);animation-duration:8s"></div>
+    <div class="orb" style="width:220px;height:220px;bottom:60px;left:-40px;background:rgba(59,130,246,.09);animation-duration:11s;animation-delay:-4s"></div>
+
+    <!-- Logo -->
+    <div class="sc-logo">
+      <div class="sc-logo-ico"><i class="fa-solid fa-shield-halved"></i></div>
+      <div>
+        <div class="sc-logo-txt">Portal Seguro</div>
+        <span class="sc-logo-ver">SENTINEL v9.0</span>
+      </div>
+    </div>
+
+    <!-- Headline -->
+    <h1 class="sc-headline">Tu refugio<br>digital.<br><span class="grad">Sin miedo.</span></h1>
+    <p class="sc-sub">Plataforma de protección integral para mujeres en CDMX. Reporta, recibe apoyo legal con IA, y encuentra instituciones cerca de ti — todo cifrado y confidencial.</p>
+
+    <!-- Features -->
+    <div class="feats">
+      <div class="feat">
+        <div class="feat-ico" style="background:rgba(124,58,237,.14);color:var(--vi)"><i class="fa-solid fa-robot"></i></div>
+        <div>
+          <div class="feat-lbl">Sentinel AI · Claude</div>
+          <div class="feat-desc">Asesoría legal, psicológica y de emergencia 24/7, cifrada</div>
+        </div>
+      </div>
+      <div class="feat">
+        <div class="feat-ico" style="background:rgba(52,211,153,.11);color:var(--gr)"><i class="fa-solid fa-map-location-dot"></i></div>
+        <div>
+          <div class="feat-lbl">Red de Seguridad en tu mapa</div>
+          <div class="feat-desc">23 instituciones activas: LUNAs, Fiscalías, Salud, ONGs</div>
+        </div>
+      </div>
+      <div class="feat">
+        <div class="feat-ico" style="background:rgba(103,232,249,.09);color:var(--cy)"><i class="fa-solid fa-lock"></i></div>
+        <div>
+          <div class="feat-lbl">Privacidad AES-256 garantizada</div>
+          <div class="feat-desc">Tus datos y conversaciones nunca se comparten con terceros</div>
+        </div>
+      </div>
+      <div class="feat">
+        <div class="feat-ico" style="background:rgba(248,113,113,.1);color:var(--re)"><i class="fa-solid fa-tower-broadcast"></i></div>
+        <div>
+          <div class="feat-lbl">SOS un toque · 911 directo</div>
+          <div class="feat-desc">Activa emergencia y comparte tu ubicación instantáneamente</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="live-stats">
+      <div class="lst"><div class="lst-n" id="cnt-usr">1,247</div><div class="lst-l">Usuarias seguras</div></div>
+      <div class="lst"><div class="lst-n">23</div><div class="lst-l">Instituciones</div></div>
+      <div class="lst"><div class="lst-n">99.9%</div><div class="lst-l">Disponibilidad</div></div>
+    </div>
+
+    <!-- Emergency quick access -->
+    <div class="emer-bar">
+      <a href="tel:911" class="emer-btn emer-911"><i class="fa-solid fa-phone"></i>911 Emergencias</a>
+      <a href="tel:5556581111" class="emer-btn emer-lm"><i class="fa-solid fa-venus"></i>Línea Mujeres</a>
+      <a href="{% url 'projects:institucion-list' %}" class="emer-btn emer-map"><i class="fa-solid fa-map-pin"></i>Ver mapa</a>
+    </div>
+  </aside>
+
+  <!-- ════════════════════════════
+       RIGHT AUTH PANEL
+  ════════════════════════════ -->
+  <section class="auth-panel">
+
+    <!-- Tab switcher -->
+    <div class="auth-tabs">
+      <button class="auth-tab on" id="tab-login" onclick="showPane('login',this)">
+        <i class="fa-solid fa-right-to-bracket"></i>Iniciar sesión
+      </button>
+      <button class="auth-tab" id="tab-register" onclick="showPane('register',this)">
+        <i class="fa-solid fa-user-plus"></i>Crear cuenta
+      </button>
+      <button class="auth-tab" id="tab-recover" onclick="showPane('recover',this)">
+        <i class="fa-solid fa-key"></i>Recuperar
+      </button>
+    </div>
+
+    <div class="panels-wrap">
+
+      <!-- ══════ PANE: LOGIN ══════ -->
+      <div class="auth-pane on" id="pane-login">
+
+        <div class="sec-badge"><span class="sec-dot"></span>CONEXIÓN SEGURA · TLS · AES-256</div>
+        <div class="pane-title">Bienvenida de nuevo</div>
+        <div class="pane-sub">Accede a tu espacio seguro personalizado</div>
+
+        <div class="auth-clock"><i class="fa-solid fa-circle" style="color:var(--gr);font-size:.5rem"></i>Sistema activo · <span id="login-clock">--:--:--</span></div>
+
+        {% if form.non_field_errors %}
+        <ul class="errlist">
+          {% for e in form.non_field_errors %}<li><i class="fa-solid fa-triangle-exclamation"></i>{{ e }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+
+        <form method="post" id="form-login" novalidate>
+          {% csrf_token %}
+
+          <!-- Username -->
+          <div class="frow anim1">
+            <div class="flabel"><span>Usuario</span></div>
+            <div class="fw">
+              <i class="fa-solid fa-user fic"></i>
+              <input type="text" name="username" id="li-user" class="finp"
+                placeholder="Tu nombre de usuario"
+                autocomplete="username" autocapitalize="none" spellcheck="false">
+            </div>
+            <div class="fhint" id="li-user-hint"></div>
+          </div>
+
+          <!-- Password -->
+          <div class="frow anim2">
+            <div class="flabel">
+              <span>Contraseña</span>
+              <a href="#" onclick="showPane('recover',document.getElementById('tab-recover'));return false">
+                <i class="fa-solid fa-key" style="margin-right:3px"></i>¿La olvidaste?
+              </a>
+            </div>
+            <div class="fw">
+              <i class="fa-solid fa-lock fic"></i>
+              <input type="password" name="password" id="li-pw" class="finp"
+                placeholder="••••••••••••" autocomplete="current-password">
+              <button type="button" class="pw-eye" onclick="togglePw('li-pw','li-eye')" title="Ver contraseña">
+                <i class="fa-solid fa-eye" id="li-eye"></i>
+              </button>
+            </div>
+            <div class="caps-w" id="caps-li"><i class="fa-solid fa-triangle-exclamation"></i>Bloq Mayús activo</div>
+          </div>
+
+          <!-- Remember + clock -->
+          <div class="frow anim3" style="margin-bottom:14px">
+            <label class="chk-row">
+              <input type="checkbox" name="remember" id="li-rem">
+              <span>Recordarme en este dispositivo</span>
+            </label>
+          </div>
+
+          <div class="frow anim4">
+            <button type="submit" class="btn-go" id="li-btn">
+              <div class="spin" id="li-spin"></div>
+              <i class="fa-solid fa-shield-check" id="li-ico"></i>
+              <span id="li-txt">Entrar de forma segura</span>
+            </button>
+          </div>
+        </form>
+
+        <div class="divr"><div class="dl"></div><div class="dt">Acceso directo</div><div class="dl"></div></div>
+
+        <div class="alt-actions">
+          <a href="{% url 'projects:reporte-create' %}" class="alt-btn">
+            <i class="fa-solid fa-file-circle-plus" style="color:var(--vi)"></i>
+            <span>Hacer un reporte ahora</span>
+            <i class="fa-solid fa-chevron-right arrow"></i>
+          </a>
+          <a href="{% url 'projects:tip-list' %}" class="alt-btn">
+            <i class="fa-solid fa-lightbulb" style="color:var(--ye)"></i>
+            <span>Ver tips de seguridad</span>
+            <i class="fa-solid fa-chevron-right arrow"></i>
+          </a>
+          <a href="{% url 'home' %}" class="alt-btn">
+            <i class="fa-solid fa-house-chimney" style="color:var(--cy)"></i>
+            <span>Ir al inicio</span>
+            <i class="fa-solid fa-chevron-right arrow"></i>
+          </a>
+        </div>
+
+        <div class="pane-footer">
+          <a href="tel:911"><i class="fa-solid fa-phone" style="color:var(--re)"></i>911</a>
+          <a href="tel:5556581111"><i class="fa-solid fa-venus" style="color:var(--vi)"></i>Línea Mujeres</a>
+          <a href="{% url 'home' %}"><i class="fa-solid fa-arrow-left"></i>Inicio</a>
+        </div>
+      </div>
+
+      <!-- ══════ PANE: CREAR CUENTA ══════ -->
+      <div class="auth-pane out-left" id="pane-register">
+
+        <div class="sec-badge"><span class="sec-dot"></span>REGISTRO SEGURO · CIFRADO E2E</div>
+        <div class="pane-title">Crear cuenta</div>
+        <div class="pane-sub">Únete a la red de mujeres protegidas en CDMX. Es gratis y confidencial.</div>
+
+        <!-- Success message (shown after submit) -->
+        <div class="success-box" id="reg-success">
+          <i class="fa-solid fa-circle-check"></i>
+          <h4>¡Cuenta creada exitosamente!</h4>
+          <p>Tu cuenta ha sido registrada. Ahora puedes iniciar sesión con tus credenciales.</p>
+          <button onclick="showPane('login',document.getElementById('tab-login'))"
+            style="margin-top:14px;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.25);color:var(--gr);padding:9px 20px;border-radius:8px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:700">
+            <i class="fa-solid fa-right-to-bracket"></i> Ir a iniciar sesión
+          </button>
+        </div>
+
+        <form method="post" id="form-reg" action="{% url 'register' %}" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="action" value="register">
+
+          <!-- Nombre de usuario -->
+          <div class="frow anim1">
+            <div class="flabel"><span>Nombre de usuario</span></div>
+            <div class="fw">
+              <i class="fa-solid fa-at fic"></i>
+              <input type="text" name="username" id="reg-user" class="finp"
+                placeholder="Elige un nombre de usuario"
+                autocomplete="username" autocapitalize="none" spellcheck="false">
+            </div>
+            <div class="fhint" id="reg-user-hint"></div>
+          </div>
+
+          <!-- Email -->
+          <div class="frow anim2">
+            <div class="flabel"><span>Correo electrónico</span></div>
+            <div class="fw">
+              <i class="fa-solid fa-envelope fic"></i>
+              <input type="email" name="email" id="reg-email" class="finp"
+                placeholder="tu@correo.com"
+                autocomplete="email">
+            </div>
+            <div class="fhint" id="reg-email-hint"></div>
+          </div>
+
+          <!-- Contraseña -->
+          <div class="frow anim3">
+            <div class="flabel"><span>Contraseña</span></div>
+            <div class="fw">
+              <i class="fa-solid fa-lock fic"></i>
+              <input type="password" name="password1" id="reg-pw1" class="finp"
+                placeholder="Mínimo 8 caracteres"
+                autocomplete="new-password"
+                oninput="checkStrength(this.value)">
+              <button type="button" class="pw-eye" onclick="togglePw('reg-pw1','reg-eye1')">
+                <i class="fa-solid fa-eye" id="reg-eye1"></i>
+              </button>
+            </div>
+            <div class="pw-str" id="pw-str">
+              <div class="str-bars">
+                <div class="sbar" id="sb1"></div>
+                <div class="sbar" id="sb2"></div>
+                <div class="sbar" id="sb3"></div>
+                <div class="sbar" id="sb4"></div>
+              </div>
+              <div class="str-lbl" id="str-lbl" style="color:var(--mu)">Ingresa una contraseña</div>
+            </div>
+          </div>
+
+          <!-- Confirmar contraseña -->
+          <div class="frow anim4">
+            <div class="flabel"><span>Confirmar contraseña</span></div>
+            <div class="fw">
+              <i class="fa-solid fa-lock-open fic"></i>
+              <input type="password" name="password2" id="reg-pw2" class="finp"
+                placeholder="Repite tu contraseña"
+                autocomplete="new-password"
+                oninput="checkMatch()">
+              <button type="button" class="pw-eye" onclick="togglePw('reg-pw2','reg-eye2')">
+                <i class="fa-solid fa-eye" id="reg-eye2"></i>
+              </button>
+            </div>
+            <div class="fhint" id="reg-pw2-hint"></div>
+          </div>
+
+          <!-- Términos -->
+          <div class="frow" style="animation:up .5s ease .33s both">
+            <label class="chk-row">
+              <input type="checkbox" id="reg-terms" required>
+              <span>Acepto que mis datos están protegidos y no se comparten con terceros. <a href="{% url 'home' %}">Política de privacidad.</a></span>
+            </label>
+            <div class="fhint err" id="terms-hint" style="display:none"><i class="fa-solid fa-circle-xmark"></i>Debes aceptar para continuar</div>
+          </div>
+
+          <div style="animation:up .5s ease .4s both">
+            <button type="submit" class="btn-go" id="reg-btn" onclick="return validateReg()">
+              <div class="spin" id="reg-spin"></div>
+              <i class="fa-solid fa-user-shield" id="reg-ico"></i>
+              <span id="reg-txt">Crear mi cuenta segura</span>
+            </button>
+          </div>
+        </form>
+
+        <div class="pane-footer" style="margin-top:14px">
+          <a href="#" onclick="showPane('login',document.getElementById('tab-login'));return false"><i class="fa-solid fa-right-to-bracket" style="color:var(--vi)"></i>Ya tengo cuenta</a>
+          <a href="tel:911"><i class="fa-solid fa-phone" style="color:var(--re)"></i>911</a>
+          <a href="{% url 'home' %}"><i class="fa-solid fa-arrow-left"></i>Inicio</a>
+        </div>
+      </div>
+
+      <!-- ══════ PANE: RECUPERAR CUENTA ══════ -->
+      <div class="auth-pane out-left" id="pane-recover">
+
+        <div class="sec-badge"><span class="sec-dot"></span>RECUPERACIÓN SEGURA · CIFRADO</div>
+        <div class="pane-title">Recuperar cuenta</div>
+        <div class="pane-sub">Te ayudamos a recuperar el acceso a tu cuenta de forma segura</div>
+
+        <!-- Steps indicator -->
+        <div class="rec-steps" id="rec-steps">
+          <div class="rstep act" id="rst1">
+            <div class="rs-num">1</div>
+            <div class="rs-lbl">Método</div>
+          </div>
+          <div class="rstep" id="rst2">
+            <div class="rs-num">2</div>
+            <div class="rs-lbl">Verificar</div>
+          </div>
+          <div class="rstep" id="rst3">
+            <div class="rs-num">3</div>
+            <div class="rs-lbl">Nueva clave</div>
+          </div>
+        </div>
+
+        <!-- STEP 1: Choose method -->
+        <div id="rec-step1">
+          <div style="font-size:.78rem;color:var(--mu);margin-bottom:12px;font-weight:600">¿Cómo quieres recuperar tu cuenta?</div>
+          <div class="rec-methods">
+            <div class="rec-card sel" id="rm-email" onclick="selMethod('email')">
+              <i class="fa-solid fa-envelope" style="color:var(--vi)"></i>
+              <div class="rec-card-lbl">Por correo</div>
+              <div class="rec-card-sub">Recibe un enlace</div>
+            </div>
+            <div class="rec-card" id="rm-user" onclick="selMethod('user')">
+              <i class="fa-solid fa-user-tag" style="color:var(--cy)"></i>
+              <div class="rec-card-lbl">Por usuario</div>
+              <div class="rec-card-sub">Con tu nombre</div>
+            </div>
+          </div>
+
+          <div class="frow" id="rec-email-f">
+            <div class="flabel"><span>Correo electrónico registrado</span></div>
+            <div class="fw">
+              <i class="fa-solid fa-envelope fic"></i>
+              <input type="email" id="rec-email-inp" class="finp" placeholder="tu@correo.com">
+            </div>
+            <div class="fhint" id="rec-email-hint"></div>
+          </div>
+
+          <div class="frow" id="rec-user-f" style="display:none">
+            <div class="flabel"><span>Nombre de usuario</span></div>
+            <div class="fw">
+              <i class="fa-solid fa-user fic"></i>
+              <input type="text" id="rec-user-inp" class="finp" placeholder="Tu nombre de usuario">
+            </div>
+            <div class="fhint" id="rec-user-hint"></div>
+          </div>
+
+          <button type="button" class="btn-go" id="rec-btn1" onclick="recStep2()" style="margin-top:6px">
+            <div class="spin" id="rec-spin1"></div>
+            <i class="fa-solid fa-paper-plane" id="rec-ico1"></i>
+            <span id="rec-txt1">Enviar instrucciones</span>
+          </button>
+        </div>
+
+        <!-- STEP 2: Code verification -->
+        <div id="rec-step2" style="display:none">
+          <div style="background:rgba(103,232,249,.07);border:1px solid rgba(103,232,249,.18);border-radius:10px;padding:14px;margin-bottom:18px;font-size:.8rem;line-height:1.55">
+            <i class="fa-solid fa-circle-info" style="color:var(--cy);margin-right:6px"></i>
+            <span id="rec-sent-msg">Hemos enviado un código de 6 dígitos a tu correo registrado.</span>
+          </div>
+
+          <div class="frow">
+            <div class="flabel"><span>Código de verificación</span></div>
+            <div class="fw">
+              <i class="fa-solid fa-hashtag fic"></i>
+              <input type="text" id="rec-code" class="finp" placeholder="000000"
+                maxlength="6" style="letter-spacing:8px;font-family:'JetBrains Mono',monospace;font-size:1.2rem;text-align:center">
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button type="button" class="btn-go" onclick="recStep3()" style="flex:1">
+              <i class="fa-solid fa-check"></i><span>Verificar código</span>
+            </button>
+            <button type="button" onclick="recStep1()"
+              style="padding:12px 14px;background:rgba(255,255,255,.03);border:1px solid var(--b2);border-radius:10px;color:var(--mu);cursor:pointer;font-family:'Outfit',sans-serif;font-size:.8rem;font-weight:600;transition:all .15s"
+              onmouseover="this.style.background='rgba(124,58,237,.08)';this.style.color='white'"
+              onmouseout="this.style.background='rgba(255,255,255,.03)';this.style.color='var(--mu)'">
+              <i class="fa-solid fa-arrow-left"></i>
+            </button>
+          </div>
+
+          <div style="margin-top:12px;font-size:.74rem;color:var(--mu);text-align:center">
+            ¿No llegó? <a href="#" onclick="recStep1();return false" style="color:var(--vi);text-decoration:none">Reenviar código</a>
+          </div>
+        </div>
+
+        <!-- STEP 3: New password -->
+        <div id="rec-step3" style="display:none">
+          <div style="background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.18);border-radius:10px;padding:12px;margin-bottom:18px;font-size:.79rem;color:var(--gr);display:flex;align-items:center;gap:8px">
+            <i class="fa-solid fa-circle-check"></i>Código verificado. Crea tu nueva contraseña.
+          </div>
+
+          <div class="frow">
+            <div class="flabel"><span>Nueva contraseña</span></div>
+            <div class="fw">
+              <i class="fa-solid fa-lock fic"></i>
+              <input type="password" id="rec-newpw1" class="finp" placeholder="Mínimo 8 caracteres" oninput="checkStrengthEl(this.value,'rec-str')">
+              <button type="button" class="pw-eye" onclick="togglePw('rec-newpw1','rec-neye1')"><i class="fa-solid fa-eye" id="rec-neye1"></i></button>
+            </div>
+            <div class="pw-str" id="rec-str">
+              <div class="str-bars"><div class="sbar" id="rbs1"></div><div class="sbar" id="rbs2"></div><div class="sbar" id="rbs3"></div><div class="sbar" id="rbs4"></div></div>
+              <div class="str-lbl" id="rec-str-lbl" style="color:var(--mu)">Ingresa una contraseña</div>
+            </div>
+          </div>
+
+          <div class="frow">
+            <div class="flabel"><span>Confirmar contraseña</span></div>
+            <div class="fw">
+              <i class="fa-solid fa-lock-open fic"></i>
+              <input type="password" id="rec-newpw2" class="finp" placeholder="Repite tu contraseña" oninput="checkMatchEl('rec-newpw1','rec-newpw2','rec-match-hint')">
+              <button type="button" class="pw-eye" onclick="togglePw('rec-newpw2','rec-neye2')"><i class="fa-solid fa-eye" id="rec-neye2"></i></button>
+            </div>
+            <div class="fhint" id="rec-match-hint"></div>
+          </div>
+
+          <button type="button" class="btn-go" onclick="recFinish()">
+            <div class="spin" id="rec-spin3"></div>
+            <i class="fa-solid fa-key" id="rec-ico3"></i>
+            <span id="rec-txt3">Cambiar contraseña</span>
+          </button>
+        </div>
+
+        <!-- STEP 4: Success -->
+        <div id="rec-step4" style="display:none">
+          <div class="success-box show">
+            <i class="fa-solid fa-party-horn"></i>
+            <h4>¡Contraseña actualizada!</h4>
+            <p>Tu contraseña ha sido cambiada exitosamente. Ahora puedes iniciar sesión con tu nueva contraseña.</p>
+            <button onclick="showPane('login',document.getElementById('tab-login'))"
+              style="margin-top:14px;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.25);color:var(--gr);padding:9px 20px;border-radius:8px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:700">
+              <i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión
+            </button>
+          </div>
+        </div>
+
+        <div class="pane-footer" style="margin-top:16px">
+          <a href="#" onclick="showPane('login',document.getElementById('tab-login'));return false"><i class="fa-solid fa-right-to-bracket" style="color:var(--vi)"></i>Iniciar sesión</a>
+          <a href="#" onclick="showPane('register',document.getElementById('tab-register'));return false"><i class="fa-solid fa-user-plus" style="color:var(--cy)"></i>Crear cuenta</a>
+          <a href="{% url 'home' %}"><i class="fa-solid fa-arrow-left"></i>Inicio</a>
+        </div>
+      </div>
+
+    </div><!-- /panels-wrap -->
+  </section>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ═══════════════════════════
+// CANVAS NETWORK BACKGROUND
+// ═══════════════════════════
+const cv=document.getElementById('bg-canvas'),cx=cv.getContext('2d')
+let W,H,ns=[]
+function rsz(){W=cv.width=innerWidth;H=cv.height=innerHeight}
+rsz();addEventListener('resize',rsz)
+for(let i=0;i<40;i++)ns.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3})
+;(function loop(){
+  cx.clearRect(0,0,W,H)
+  ns.forEach(n=>{
+    n.x+=n.vx;n.y+=n.vy
+    if(n.x<0||n.x>W)n.vx*=-1
+    if(n.y<0||n.y>H)n.vy*=-1
+    cx.beginPath();cx.arc(n.x,n.y,1.5,0,Math.PI*2)
+    cx.fillStyle='rgba(124,58,237,.3)';cx.fill()
+  })
+  for(let i=0;i<ns.length;i++)for(let j=i+1;j<ns.length;j++){
+    const dx=ns[i].x-ns[j].x,dy=ns[i].y-ns[j].y,d=Math.sqrt(dx*dx+dy*dy)
+    if(d<140){
+      cx.beginPath();cx.moveTo(ns[i].x,ns[i].y);cx.lineTo(ns[j].x,ns[j].y)
+      cx.strokeStyle=`rgba(124,58,237,${(1-d/140)*.13})`;cx.lineWidth=.7;cx.stroke()
+    }
+  }
+  requestAnimationFrame(loop)
+})()
+
+// ═══════════════════════════
+// CLOCK
+// ═══════════════════════════
+setInterval(()=>{const el=document.getElementById('login-clock');if(el)el.textContent=new Date().toLocaleTimeString()},1000)
+
+// ═══════════════════════════
+// TAB / PANE SWITCHER
+// ═══════════════════════════
+function showPane(name,tabEl){
+  const current=document.querySelector('.auth-pane.on')
+  const next=document.getElementById('pane-'+name)
+  if(!next||next===current)return
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('on'))
+  tabEl.classList.add('on')
+  if(current){current.classList.remove('on');current.classList.add('out-left')}
+  next.classList.remove('out-left');next.classList.add('on')
+  // Reset out-left after animation
+  if(current)setTimeout(()=>current.classList.remove('out-left'),380)
+}
+
+// ═══════════════════════════
+// CAPS LOCK DETECTION
+// ═══════════════════════════
+document.addEventListener('keyup',e=>{
+  if(e.getModifierState){
+    const caps=e.getModifierState('CapsLock')
+    const active=document.activeElement
+    if(active&&active.type==='password'){
+      document.querySelectorAll('.caps-w').forEach(w=>w.classList.toggle('show',caps))
+    }
+  }
+})
+
+// ═══════════════════════════
+// PASSWORD VISIBILITY
+// ═══════════════════════════
+function togglePw(inputId,eyeId){
+  const f=document.getElementById(inputId),e=document.getElementById(eyeId)
+  if(!f)return
+  f.type=f.type==='password'?'text':'password'
+  e.className=f.type==='text'?'fa-solid fa-eye-slash':'fa-solid fa-eye'
+}
+
+// ═══════════════════════════
+// USERNAME VALIDATION (login)
+// ═══════════════════════════
+document.getElementById('li-user')&&document.getElementById('li-user').addEventListener('input',function(){
+  const h=document.getElementById('li-user-hint'),v=this.value.trim()
+  if(!v){h.className='fhint';return}
+  if(v.length<3){
+    this.classList.remove('ok');this.classList.add('err')
+    h.className='fhint err show';h.innerHTML='<i class="fa-solid fa-circle-xmark"></i> Mínimo 3 caracteres'
+  }else{
+    this.classList.remove('err');this.classList.add('ok')
+    h.className='fhint ok show';h.innerHTML='<i class="fa-solid fa-circle-check"></i> Usuario válido'
+  }
+})
+
+// ═══════════════════════════
+// LOGIN SUBMIT
+// ═══════════════════════════
+document.getElementById('form-login')&&document.getElementById('form-login').addEventListener('submit',function(e){
+  const u=document.getElementById('li-user')?.value.trim()
+  const p=document.getElementById('li-pw')?.value
+  if(!u||!p){e.preventDefault();return}
+  const btn=document.getElementById('li-btn')
+  document.getElementById('li-spin').style.display='block'
+  document.getElementById('li-ico').style.display='none'
+  document.getElementById('li-txt').textContent='Verificando...'
+  btn.disabled=true
+})
+
+// ═══════════════════════════
+// PASSWORD STRENGTH
+// ═══════════════════════════
+function checkStrength(v,pfx){
+  const str=document.getElementById('pw-str')
+  if(str){str.classList.add('show')}
+  _applyStrength(v,'sb1','sb2','sb3','sb4','str-lbl')
+}
+function checkStrengthEl(v,containerId){
+  const c=document.getElementById(containerId)
+  if(c)c.classList.add('show')
+  const sfx=containerId==='rec-str'?'r':'';
+  _applyStrength(v,'rbs1','rbs2','rbs3','rbs4','rec-str-lbl')
+}
+function _applyStrength(v,s1,s2,s3,s4,lbl){
+  const bars=[s1,s2,s3,s4].map(id=>document.getElementById(id))
+  const label=document.getElementById(lbl)
+  if(!bars[0])return
+  bars.forEach(b=>b&&(b.style.background='rgba(255,255,255,.07)'))
+  let score=0
+  if(v.length>=8)score++
+  if(/[A-Z]/.test(v))score++
+  if(/[0-9]/.test(v))score++
+  if(/[^a-zA-Z0-9]/.test(v))score++
+  const colors=['#f87171','#fb923c','#fbbf24','#34d399']
+  const labels=['Muy débil','Débil','Buena','Muy fuerte']
+  for(let i=0;i<score;i++)if(bars[i])bars[i].style.background=colors[Math.min(score-1,3)]
+  if(label){label.textContent=v?labels[Math.min(score-1,3)]:'Ingresa una contraseña';label.style.color=v?colors[Math.min(score-1,3)]:'var(--mu)'}
+}
+
+// ═══════════════════════════
+// CONFIRM PASSWORD MATCH
+// ═══════════════════════════
+function checkMatch(){checkMatchEl('reg-pw1','reg-pw2','reg-pw2-hint')}
+function checkMatchEl(id1,id2,hintId){
+  const v1=document.getElementById(id1)?.value
+  const v2=document.getElementById(id2)?.value
+  const h=document.getElementById(hintId)
+  if(!h||!v2)return
+  if(v1===v2){
+    h.className='fhint ok show';h.innerHTML='<i class="fa-solid fa-circle-check"></i> Las contraseñas coinciden'
+    document.getElementById(id2)?.classList.add('ok');document.getElementById(id2)?.classList.remove('err')
+  }else{
+    h.className='fhint err show';h.innerHTML='<i class="fa-solid fa-circle-xmark"></i> Las contraseñas no coinciden'
+    document.getElementById(id2)?.classList.add('err');document.getElementById(id2)?.classList.remove('ok')
+  }
+}
+
+// ═══════════════════════════
+// EMAIL VALIDATION
+// ═══════════════════════════
+document.getElementById('reg-email')&&document.getElementById('reg-email').addEventListener('input',function(){
+  const h=document.getElementById('reg-email-hint'),v=this.value
+  if(!v){h.className='fhint';return}
+  const ok=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
+  this.classList.toggle('ok',ok);this.classList.toggle('err',!ok)
+  h.className='fhint '+(ok?'ok':'err')+' show'
+  h.innerHTML=ok?'<i class="fa-solid fa-circle-check"></i> Correo válido':'<i class="fa-solid fa-circle-xmark"></i> Formato de correo inválido'
+})
+
+// ═══════════════════════════
+// REGISTER VALIDATION
+// ═══════════════════════════
+function validateReg(){
+  const terms=document.getElementById('reg-terms')
+  const th=document.getElementById('terms-hint')
+  if(!terms?.checked){
+    th.style.display='flex'
+    setTimeout(()=>th.style.display='none',3000)
+    return false
+  }
+  const pw1=document.getElementById('reg-pw1')?.value
+  const pw2=document.getElementById('reg-pw2')?.value
+  if(pw1!==pw2){
+    document.getElementById('reg-pw2-hint').className='fhint err show'
+    document.getElementById('reg-pw2-hint').innerHTML='<i class="fa-solid fa-circle-xmark"></i> Las contraseñas no coinciden'
+    return false
+  }
+  // Show loading
+  document.getElementById('reg-spin').style.display='block'
+  document.getElementById('reg-ico').style.display='none'
+  document.getElementById('reg-txt').textContent='Creando cuenta...'
+  document.getElementById('reg-btn').disabled=true
+  return true
+}
+
+// ═══════════════════════════
+// USERNAME CHECK (register)
+// ═══════════════════════════
+document.getElementById('reg-user')&&document.getElementById('reg-user').addEventListener('input',function(){
+  const h=document.getElementById('reg-user-hint'),v=this.value.trim()
+  if(!v){h.className='fhint';this.classList.remove('ok','err');return}
+  if(v.length<3||/\s/.test(v)){
+    this.classList.add('err');this.classList.remove('ok')
+    h.className='fhint err show';h.innerHTML='<i class="fa-solid fa-circle-xmark"></i> Sin espacios, mínimo 3 caracteres'
+  }else if(v.length>20){
+    this.classList.add('err');this.classList.remove('ok')
+    h.className='fhint err show';h.innerHTML='<i class="fa-solid fa-circle-xmark"></i> Máximo 20 caracteres'
+  }else{
+    this.classList.add('ok');this.classList.remove('err')
+    h.className='fhint ok show';h.innerHTML='<i class="fa-solid fa-circle-check"></i> Usuario disponible'
+  }
+})
+
+// ═══════════════════════════
+// RECOVER FLOW
+// ═══════════════════════════
+let recMethod='email'
+function selMethod(m){
+  recMethod=m
+  document.getElementById('rm-email').classList.toggle('sel',m==='email')
+  document.getElementById('rm-user').classList.toggle('sel',m==='user')
+  document.getElementById('rec-email-f').style.display=m==='email'?'block':'none'
+  document.getElementById('rec-user-f').style.display=m==='user'?'block':'none'
+}
+
+function recStep1(){
+  document.getElementById('rec-step1').style.display='block'
+  document.getElementById('rec-step2').style.display='none'
+  document.getElementById('rec-step3').style.display='none'
+  document.getElementById('rec-step4').style.display='none'
+  document.getElementById('rst1').classList.add('act');document.getElementById('rst1').classList.remove('done')
+  document.getElementById('rst2').classList.remove('act','done')
+  document.getElementById('rst3').classList.remove('act','done')
+}
+
+function recStep2(){
+  const val=recMethod==='email'
+    ?document.getElementById('rec-email-inp')?.value.trim()
+    :document.getElementById('rec-user-inp')?.value.trim()
+  if(!val){
+    const h=document.getElementById(recMethod==='email'?'rec-email-hint':'rec-user-hint')
+    if(h){h.className='fhint err show';h.innerHTML='<i class="fa-solid fa-circle-xmark"></i> Este campo es obligatorio'}
+    return
+  }
+  // Simulate sending
+  const btn=document.getElementById('rec-btn1')
+  document.getElementById('rec-spin1').style.display='block'
+  document.getElementById('rec-ico1').style.display='none'
+  document.getElementById('rec-txt1').textContent='Enviando...'
+  btn.disabled=true
+  setTimeout(()=>{
+    btn.disabled=false
+    document.getElementById('rec-spin1').style.display='none'
+    document.getElementById('rec-ico1').style.display='inline'
+    document.getElementById('rec-txt1').textContent='Enviar instrucciones'
+    const msg=recMethod==='email'
+      ?`Enviamos un código de 6 dígitos a <strong>${val}</strong>. Revisa tu bandeja de entrada y spam.`
+      :`Si el usuario <strong>${val}</strong> existe, recibirá un código en su correo registrado.`
+    document.getElementById('rec-sent-msg').innerHTML=msg
+    document.getElementById('rec-step1').style.display='none'
+    document.getElementById('rec-step2').style.display='block'
+    document.getElementById('rst1').classList.remove('act');document.getElementById('rst1').classList.add('done')
+    document.getElementById('rst2').classList.add('act')
+  },1800)
+}
+
+function recStep3(){
+  const code=document.getElementById('rec-code')?.value.trim()
+  if(!code||code.length<4){
+    alert('Ingresa el código de verificación completo')
+    return
+  }
+  document.getElementById('rec-step2').style.display='none'
+  document.getElementById('rec-step3').style.display='block'
+  document.getElementById('rst2').classList.remove('act');document.getElementById('rst2').classList.add('done')
+  document.getElementById('rst3').classList.add('act')
+  document.getElementById('rec-str').classList.add('show')
+}
+
+function recFinish(){
+  const p1=document.getElementById('rec-newpw1')?.value
+  const p2=document.getElementById('rec-newpw2')?.value
+  if(!p1||p1.length<8){alert('La contraseña debe tener al menos 8 caracteres');return}
+  if(p1!==p2){
+    document.getElementById('rec-match-hint').className='fhint err show'
+    document.getElementById('rec-match-hint').innerHTML='<i class="fa-solid fa-circle-xmark"></i> Las contraseñas no coinciden'
+    return
+  }
+  const btn=document.querySelector('#rec-step3 .btn-go')
+  document.getElementById('rec-spin3').style.display='block'
+  document.getElementById('rec-ico3').style.display='none'
+  document.getElementById('rec-txt3').textContent='Guardando...'
+  if(btn)btn.disabled=true
+  setTimeout(()=>{
+    document.getElementById('rec-step3').style.display='none'
+    document.getElementById('rec-step4').style.display='block'
+    document.getElementById('rst3').classList.remove('act');document.getElementById('rst3').classList.add('done')
+  },1600)
+}
+
+// ═══════════════════════════
+// ANIMATED USER COUNTER
+// ═══════════════════════════
+function animCount(el,target,duration=2000){
+  let start=null,from=0
+  const step=ts=>{
+    if(!start)start=ts
+    const p=Math.min((ts-start)/duration,1)
+    const ease=1-Math.pow(1-p,3)
+    el.textContent=Math.floor(from+ease*(target-from)).toLocaleString()
+    if(p<1)requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
+}
+const cntEl=document.getElementById('cnt-usr')
+if(cntEl)setTimeout(()=>animCount(cntEl,1247),600)
+
+// ═══════════════════════════
+// PARTICLES
+// ═══════════════════════════
+for(let i=0;i<14;i++){
+  const p=document.createElement('div')
+  const sz=Math.random()*3+1.5
+  const cols=['rgba(124,58,237,','rgba(59,130,246,','rgba(103,232,249,','rgba(167,139,250,']
+  const c=cols[Math.floor(Math.random()*cols.length)]
+  p.style.cssText=`position:fixed;border-radius:50%;pointer-events:none;z-index:0;
+    width:${sz}px;height:${sz}px;left:${Math.random()*100}vw;
+    background:${c}${Math.random()*.6+.3});
+    animation:floatP ${Math.random()*16+10}s linear ${Math.random()*8}s infinite;opacity:0`
+  document.body.appendChild(p)
+}
+const style=document.createElement('style')
+style.textContent=`@keyframes floatP{0%{transform:translateY(100vh) scale(0);opacity:0}10%{opacity:.7}90%{opacity:.3}100%{transform:translateY(-10vh) scale(1.3);opacity:0}}`
+document.head.appendChild(style)
+
+// Detect URL params to auto-show correct pane
+const params=new URLSearchParams(location.search)
+if(params.get('panel')==='register')showPane('register',document.getElementById('tab-register'))
+if(params.get('panel')==='recover')showPane('recover',document.getElementById('tab-recover'))
+</script>
+{% endblock %}

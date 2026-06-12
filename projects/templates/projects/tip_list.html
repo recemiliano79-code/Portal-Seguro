@@ -1,0 +1,151 @@
+{% extends "projects/base_dashboard.html" %}
+{% block dashboard_content %}
+<style>
+.page-hero{background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(251,146,60,.06));border:1px solid rgba(251,191,36,.2);border-radius:18px;padding:26px 30px;margin-bottom:24px;position:relative;overflow:hidden;}
+.page-hero::after{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(251,191,36,.15),transparent 70%);pointer-events:none;}
+.page-hero h1{font-size:1.9rem;font-weight:900;letter-spacing:-.5px;display:flex;align-items:center;gap:11px;margin-bottom:5px;}
+.page-hero p{color:var(--muted);font-size:.86rem;margin-bottom:14px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9px;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .16s;text-decoration:none;border:1px solid;}
+.btn-yellow{background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.25);color:#fbbf24;}
+.btn-yellow:hover{background:rgba(251,191,36,.22);transform:translateY(-1px);}
+.btn-ghost{background:rgba(255,255,255,.04);border-color:rgba(130,90,255,.2);color:var(--text);}
+.btn-ghost:hover{background:rgba(124,58,237,.1);}
+.btn-sm{padding:6px 12px;font-size:.71rem;}
+.btn-primary{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:white;border-color:transparent;}
+.btn-primary:hover{transform:translateY(-1px);}
+
+/* Stats */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:24px;}
+@media(max-width:800px){.stat-row{grid-template-columns:repeat(2,1fr);}}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;transition:all .2s;}
+.stat-box:hover{border-color:var(--border2);transform:translateY(-2px);}
+.stat-box-icon{font-size:.95rem;margin-bottom:5px;}
+.stat-box-val{font-size:1.65rem;font-weight:900;line-height:1.1;}
+.stat-box-lbl{font-size:.63rem;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-top:3px;font-weight:600;}
+
+/* Search */
+.search-bar{display:flex;gap:.5rem;margin-bottom:20px;flex-wrap:wrap;}
+.search-inp{flex:1;min-width:200px;background:var(--surface);border:1px solid rgba(130,90,255,.2);border-radius:9px;padding:10px 14px;color:var(--text);font-size:.84rem;font-family:var(--font);outline:none;}
+.search-inp:focus{border-color:#fbbf24;box-shadow:0 0 0 3px rgba(251,191,36,.1);}
+.search-inp::placeholder{color:var(--muted);}
+
+/* Tip cards */
+.tips-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;}
+.tip-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:0;overflow:hidden;transition:all .22s;display:flex;flex-direction:column;}
+.tip-card:hover{border-color:rgba(251,191,36,.3);box-shadow:0 12px 36px rgba(0,0,0,.3);transform:translateY(-2px);}
+.tip-card-head{padding:18px 19px 14px;flex:1;}
+.tip-card-icon-row{display:flex;align-items:flex-start;gap:13px;margin-bottom:12px;}
+.tip-icon-box{width:44px;height:44px;border-radius:11px;background:linear-gradient(135deg,rgba(251,191,36,.2),rgba(251,146,60,.15));border:1px solid rgba(251,191,36,.2);display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;}
+.tip-title{font-size:.95rem;font-weight:800;color:var(--text);line-height:1.35;margin-bottom:3px;}
+.tip-cat{font-size:.64rem;font-family:var(--mono);font-weight:700;text-transform:uppercase;color:#fbbf24;letter-spacing:.6px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.15);padding:2px 7px;border-radius:4px;display:inline-flex;}
+.tip-body{font-size:.82rem;color:var(--muted);line-height:1.6;}
+.tip-card-footer{padding:10px 18px;border-top:1px solid var(--border);background:rgba(0,0,0,.15);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:7px;}
+.tip-date{font-size:.67rem;color:var(--muted);font-family:var(--mono);}
+.tip-actions{display:flex;gap:.4rem;}
+
+/* Empty */
+.empty-tip{text-align:center;padding:50px 20px;background:var(--surface);border:2px dashed var(--border);border-radius:16px;}
+.empty-icon{width:65px;height:65px;border-radius:16px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.18);display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 15px;}
+
+/* CTA */
+.cta-card{background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(59,130,246,.07));border:1px solid rgba(124,58,237,.2);border-radius:16px;padding:26px;text-align:center;margin-top:22px;}
+.cta-orb{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin:0 auto 13px;box-shadow:0 8px 24px rgba(124,58,237,.3);}
+
+/* Admin badge */
+.admin-tag{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.18);color:#f87171;font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:4px;text-transform:uppercase;}
+</style>
+
+<div class="page-hero">
+  <h1><i class="fa-solid fa-lightbulb" style="color:#fbbf24;"></i> Tips de Seguridad</h1>
+  <p>Consejos verificados para protegerte en tu día a día · CDMX · Actualizados 2026</p>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+    <a href="{% url 'projects:sugerencia-create' %}" class="btn btn-yellow"><i class="fa-solid fa-paper-plane"></i> Sugerir un tip</a>
+    {% if is_admin %}<a href="{% url 'projects:tip-create' %}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nuevo Tip</a>{% endif %}
+    <a href="{% url 'projects:home' %}" class="btn btn-ghost"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat-box">
+    <div class="stat-box-icon" style="color:#fbbf24"><i class="fa-solid fa-lightbulb"></i></div>
+    <div class="stat-box-val" style="color:#fbbf24">{{ tips.count|default:"0" }}</div>
+    <div class="stat-box-lbl">Consejos publicados</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-box-icon" style="color:#34d399"><i class="fa-solid fa-shield-check"></i></div>
+    <div class="stat-box-val" style="color:#34d399">{{ tips.count|default:"0" }}</div>
+    <div class="stat-box-lbl">Verificados</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-box-icon" style="color:#67e8f9"><i class="fa-solid fa-tags"></i></div>
+    <div class="stat-box-val" style="color:#67e8f9">5</div>
+    <div class="stat-box-lbl">Categorías</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-box-icon" style="color:#a78bfa"><i class="fa-solid fa-calendar-check"></i></div>
+    <div class="stat-box-val" style="color:#a78bfa;font-size:1rem;">2026</div>
+    <div class="stat-box-lbl">Actualizado</div>
+  </div>
+</div>
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:.7rem;">
+  <div style="font-size:1rem;font-weight:800;display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-lightbulb" style="color:#fbbf24;"></i> Todos los Consejos <span style="font-size:.74rem;font-weight:400;color:var(--muted);">{{ tips.count }} tips</span></div>
+</div>
+
+<div class="search-bar">
+  <input class="search-inp" id="tip-srch" placeholder="🔍  Buscar consejos..." oninput="filterTips()">
+</div>
+
+{% if tips %}
+<div class="tips-grid" id="tips-grid">
+  {% for tip in tips %}
+  <div class="tip-card" data-txt="{{ tip.titulo|lower }} {{ tip.contenido|lower }}">
+    <div class="tip-card-head">
+      <div class="tip-card-icon-row">
+        <div class="tip-icon-box"><i class="fa-solid fa-lightbulb" style="color:#fbbf24;"></i></div>
+        <div>
+          <div class="tip-title">{{ tip.titulo }}</div>
+          <span class="tip-cat">Seguridad general</span>
+        </div>
+      </div>
+      <div class="tip-body">{{ tip.contenido|truncatechars:200 }}</div>
+    </div>
+    <div class="tip-card-footer">
+      <span class="tip-date">{{ tip.creado_en|date:"d/m/Y" }}</span>
+      <div class="tip-actions">
+        {% if is_admin %}
+        <a href="{% url 'projects:tip-update' tip.pk %}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-pen"></i></a>
+        <a href="{% url 'projects:tip-delete' tip.pk %}" class="btn btn-sm" style="background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.18);color:#f87171;"><i class="fa-solid fa-trash"></i></a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="empty-tip">
+  <div class="empty-icon"><i class="fa-solid fa-lightbulb" style="color:#fbbf24;"></i></div>
+  <div style="font-size:1.1rem;font-weight:800;margin-bottom:7px;">Sin consejos publicados</div>
+  <div style="color:var(--muted);font-size:.84rem;max-width:300px;margin:0 auto 18px;line-height:1.6;">Aún no hay tips en el sistema. Sé la primera en sugerir uno.</div>
+  <a href="{% url 'projects:sugerencia-create' %}" class="btn btn-yellow"><i class="fa-solid fa-paper-plane"></i> Sugerir tip</a>
+</div>
+{% endif %}
+
+<!-- CTA -->
+<div class="cta-card">
+  <div class="cta-orb"><i class="fa-solid fa-paper-plane"></i></div>
+  <div style="font-size:1rem;font-weight:800;margin-bottom:6px;">¿Conoces un tip útil?</div>
+  <div style="color:var(--muted);font-size:.83rem;margin-bottom:14px;max-width:300px;margin-left:auto;margin-right:auto;line-height:1.6;">Compártelo con la comunidad. El equipo lo revisará y publicará si es aprobado.</div>
+  <a href="{% url 'projects:sugerencia-create' %}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Sugerir Tip</a>
+</div>
+
+<script>
+function filterTips(){
+  const q=document.getElementById('tip-srch').value.toLowerCase();
+  document.querySelectorAll('#tips-grid .tip-card').forEach(c=>{
+    c.style.display=!q||c.dataset.txt.includes(q)?'':'none';
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,73 @@
+<aside class="sidebar">
+  <div class="s-logo">
+    <div class="s-logo-icon"><i class="fa-solid fa-shield-cat"></i></div>
+    <div>
+      <div class="s-logo-text">Portal Seguro</div>
+      <div class="s-logo-sub">Sentinel v9.0</div>
+    </div>
+  </div>
+
+  <div class="s-badge">
+    <span class="s-badge-dot"></span>
+    {% if is_admin %}ADMIN{% else %}CIVIL{% endif %}
+    &nbsp;·&nbsp; {{ request.user.username|upper|truncatechars:12 }}
+  </div>
+
+  <div class="s-sec">Principal</div>
+  <a href="{% url 'projects:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+    <i class="fa-solid fa-house"></i> Dashboard
+  </a>
+  <a href="#" class="nav-link {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}">
+    <i class="fa-solid fa-user-shield"></i> Mi Perfil Táctico
+  </a>
+  <a href="{% url 'projects:reporte-list' %}" class="nav-link {% if request.resolver_match.url_name == 'reporte-list' %}active{% endif %}">
+    <i class="fa-solid fa-file-lines"></i> Mis Reportes
+    {% if mis_reportes_count %}<span class="nl-badge">{{ mis_reportes_count }}</span>{% endif %}
+  </a>
+
+  <div class="s-sec">Herramientas</div>
+  <a href="{% url 'projects:reporte-create' %}" class="nav-link {% if request.resolver_match.url_name == 'reporte-create' %}active{% endif %}">
+    <i class="fa-solid fa-circle-plus"></i> Nuevo Reporte
+  </a>
+  <a href="#" class="nav-link">
+    <i class="fa-solid fa-robot"></i> Sentinel AI
+  </a>
+  <a href="#" class="nav-link">
+    <i class="fa-solid fa-video"></i> Videoteca
+  </a>
+  <a href="{% url 'projects:tip-list' %}" class="nav-link {% if request.resolver_match.url_name == 'tip-list' or request.resolver_match.url_name == 'tip-create' %}active{% endif %}">
+    <i class="fa-solid fa-lightbulb"></i> Tips de Seguridad
+  </a>
+  <a href="{% url 'projects:institucion-list' %}" class="nav-link {% if 'institucion' in request.resolver_match.url_name %}active{% endif %}">
+    <i class="fa-solid fa-building-ngo"></i> Instituciones
+  </a>
+  <a href="{% url 'projects:tipo-list' %}" class="nav-link {% if 'tipo' in request.resolver_match.url_name %}active{% endif %}">
+    <i class="fa-solid fa-book-open"></i> Glosario
+  </a>
+
+  <div class="s-sec">Acciones</div>
+  <a href="#" class="nav-link"><i class="fa-solid fa-triangle-exclamation"></i> Test de Riesgo</a>
+  <a href="#" class="nav-link"><i class="fa-solid fa-location-dot"></i> Enviar Ubicación</a>
+  <a href="#" class="nav-link"><i class="fa-solid fa-eye-slash"></i> Modo Camuflaje</a>
+
+  {% if is_admin %}
+  <div class="s-sec">Administración</div>
+  <a href="{% url 'admin:index' %}" class="nav-link" target="_blank">
+    <i class="fa-solid fa-sliders"></i> Panel Master
+  </a>
+  <a href="#" class="nav-link"><i class="fa-solid fa-comments"></i> Sugerencias</a>
+  {% endif %}
+
+  <a href="tel:911" class="s-sos">
+    <i class="fa-solid fa-bolt"></i> SOS EMERGENCIA
+    <span class="s-sos-dot"></span>
+  </a>
+
+  <div class="s-user">
+    <div class="s-av">{{ request.user.username|first|upper }}</div>
+    <div>
+      <div class="s-uname">{{ request.user.username }}</div>
+      <div class="s-urole">{% if is_admin %}ADMINISTRADOR{% else %}CLASE_CIVIL_V2{% endif %}</div>
+    </div>
+  </div>
+</aside>

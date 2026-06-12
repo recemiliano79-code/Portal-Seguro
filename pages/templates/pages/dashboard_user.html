@@ -1,0 +1,264 @@
+{% extends "projects/base_dashboard.html" %}
+{% block dashboard_content %}
+<style>
+/* ── Emergencia ── */
+.sos-banner{
+  background:linear-gradient(135deg,rgba(239,68,68,.15),rgba(220,38,38,.08));
+  border:2px solid rgba(239,68,68,.4);border-radius:20px;
+  padding:1.6rem 2rem;display:flex;align-items:center;justify-content:space-between;
+  gap:1.2rem;flex-wrap:wrap;position:relative;overflow:hidden;
+}
+.sos-banner::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at top left,rgba(239,68,68,.08),transparent 60%);
+  pointer-events:none;
+}
+.sos-pulse{
+  width:56px;height:56px;border-radius:50%;
+  background:rgba(239,68,68,.15);border:2px solid rgba(239,68,68,.4);
+  display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:var(--red);
+  animation:pulse-red 1.8s ease-in-out infinite;flex-shrink:0;
+}
+@keyframes pulse-red{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4);}50%{box-shadow:0 0 0 14px rgba(239,68,68,0);}}
+.sos-text h2{font-size:1.1rem;font-weight:900;color:#fff;}
+.sos-text p{font-size:.78rem;color:rgba(255,255,255,.6);margin-top:.2rem;}
+.sos-btns{display:flex;gap:.6rem;flex-wrap:wrap;}
+
+.btn-911{
+  display:flex;align-items:center;gap:.55rem;
+  padding:.7rem 1.4rem;border-radius:12px;border:none;cursor:pointer;
+  font-weight:800;font-size:.88rem;font-family:var(--font);
+  background:var(--red);color:#fff;
+  box-shadow:0 0 24px rgba(239,68,68,.45);
+  transition:all .18s;text-decoration:none;
+  animation:pulse-btn 2s ease-in-out infinite;
+}
+.btn-911:hover{background:#dc2626;transform:scale(1.04);}
+@keyframes pulse-btn{0%,100%{box-shadow:0 0 24px rgba(239,68,68,.45);}50%{box-shadow:0 0 38px rgba(239,68,68,.7);}}
+
+/* ── Quick actions ── */
+.quick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.9rem;}
+.qa-card{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:16px;
+  padding:1.3rem;display:flex;flex-direction:column;align-items:center;
+  gap:.7rem;text-align:center;text-decoration:none;
+  transition:border-color .2s,transform .2s,box-shadow .2s;cursor:pointer;
+}
+.qa-card:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.3);}
+.qa-card.red:hover{border-color:rgba(239,68,68,.4);}
+.qa-card.yellow:hover{border-color:rgba(245,158,11,.4);}
+.qa-card.blue:hover{border-color:rgba(79,142,247,.4);}
+.qa-card.green:hover{border-color:rgba(34,197,94,.4);}
+.qa-card.cyan:hover{border-color:rgba(34,211,238,.4);}
+.qa-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;}
+.qa-label{font-size:.82rem;font-weight:700;color:var(--text);}
+.qa-desc{font-size:.7rem;color:var(--tl);}
+
+/* ── Mis reportes ── */
+.reporte-card{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:16px;
+  overflow:hidden;transition:border-color .2s,box-shadow .2s;
+}
+.reporte-card:hover{box-shadow:0 8px 30px rgba(0,0,0,.25);}
+.reporte-card.critico{border-left:4px solid var(--red);}
+.reporte-card.alto{border-left:4px solid var(--orange);}
+.reporte-card.medio{border-left:4px solid var(--yellow);}
+.reporte-card.bajo{border-left:4px solid var(--green);}
+.rc-head{padding:1rem 1.3rem;display:flex;align-items:center;justify-content:space-between;gap:.7rem;flex-wrap:wrap;}
+.rc-title{font-size:.88rem;font-weight:700;color:#fff;}
+.rc-date{font-size:.68rem;font-family:var(--mono);color:var(--tl);}
+.rc-body{padding:.85rem 1.3rem;border-top:1px solid var(--border);font-size:.78rem;color:var(--ts);line-height:1.6;}
+
+/* mensajes admin */
+.admin-msg{
+  margin:0 1.3rem .9rem;
+  background:linear-gradient(135deg,rgba(79,142,247,.07),rgba(99,102,241,.04));
+  border:1px solid rgba(79,142,247,.2);border-radius:12px;
+  padding:.85rem 1rem;
+}
+.admin-msg-head{display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem;}
+.admin-msg-head i{color:var(--primary);font-size:.78rem;}
+.admin-msg-head span{font-size:.7rem;font-weight:700;color:var(--primary);}
+.admin-msg-head time{font-size:.65rem;font-family:var(--mono);color:var(--tl);margin-left:auto;}
+.admin-msg-text{font-size:.8rem;color:var(--text);line-height:1.6;}
+
+/* urgencia badges */
+.urg-critico{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25);}
+.urg-alto   {background:rgba(249,115,22,.12);color:var(--orange);border:1px solid rgba(249,115,22,.25);}
+.urg-medio  {background:rgba(245,158,11,.1);color:var(--yellow);border:1px solid rgba(245,158,11,.22);}
+.urg-bajo   {background:rgba(34,197,94,.08);color:var(--green);border:1px solid rgba(34,197,94,.2);}
+
+.urg-badge{display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .65rem;border-radius:99px;font-size:.65rem;font-weight:700;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;}
+</style>
+
+<!-- Banner SOS -->
+<div class="sos-banner">
+  <div style="display:flex;align-items:center;gap:1.2rem;">
+    <div class="sos-pulse"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <div class="sos-text">
+      <h2>¿Estás en peligro ahora mismo?</h2>
+      <p>Si tu seguridad está en riesgo, llama inmediatamente al 911 o usa el botón de emergencia</p>
+    </div>
+  </div>
+  <div class="sos-btns">
+    <a href="tel:911" class="btn-911">
+      <i class="fa-solid fa-phone-flip"></i> Llamar al 911
+    </a>
+    <a href="{% url 'projects:reporte-create' %}?urgencia=critico" class="btn btn-danger">
+      <i class="fa-solid fa-siren-on"></i> Emergencia
+    </a>
+  </div>
+</div>
+
+<!-- Acciones rápidas -->
+<div class="quick-grid">
+  <a href="{% url 'projects:reporte-create' %}" class="qa-card red">
+    <div class="qa-icon" style="background:rgba(239,68,68,.1);color:var(--red);"><i class="fa-solid fa-file-circle-exclamation"></i></div>
+    <div class="qa-label">Reportar incidente</div>
+    <div class="qa-desc">Documenta lo ocurrido</div>
+  </a>
+  <a href="tel:800-800-0024" class="qa-card yellow">
+    <div class="qa-icon" style="background:rgba(245,158,11,.1);color:var(--yellow);"><i class="fa-solid fa-headset"></i></div>
+    <div class="qa-label">Línea Mujeres</div>
+    <div class="qa-desc">800 800 0024 · 24h</div>
+  </a>
+  <a href="{% url 'projects:reporte-list' %}" class="qa-card blue">
+    <div class="qa-icon" style="background:var(--pdim);color:var(--primary);">
+      <i class="fa-solid fa-folder-open"></i>
+      {% if mensajes_no_leidos %}<span style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border-radius:50%;width:16px;height:16px;font-size:.55rem;display:flex;align-items:center;justify-content:center;font-weight:800;">{{ mensajes_no_leidos }}</span>{% endif %}
+    </div>
+    <div class="qa-label">Mis Reportes</div>
+    <div class="qa-desc">{{ mis_reportes_count }} reporte{{ mis_reportes_count|pluralize:"s" }}</div>
+  </a>
+  <a href="{% url 'projects:tip-list' %}" class="qa-card green">
+    <div class="qa-icon" style="background:rgba(34,197,94,.1);color:var(--green);"><i class="fa-solid fa-shield-halved"></i></div>
+    <div class="qa-label">Consejos de seguridad</div>
+    <div class="qa-desc">Tips para protegerte</div>
+  </a>
+  <a href="{% url 'projects:institucion-list' %}" class="qa-card cyan">
+    <div class="qa-icon" style="background:rgba(34,211,238,.1);color:var(--cyan);"><i class="fa-solid fa-building-ngo"></i></div>
+    <div class="qa-label">Centros de apoyo</div>
+    <div class="qa-desc">Ayuda cerca de ti</div>
+  </a>
+  <a href="{% url 'projects:sugerencia-create' %}" class="qa-card blue">
+    <div class="qa-icon" style="background:rgba(99,102,241,.1);color:#818cf8;"><i class="fa-solid fa-paper-plane"></i></div>
+    <div class="qa-label">Enviar sugerencia</div>
+    <div class="qa-desc">Mejora la plataforma</div>
+  </a>
+</div>
+
+<!-- Números de emergencia -->
+<div class="card">
+  <div class="card-head">
+    <div class="card-head-l"><i class="fa-solid fa-phone" style="color:var(--red);"></i><span style="color:var(--text);">Números de Emergencia</span></div>
+    <span class="badge badge-red">Disponibles 24/7</span>
+  </div>
+  <div class="card-body" style="padding:1rem 1.4rem;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.7rem;">
+      {% for num in numeros_emergencia %}
+      <a href="tel:{{ num.numero }}" style="display:flex;align-items:center;gap:.8rem;padding:.85rem 1rem;background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:12px;text-decoration:none;transition:border-color .18s;" onmouseover="this.style.borderColor='rgba(239,68,68,.3)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(239,68,68,.1);display:flex;align-items:center;justify-content:center;color:var(--red);font-size:.85rem;flex-shrink:0;"><i class="fa-solid fa-phone"></i></div>
+        <div><div style="font-size:.8rem;font-weight:700;color:#fff;">{{ num.nombre }}</div><div style="font-size:.75rem;font-family:var(--mono);color:var(--primary);">{{ num.numero }}</div></div>
+      </a>
+      {% empty %}
+      {% for item in numeros_default %}
+      <a href="tel:{{ item.1 }}" style="display:flex;align-items:center;gap:.8rem;padding:.85rem 1rem;background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:12px;text-decoration:none;transition:border-color .18s;" onmouseover="this.style.borderColor='rgba(239,68,68,.3)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(239,68,68,.1);display:flex;align-items:center;justify-content:center;color:var(--red);font-size:.85rem;flex-shrink:0;"><i class="fa-solid fa-phone"></i></div>
+        <div><div style="font-size:.8rem;font-weight:700;color:#fff;">{{ item.0 }}</div><div style="font-size:.75rem;font-family:var(--mono);color:var(--primary);">{{ item.1 }}</div></div>
+      </a>
+      {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Mis reportes recientes -->
+{% if mis_reportes %}
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;padding:.5rem 0;">
+  <h2 style="font-size:1rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:.5rem;">
+    <i class="fa-solid fa-folder-open" style="color:var(--primary);"></i> Mis Reportes Recientes
+    {% if mensajes_no_leidos %}
+    <span style="background:var(--red);color:#fff;font-size:.62rem;padding:.15rem .5rem;border-radius:99px;font-weight:800;">{{ mensajes_no_leidos }} nuevo{{ mensajes_no_leidos|pluralize }}</span>
+    {% endif %}
+  </h2>
+  <a href="{% url 'projects:reporte-list' %}" class="btn btn-ghost btn-sm">Ver todos <i class="fa-solid fa-arrow-right"></i></a>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:.8rem;">
+  {% for rep in mis_reportes %}
+  <div class="reporte-card {{ rep.nivel_urgencia|default:'bajo' }}">
+    <div class="rc-head">
+      <div>
+        <div class="rc-title">{{ rep.descripcion|default:"Reporte #"|add:rep.pk|truncatechars:60 }}</div>
+        <div class="rc-date"><i class="fa-regular fa-clock"></i> {{ rep.creado_en|date:"d/m/Y H:i" }}</div>
+      </div>
+      <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;">
+        {% if rep.nivel_urgencia %}
+        <span class="urg-badge urg-{{ rep.nivel_urgencia }}">
+          {% if rep.nivel_urgencia == 'critico' %}<i class="fa-solid fa-siren-on"></i>{% elif rep.nivel_urgencia == 'alto' %}<i class="fa-solid fa-triangle-exclamation"></i>{% elif rep.nivel_urgencia == 'medio' %}<i class="fa-solid fa-circle-exclamation"></i>{% else %}<i class="fa-solid fa-circle-info"></i>{% endif %}
+          {{ rep.get_nivel_urgencia_display|default:rep.nivel_urgencia }}
+        </span>
+        {% endif %}
+        {% if rep.revisado %}
+        <span class="badge badge-green" style="font-size:.62rem;"><i class="fa-solid fa-check"></i> Revisado</span>
+        {% else %}
+        <span class="badge badge-yellow" style="font-size:.62rem;"><i class="fa-solid fa-hourglass"></i> Pendiente</span>
+        {% endif %}
+        <a href="{% url 'projects:reporte-detail' rep.pk %}" class="btn btn-ghost btn-sm btn-icon"><i class="fa-solid fa-eye"></i></a>
+      </div>
+    </div>
+    {% if rep.descripcion %}
+    <div class="rc-body">{{ rep.descripcion|truncatechars:150 }}</div>
+    {% endif %}
+    <!-- Mensajes del admin -->
+    {% for msg in rep.mensajes.all %}
+    {% if msg.es_del_admin %}
+    <div class="admin-msg">
+      <div class="admin-msg-head">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>Respuesta del equipo Sentinel</span>
+        <time>{{ msg.creado_en|date:"d/m H:i" }}</time>
+      </div>
+      <div class="admin-msg-text">{{ msg.texto }}</div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Tips rápidos -->
+{% if tips_destacados %}
+<div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;">
+  <h2 style="font-size:1rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:.5rem;">
+    <i class="fa-solid fa-lightbulb" style="color:var(--yellow);"></i> Consejos de Seguridad
+  </h2>
+  <a href="{% url 'projects:tip-list' %}" class="btn btn-ghost btn-sm">Ver todos <i class="fa-solid fa-arrow-right"></i></a>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.8rem;">
+  {% for tip in tips_destacados %}
+  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:1.2rem;display:flex;gap:.8rem;align-items:flex-start;">
+    <div style="width:36px;height:36px;border-radius:10px;background:rgba(245,158,11,.1);display:flex;align-items:center;justify-content:center;font-size:.9rem;color:var(--yellow);flex-shrink:0;"><i class="fa-solid fa-lightbulb"></i></div>
+    <div>
+      <div style="font-size:.84rem;font-weight:700;color:#fff;margin-bottom:.3rem;">{{ tip.titulo }}</div>
+      <div style="font-size:.76rem;color:var(--ts);line-height:1.6;">{{ tip.contenido|truncatechars:90 }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}
+{% block extra_js %}
+<script>
+// Preselect urgencia si viene por URL
+document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('urgencia') === 'critico') {
+    const el = document.querySelector('[name="nivel_urgencia"][value="critico"]');
+    if (el) el.checked = true;
+  }
+});
+</script>
+{% endblock %}

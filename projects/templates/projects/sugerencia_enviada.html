@@ -1,0 +1,26 @@
+{% extends "projects/base_dashboard.html" %}
+{% block dashboard_content %}
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1rem;text-align:center;gap:1.5rem;">
+  <div style="width:80px;height:80px;border-radius:20px;
+    background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(79,142,247,.1));
+    border:1px solid rgba(34,197,94,.25);
+    display:flex;align-items:center;justify-content:center;font-size:2.2rem;color:var(--green);
+    animation:pop .4s cubic-bezier(.34,1.4,.64,1) both;">
+    <i class="fa-solid fa-circle-check"></i>
+  </div>
+  <div>
+    <h1 style="font-size:1.7rem;font-weight:900;color:#fff;letter-spacing:-.02em;margin-bottom:.5rem;">¡Sugerencia enviada!</h1>
+    <p style="font-size:.88rem;color:var(--ts);max-width:380px;line-height:1.7;margin:0 auto;">
+      Gracias por contribuir. El equipo revisará tu sugerencia en las próximas <strong style="color:var(--text);">24–48 horas</strong>.
+      Si es aprobada, se publicará en la plataforma.
+    </p>
+  </div>
+  <div style="display:flex;gap:.7rem;flex-wrap:wrap;justify-content:center;">
+    <a href="{% url 'projects:home' %}" class="btn btn-primary"><i class="fa-solid fa-house"></i> Ir al Dashboard</a>
+    <a href="{% url 'projects:sugerencia-create' %}" class="btn btn-ghost"><i class="fa-solid fa-plus"></i> Otra sugerencia</a>
+  </div>
+</div>
+<style>
+@keyframes pop{from{opacity:0;transform:scale(.5);}to{opacity:1;transform:scale(1);}}
+</style>
+{% endblock %}

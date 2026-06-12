@@ -1,0 +1,174 @@
+{% extends "projects/base_dashboard.html" %}
+{% block dashboard_content %}
+<style>
+.page-hero{background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(59,130,246,.08));border:1px solid rgba(124,58,237,.22);border-radius:18px;padding:28px 32px;margin-bottom:24px;position:relative;overflow:hidden;}
+.page-hero::after{content:'';position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,.18),transparent 70%);pointer-events:none;}
+.page-hero h1{font-size:2rem;font-weight:900;letter-spacing:-.5px;display:flex;align-items:center;gap:12px;margin-bottom:5px;}
+.page-hero p{color:var(--muted);font-size:.86rem;margin-bottom:16px;}
+.hero-btns{display:flex;gap:.6rem;flex-wrap:wrap;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .16s;text-decoration:none;border:1px solid;}
+.btn-primary{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:white;border-color:transparent;box-shadow:0 4px 16px rgba(124,58,237,.3);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(124,58,237,.4);}
+.btn-ghost{background:rgba(255,255,255,.04);border-color:rgba(130,90,255,.2);color:var(--text);}
+.btn-ghost:hover{background:rgba(124,58,237,.1);border-color:rgba(130,90,255,.4);}
+.btn-sm{padding:6px 12px;font-size:.72rem;}
+
+/* Stats */
+.stat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-bottom:24px;}
+@media(max-width:900px){.stat-row{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:560px){.stat-row{grid-template-columns:repeat(2,1fr);}}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px;text-align:center;transition:all .2s;}
+.stat-box:hover{border-color:var(--border2);transform:translateY(-2px);}
+.stat-box-icon{font-size:1rem;margin-bottom:5px;}
+.stat-box-val{font-size:1.75rem;font-weight:900;line-height:1.1;}
+.stat-box-lbl{font-size:.64rem;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-top:3px;font-weight:600;}
+
+/* Filter */
+.filter-bar{display:flex;gap:.5rem;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+.filter-inp{background:var(--surface);border:1px solid rgba(130,90,255,.2);border-radius:9px;padding:9px 14px;color:var(--text);font-size:.82rem;font-family:var(--font);outline:none;flex:1;min-width:160px;}
+.filter-inp:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.12);}
+.filter-inp::placeholder{color:var(--muted);}
+.filter-sel{background:var(--surface);border:1px solid rgba(130,90,255,.2);border-radius:9px;padding:8px 12px;color:var(--muted);font-size:.78rem;font-family:var(--font);outline:none;cursor:pointer;}
+.filter-sel:focus{border-color:#7c3aed;}
+
+/* Cards */
+.report-grid{display:grid;gap:11px;}
+.rep-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:all .22s;position:relative;}
+.rep-card:hover{border-color:rgba(130,90,255,.3);box-shadow:0 14px 40px rgba(0,0,0,.35);transform:translateY(-2px);}
+.rep-card-body{border-left:4px solid;padding:16px 20px 14px;}
+.rep-card-body.c-critico{border-color:#ef4444;}
+.rep-card-body.c-alto{border-color:#fb923c;}
+.rep-card-body.c-medio{border-color:#fbbf24;}
+.rep-card-body.c-bajo{border-color:#34d399;}
+.rep-card-body.c-none{border-color:#7c3aed;}
+.rep-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:9px;}
+.rep-id{font-family:var(--mono);font-size:.7rem;color:#67e8f9;font-weight:700;background:rgba(103,232,249,.07);border:1px solid rgba(103,232,249,.14);padding:2px 8px;border-radius:5px;}
+.rep-desc{font-size:.9rem;color:var(--text);line-height:1.6;margin-bottom:9px;}
+.rep-tag{font-size:.73rem;color:var(--muted);display:flex;align-items:center;gap:5px;}
+.rep-footer{padding:9px 20px;border-top:1px solid var(--border);background:rgba(0,0,0,.18);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.rep-date{font-size:.7rem;color:var(--muted);font-family:var(--mono);display:flex;align-items:center;gap:5px;}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:5px;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+.b-new{background:rgba(52,211,153,.1);color:#34d399;border:1px solid rgba(52,211,153,.2);}
+.b-rev{background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.2);}
+.b-proc{background:rgba(59,130,246,.1);color:#67e8f9;border:1px solid rgba(59,130,246,.2);}
+.b-done{background:rgba(107,114,128,.1);color:#6d619a;border:1px solid rgba(107,114,128,.16);}
+.b-urg{background:rgba(248,113,113,.1);color:#f87171;border:1px solid rgba(248,113,113,.2);}
+.b-orange{background:rgba(251,146,60,.1);color:#fb923c;border:1px solid rgba(251,146,60,.2);}
+.badge-msg{animation:msgPulse 2s infinite;}
+@keyframes msgPulse{0%,100%{opacity:1;}50%{opacity:.6;}}
+
+/* Empty */
+.empty-state{text-align:center;padding:55px 20px;background:var(--surface);border:2px dashed var(--border);border-radius:16px;}
+.empty-icon{width:68px;height:68px;border-radius:16px;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.18);display:flex;align-items:center;justify-content:center;font-size:1.7rem;margin:0 auto 16px;}
+</style>
+
+<div class="page-hero">
+  <h1><i class="fa-solid fa-folder-open" style="color:#a78bfa;"></i>Mis Reportes</h1>
+  <p>Historial completo de tus incidentes · Confidencial · Solo el equipo Sentinel lo verá</p>
+  <div class="hero-btns">
+    <a href="{% url 'projects:reporte-create' %}" class="btn btn-primary"><i class="fa-solid fa-file-circle-plus"></i> Nuevo Reporte</a>
+    <a href="{% url 'projects:home' %}" class="btn btn-ghost"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat-box">
+    <div class="stat-box-icon" style="color:#a78bfa"><i class="fa-solid fa-folder-open"></i></div>
+    <div class="stat-box-val" style="color:#a78bfa">{{ reportes.count|default:"0" }}</div>
+    <div class="stat-box-lbl">Total reportes</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-box-icon" style="color:#67e8f9"><i class="fa-solid fa-file-lines"></i></div>
+    <div class="stat-box-val" style="color:#67e8f9">{{ reportes.count|default:"0" }}</div>
+    <div class="stat-box-lbl">Registrados por ti</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-box-icon" style="color:#fbbf24"><i class="fa-solid fa-hourglass-half"></i></div>
+    <div class="stat-box-val" style="color:#fbbf24">{{ activos|default:"0" }}</div>
+    <div class="stat-box-lbl">En seguimiento</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-box-icon" style="color:#34d399"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="stat-box-val" style="color:#34d399">{{ cerrados|default:"0" }}</div>
+    <div class="stat-box-lbl">Casos cerrados</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-box-icon" style="color:#f472b6"><i class="fa-solid fa-gauge-high"></i></div>
+    <div class="stat-box-val" style="color:#f472b6;font-size:1rem;">{{ nivel_max|capfirst|default:"—" }}</div>
+    <div class="stat-box-lbl">Nivel máx.</div>
+  </div>
+</div>
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:.7rem;">
+  <div style="font-size:1rem;font-weight:800;display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-list-check" style="color:#a78bfa;"></i> Todos los Incidentes <span style="font-size:.74rem;font-weight:400;color:var(--muted);">{{ reportes.count|default:"0" }} registros</span></div>
+</div>
+
+{% if reportes %}
+<div class="filter-bar">
+  <input class="filter-inp" id="srch" placeholder="🔍 Buscar por descripción o tipo..." oninput="filterCards()">
+  <select class="filter-sel" id="fStatus" onchange="filterCards()">
+    <option value="">Todos los estados</option>
+    <option value="nuevo">Nuevos</option>
+    <option value="revision">En Revisión</option>
+    <option value="proceso">En Proceso</option>
+    <option value="cerrado">Cerrados</option>
+  </select>
+  <select class="filter-sel" id="fNivel" onchange="filterCards()">
+    <option value="">Todos los niveles</option>
+    <option value="critico">Crítico</option>
+    <option value="alto">Alto</option>
+    <option value="medio">Medio</option>
+    <option value="bajo">Bajo</option>
+  </select>
+</div>
+
+<div class="report-grid" id="rep-grid">
+  {% for rep in reportes %}
+  <div class="rep-card" data-status="{{ rep.status }}" data-nivel="{{ rep.nivel_urgencia|default:'bajo' }}" data-txt="{{ rep.descripcion|lower }} {{ rep.tipo_acoso.nombre|lower|default:'' }}">
+    <div class="rep-card-body c-{{ rep.nivel_urgencia|default:'none' }}">
+      <div class="rep-meta">
+        <span class="rep-id">#{{ rep.pk|stringformat:"04d" }}</span>
+        {% if rep.status == 'nuevo' %}<span class="badge b-new"><i class="fa-circle" class="fa-solid" style="font-size:.35rem;"></i> Nuevo</span>
+        {% elif rep.status == 'revision' %}<span class="badge b-rev"><i class="fa-solid fa-magnifying-glass" style="font-size:.5rem;"></i> En Revisión</span>
+        {% elif rep.status == 'proceso' %}<span class="badge b-proc"><i class="fa-solid fa-gears" style="font-size:.5rem;"></i> En Proceso</span>
+        {% else %}<span class="badge b-done"><i class="fa-solid fa-check" style="font-size:.5rem;"></i> Cerrado</span>{% endif %}
+        {% if rep.nivel_urgencia == 'critico' %}<span class="badge b-urg"><i class="fa-solid fa-bolt"></i> Crítico</span>
+        {% elif rep.nivel_urgencia == 'alto' %}<span class="badge b-orange"><i class="fa-solid fa-triangle-exclamation" style="font-size:.5rem;"></i> Alto</span>
+        {% elif rep.nivel_urgencia == 'medio' %}<span class="badge b-rev">Medio</span>{% endif %}
+        {% if rep.llamar_911 %}<span class="badge b-urg">🚨 Urgente</span>{% endif %}
+        {% if rep.revisado %}<span class="badge b-new"><i class="fa-solid fa-shield-check"></i> Revisado</span>{% endif %}
+      </div>
+      <div class="rep-desc">{{ rep.descripcion|truncatechars:180 }}</div>
+      {% if rep.tipo_acoso %}<div class="rep-tag"><i class="fa-solid fa-tag" style="color:#a78bfa;font-size:.6rem;"></i> {{ rep.tipo_acoso.nombre }}</div>{% endif %}
+    </div>
+    <div class="rep-footer">
+      <div class="rep-date"><i class="fa-solid fa-clock" style="font-size:.6rem;"></i> {{ rep.creado_en|date:"d/m/Y · H:i" }}</div>
+      <a href="{% url 'projects:reporte-detail' rep.pk %}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-eye"></i> Ver detalle y mensajes</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon"><i class="fa-solid fa-folder-open" style="color:#a78bfa;"></i></div>
+  <div style="font-size:1.15rem;font-weight:800;margin-bottom:8px;">Sin reportes registrados</div>
+  <div style="color:var(--muted);font-size:.86rem;max-width:320px;margin:0 auto 20px;line-height:1.6;">Aún no has registrado ningún incidente. Si viviste algo, documéntalo. Tu testimonio es importante y confidencial.</div>
+  <a href="{% url 'projects:reporte-create' %}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Crear primer reporte</a>
+</div>
+{% endif %}
+
+<script>
+function filterCards(){
+  const q=document.getElementById('srch').value.toLowerCase();
+  const st=document.getElementById('fStatus').value;
+  const nv=document.getElementById('fNivel').value;
+  document.querySelectorAll('#rep-grid .rep-card').forEach(c=>{
+    const ok=(!q||c.dataset.txt.includes(q))&&(!st||c.dataset.status===st)&&(!nv||c.dataset.nivel===nv);
+    c.style.display=ok?'':'none';
+  });
+}
+</script>
+{% endblock %}

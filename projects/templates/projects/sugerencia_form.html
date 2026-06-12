@@ -1,0 +1,140 @@
+{% extends "projects/base_dashboard.html" %}
+{% block dashboard_content %}
+<style>
+.sg-wrap{max-width:720px;margin:0 auto;}
+.page-hero{background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(59,130,246,.08));border:1px solid rgba(124,58,237,.2);border-radius:18px;padding:26px 30px;margin-bottom:24px;position:relative;overflow:hidden;display:flex;align-items:center;gap:18px;}
+.hero-icon{width:60px;height:60px;border-radius:15px;background:linear-gradient(135deg,#7c3aed,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;box-shadow:0 8px 24px rgba(124,58,237,.3);}
+.page-hero h1{font-size:1.6rem;font-weight:900;letter-spacing:-.4px;margin-bottom:4px;}
+.page-hero p{color:var(--muted);font-size:.84rem;}
+
+/* Section card */
+.sec-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:18px;}
+.sec-card-title{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);display:flex;align-items:center;gap:7px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+
+/* Type grid */
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:540px){.type-grid{grid-template-columns:1fr;}}
+.type-option{position:relative;}
+.type-option input[type=radio]{position:absolute;opacity:0;width:0;height:0;}
+.type-label{display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(255,255,255,.02);border:2px solid var(--border);border-radius:12px;cursor:pointer;transition:all .18s;}
+.type-label:hover{border-color:rgba(130,90,255,.3);background:rgba(124,58,237,.06);}
+.type-option input:checked + .type-label{border-color:#7c3aed;background:rgba(124,58,237,.12);}
+.type-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.type-name{font-size:.88rem;font-weight:700;color:var(--text);}
+.type-desc{font-size:.72rem;color:var(--muted);margin-top:1px;}
+.radio-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);margin-left:auto;flex-shrink:0;transition:all .18s;position:relative;}
+.type-option input:checked + .type-label .radio-dot{border-color:#7c3aed;background:#7c3aed;}
+.type-option input:checked + .type-label .radio-dot::after{content:'';position:absolute;inset:3px;border-radius:50%;background:white;}
+
+/* Form fields */
+.field{margin-bottom:16px;}
+.field label{display:flex;align-items:center;gap:7px;font-size:.8rem;font-weight:700;color:var(--text);margin-bottom:7px;}
+.field label i{color:#a78bfa;font-size:.75rem;}
+.field input,.field textarea,.field select{width:100%;background:rgba(0,0,0,.28);border:1px solid rgba(130,90,255,.18);border-radius:10px;padding:11px 14px;color:var(--text);font-family:var(--font);font-size:.86rem;outline:none;transition:all .16s;resize:vertical;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.12);}
+.field input::placeholder,.field textarea::placeholder{color:var(--muted);}
+.field-hint{font-size:.72rem;color:var(--muted);margin-top:5px;display:flex;align-items:center;gap:5px;line-height:1.4;}
+.char-count{font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-top:4px;text-align:right;}
+
+/* Privacy notice */
+.privacy-box{background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.15);border-radius:10px;padding:12px 15px;display:flex;align-items:flex-start;gap:10px;margin-bottom:18px;}
+.privacy-box i{color:#34d399;font-size:.95rem;flex-shrink:0;margin-top:1px;}
+.privacy-box p{font-size:.78rem;color:var(--muted);line-height:1.55;}
+
+/* Buttons */
+.action-row{display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:11px 22px;border-radius:10px;font-size:.84rem;font-weight:700;cursor:pointer;transition:all .16s;text-decoration:none;border:1px solid;}
+.btn-primary{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:white;border-color:transparent;box-shadow:0 4px 16px rgba(124,58,237,.3);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(124,58,237,.4);}
+.btn-ghost{background:rgba(255,255,255,.04);border-color:rgba(130,90,255,.2);color:var(--muted);}
+.btn-ghost:hover{color:var(--text);border-color:rgba(130,90,255,.35);}
+</style>
+
+<div class="sg-wrap">
+
+<div class="page-hero">
+  <div class="hero-icon"><i class="fa-solid fa-paper-plane"></i></div>
+  <div>
+    <h1>Enviar Sugerencia</h1>
+    <p>Tu sugerencia será revisada por el administrador antes de publicarse</p>
+  </div>
+</div>
+
+<form method="post" novalidate>
+  {% csrf_token %}
+
+  <!-- TIPO -->
+  <div class="sec-card">
+    <div class="sec-card-title"><i class="fa-solid fa-tags"></i> ¿Qué estás sugiriendo? <span style="color:#ef4444;font-size:.7rem;margin-left:auto;">*Requerido</span></div>
+    <div class="type-grid">
+      <div class="type-option">
+        <input type="radio" name="tipo" id="t-tip" value="tip" {% if form.tipo.value == 'tip' %}checked{% endif %} required>
+        <label for="t-tip" class="type-label">
+          <div class="type-icon" style="background:rgba(251,191,36,.15);"><i class="fa-solid fa-lightbulb" style="color:#fbbf24;"></i></div>
+          <div><div class="type-name">Tip de Seguridad</div><div class="type-desc">Consejo útil para la comunidad</div></div>
+          <div class="radio-dot"></div>
+        </label>
+      </div>
+      <div class="type-option">
+        <input type="radio" name="tipo" id="t-inst" value="institucion" {% if form.tipo.value == 'institucion' %}checked{% endif %}>
+        <label for="t-inst" class="type-label">
+          <div class="type-icon" style="background:rgba(52,211,153,.15);"><i class="fa-solid fa-building-ngo" style="color:#34d399;"></i></div>
+          <div><div class="type-name">Institución</div><div class="type-desc">Centro de apoyo o ayuda</div></div>
+          <div class="radio-dot"></div>
+        </label>
+      </div>
+      <div class="type-option">
+        <input type="radio" name="tipo" id="t-glos" value="tipo_acoso" {% if form.tipo.value == 'tipo_acoso' %}checked{% endif %}>
+        <label for="t-glos" class="type-label">
+          <div class="type-icon" style="background:rgba(103,232,249,.12);"><i class="fa-solid fa-book-open" style="color:#67e8f9;"></i></div>
+          <div><div class="type-name">Glosario</div><div class="type-desc">Definición de tipo de acoso</div></div>
+          <div class="radio-dot"></div>
+        </label>
+      </div>
+      <div class="type-option">
+        <input type="radio" name="tipo" id="t-otro" value="otro" {% if form.tipo.value == 'otro' %}checked{% endif %}>
+        <label for="t-otro" class="type-label">
+          <div class="type-icon" style="background:rgba(164,114,182,.15);"><i class="fa-solid fa-comment-dots" style="color:#c084fc;"></i></div>
+          <div><div class="type-name">Otro</div><div class="type-desc">Cualquier otra mejora</div></div>
+          <div class="radio-dot"></div>
+        </label>
+      </div>
+    </div>
+    {% if form.tipo.errors %}<div style="color:#f87171;font-size:.75rem;margin-top:8px;">{{ form.tipo.errors.0 }}</div>{% endif %}
+  </div>
+
+  <!-- TÍTULO Y CONTENIDO -->
+  <div class="sec-card">
+    <div class="sec-card-title"><i class="fa-solid fa-pen-to-square"></i> Detalle de la sugerencia</div>
+
+    <div class="field">
+      <label for="{{ form.titulo.id_for_label }}"><i class="fa-solid fa-heading"></i> Título de la sugerencia <span style="color:#ef4444;">*</span></label>
+      <input type="text" name="titulo" id="{{ form.titulo.id_for_label }}" value="{{ form.titulo.value|default:'' }}" placeholder="Escribe un título claro y descriptivo..." maxlength="200" oninput="document.getElementById('tc').textContent=this.value.length+' / 200'">
+      <div class="char-count" id="tc">0 / 200</div>
+      <div class="field-hint"><i class="fa-solid fa-circle-info"></i> Un buen título describe en pocas palabras lo que sugieres.</div>
+      {% if form.titulo.errors %}<div style="color:#f87171;font-size:.75rem;margin-top:5px;">{{ form.titulo.errors.0 }}</div>{% endif %}
+    </div>
+
+    <div class="field">
+      <label for="{{ form.contenido.id_for_label }}"><i class="fa-solid fa-align-left"></i> Descripción detallada <span style="color:#ef4444;">*</span></label>
+      <textarea name="contenido" id="{{ form.contenido.id_for_label }}" rows="6" placeholder="Describe tu sugerencia con todos los detalles posibles. Cuanta más información, más fácil será revisarla…" maxlength="2000" oninput="document.getElementById('cc').textContent=this.value.length+' / 2000'">{{ form.contenido.value|default:'' }}</textarea>
+      <div class="char-count" id="cc">0 / 2000</div>
+      <div class="field-hint"><i class="fa-solid fa-circle-info"></i> Incluye referencias, fuentes o contexto si tienes disponibles.</div>
+      {% if form.contenido.errors %}<div style="color:#f87171;font-size:.75rem;margin-top:5px;">{{ form.contenido.errors.0 }}</div>{% endif %}
+    </div>
+  </div>
+
+  <!-- PRIVACY + SUBMIT -->
+  <div class="privacy-box">
+    <i class="fa-solid fa-shield-check"></i>
+    <p>Tu sugerencia será revisada por el equipo en un plazo de <strong>24–48 horas</strong>. Recibirás una notificación con la decisión. Toda la información es tratada con confidencialidad.</p>
+  </div>
+
+  <div class="action-row">
+    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> Enviar Sugerencia</button>
+    <a href="{% url 'projects:home' %}" class="btn btn-ghost"><i class="fa-solid fa-xmark"></i> Cancelar</a>
+  </div>
+
+</form>
+</div>
+{% endblock %}

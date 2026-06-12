@@ -1,0 +1,475 @@
+{% extends "projects/base_dashboard.html" %}
+{% block dashboard_content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --pu:#7c3aed;--vi:#a78bfa;--cy:#67e8f9;--gr:#34d399;--re:#f87171;
+  --or:#fb923c;--ye:#fbbf24;--pk:#f472b6;
+  --surface:#0d0b26;--border:rgba(108,68,255,.1);
+  --muted:#5e5478;--mono:'JetBrains Mono',monospace;
+}
+.adm-header{position:relative;overflow:hidden;padding:24px 28px 20px;background:linear-gradient(135deg,#060417,#0f0830 50%,#07041a);border-bottom:1px solid rgba(108,68,255,.15);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.adm-header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#7c3aed,#f472b6,#67e8f9,#34d399,#7c3aed);background-size:300%;animation:flowBar 5s linear infinite;}
+@keyframes flowBar{to{background-position:300%;}}
+.adm-orb{position:absolute;border-radius:50%;filter:blur(70px);pointer-events:none;}
+.adm-orb1{width:350px;height:350px;background:rgba(124,58,237,.07);top:-180px;right:80px;}
+.adm-orb2{width:200px;height:200px;background:rgba(244,114,182,.04);bottom:-120px;left:10%;}
+.adm-title{position:relative;z-index:2;}
+.adm-subtitle{font-size:.56rem;font-weight:900;text-transform:uppercase;letter-spacing:3px;color:var(--vi);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.adm-dot{width:5px;height:5px;border-radius:50%;background:var(--re);box-shadow:0 0 8px var(--re);animation:blink2 1.5s infinite;}
+@keyframes blink2{0%,100%{opacity:1;}50%{opacity:.2;}}
+.adm-name{font-size:1.8rem;font-weight:900;letter-spacing:-0.8px;background:linear-gradient(135deg,#f8f5ff,#c4b5fd 50%,#67e8f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.adm-badge-row{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:8px;}
+.adm-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;font-size:.62rem;font-weight:800;}
+.ab-admin{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#f87171;}
+.ab-online{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);color:#34d399;}
+.ab-ver{background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);color:#a78bfa;}
+.adm-header-r{display:flex;align-items:center;gap:10px;position:relative;z-index:2;flex-wrap:wrap;}
+.h-clock{font-family:var(--mono);font-size:1.4rem;font-weight:700;color:var(--cy);letter-spacing:3px;}
+.h-refresh-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9px;font-size:.72rem;font-weight:800;cursor:pointer;border:1px solid rgba(124,58,237,.25);background:rgba(124,58,237,.1);color:#a78bfa;transition:all .15s;font-family:inherit;}
+.h-refresh-btn:hover{background:rgba(124,58,237,.2);transform:translateY(-1px);}
+.h-refresh-btn.loading i{animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#crit-zona{padding:0 26px;}
+#crit-zona:empty{display:none;}
+.crit-banner{background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(185,28,28,.07));border:1.5px solid rgba(239,68,68,.35);border-radius:14px;padding:14px 20px;margin-top:16px;animation:pulseBrd 2s infinite;}
+@keyframes pulseBrd{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.25);}50%{box-shadow:0 0 0 6px rgba(239,68,68,.04);}}
+.crit-inner{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;}
+.crit-list{flex:1;display:flex;flex-direction:column;gap:6px;}
+.crit-item{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:8px;padding:8px 12px;font-size:.78rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.crit-item a{color:#f87171;font-weight:700;text-decoration:none;}
+.crit-item a:hover{text-decoration:underline;}
+.adm-body{padding:22px 26px 40px;display:flex;flex-direction:column;gap:20px;}
+.stats-6{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;}
+@media(max-width:1100px){.stats-6{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:700px){.stats-6{grid-template-columns:repeat(2,1fr);}}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 16px;position:relative;overflow:hidden;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--scl,#7c3aed);opacity:.6;}
+.sc:hover{border-color:rgba(108,68,255,.3);transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.4);}
+.sc-ico{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.85rem;margin-bottom:10px;}
+.sc-val{font-size:2rem;font-weight:900;line-height:1;margin-bottom:3px;}
+.sc-lbl{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);}
+.sc-trend{font-size:.6rem;color:var(--muted);margin-top:4px;font-family:var(--mono);}
+.main-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;}
+@media(max-width:1000px){.main-grid{grid-template-columns:1fr;}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+.card-hd{padding:15px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-t{font-size:.84rem;font-weight:800;display:flex;align-items:center;gap:8px;}
+.card-bd{padding:16px 20px;}
+.chart-wrap{position:relative;height:200px;}
+.chart-wrap-sm{position:relative;height:170px;}
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+@media(max-width:1100px){.bottom-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:700px){.bottom-grid{grid-template-columns:1fr;}}
+.rep-tbl{width:100%;border-collapse:collapse;font-size:.78rem;}
+.rep-tbl th{padding:9px 14px;text-align:left;font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);background:rgba(0,0,0,.15);border-bottom:1px solid var(--border);}
+.rep-tbl td{padding:10px 14px;border-bottom:1px solid rgba(108,68,255,.04);vertical-align:middle;}
+.rep-tbl tr:hover td{background:rgba(124,58,237,.03);}
+.rep-tbl tr:last-child td{border-bottom:none;}
+.upill{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:.59rem;font-weight:800;}
+.u-c{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.2);}
+.u-a{background:rgba(251,146,60,.12);color:#fb923c;border:1px solid rgba(251,146,60,.2);}
+.u-m{background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.2);}
+.u-b{background:rgba(52,211,153,.12);color:#34d399;border:1px solid rgba(52,211,153,.2);}
+.spill{padding:2px 8px;border-radius:20px;font-size:.59rem;font-weight:700;}
+.s-n{background:rgba(52,211,153,.1);color:#34d399;}
+.s-r{background:rgba(251,191,36,.1);color:#fbbf24;}
+.s-p{background:rgba(103,232,249,.1);color:#67e8f9;}
+.s-c{background:rgba(107,114,128,.1);color:#9ca3af;}
+.ver-btn{color:#a78bfa;font-size:.7rem;font-weight:700;text-decoration:none;padding:3px 9px;border-radius:6px;border:1px solid rgba(124,58,237,.18);transition:all .12s;}
+.ver-btn:hover{background:rgba(124,58,237,.1);}
+.usr-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.usr-item:last-child{border-bottom:none;}
+.usr-av{width:32px;height:32px;border-radius:9px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.22);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:900;color:#c4b5fd;flex-shrink:0;}
+.usr-name{font-size:.8rem;font-weight:700;}
+.usr-date{font-size:.62rem;color:var(--muted);font-family:var(--mono);}
+.lnk{color:#a78bfa;font-size:.7rem;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:color .12s;}
+.lnk:hover{color:var(--cy);}
+.qa-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.qa-item{display:flex;flex-direction:column;align-items:center;gap:7px;padding:14px 8px;border-radius:12px;font-size:.72rem;font-weight:800;background:rgba(255,255,255,.02);border:1px solid var(--border);cursor:pointer;text-decoration:none;transition:all .15s;text-align:center;color:inherit;font-family:inherit;}
+.qa-item:hover{background:rgba(124,58,237,.06);border-color:rgba(124,58,237,.2);transform:translateY(-2px);}
+.qa-ico{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:.95rem;}
+.fp{padding:4px 11px;border-radius:6px;font-size:.62rem;font-weight:800;cursor:pointer;border:1px solid;transition:all .12s;font-family:inherit;background:transparent;}
+.tbl-empty{text-align:center;padding:28px;color:var(--muted);font-size:.78rem;}
+.sys-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:.79rem;}
+.sys-row:last-child{border-bottom:none;}
+.sys-k{color:var(--muted);}
+.sys-v{font-weight:700;font-family:var(--mono);font-size:.73rem;}
+.dot-ok{color:#34d399;}
+.dot-vi{color:#a78bfa;}
+#adm-toast{position:fixed;top:60px;right:16px;z-index:9999;background:linear-gradient(135deg,#7f1d1d,#991b1b);border:1.5px solid #ef4444;border-radius:14px;padding:14px 18px;max-width:320px;box-shadow:0 8px 32px rgba(239,68,68,.4);display:none;}
+#adm-toast.show{display:block;animation:slideR .3s ease-out;}
+@keyframes slideR{from{transform:translateX(110%);opacity:0;}to{transform:none;opacity:1;}}
+.toast-t{font-size:.82rem;font-weight:900;color:#fca5a5;display:flex;align-items:center;gap:7px;margin-bottom:6px;}
+.toast-b{font-size:.72rem;color:rgba(252,165,165,.75);line-height:1.5;}
+.toast-list{display:flex;flex-direction:column;gap:4px;margin:8px 0;}
+.toast-li{font-size:.7rem;color:rgba(252,165,165,.8);padding:5px 9px;background:rgba(239,68,68,.1);border-radius:6px;display:flex;align-items:center;gap:6px;}
+.toast-li a{color:#f87171;font-weight:700;text-decoration:none;}
+.toast-acts{display:flex;gap:.4rem;margin-top:9px;}
+.tbtn{padding:5px 11px;border-radius:7px;font-size:.68rem;font-weight:700;cursor:pointer;text-decoration:none;border:none;font-family:inherit;}
+.tbtn-p{background:rgba(239,68,68,.25);color:#fca5a5;border:1px solid rgba(239,68,68,.35);}
+.tbtn-c{background:rgba(255,255,255,.07);color:rgba(252,165,165,.5);border:1px solid rgba(255,255,255,.08);}
+</style>
+
+<!-- HEADER -->
+<div class="adm-header">
+  <div class="adm-orb adm-orb1"></div>
+  <div class="adm-orb adm-orb2"></div>
+  <div class="adm-title">
+    <div class="adm-subtitle"><span class="adm-dot"></span>Panel Administrativo</div>
+    <div class="adm-name">Sentinel Admin</div>
+    <div class="adm-badge-row">
+      <span class="adm-badge ab-admin">🛡 Admin</span>
+      <span class="adm-badge ab-online">● Sistema activo</span>
+      <span class="adm-badge ab-ver">v9.0</span>
+      <span class="adm-badge" style="background:rgba(103,232,249,.08);border:1px solid rgba(103,232,249,.18);color:#67e8f9;">{{ request.user.username }}</span>
+    </div>
+  </div>
+  <div class="adm-header-r">
+    <div class="h-clock" id="adm-clk">--:--:--</div>
+    <button class="h-refresh-btn" id="btn-refresh" onclick="refreshStats()">
+      <i class="fa-solid fa-rotate-right" id="refresh-icon"></i> Actualizar
+    </button>
+  </div>
+</div>
+
+<!-- ZONA ALERTA CRÍTICA — 100% dinámica -->
+<div id="crit-zona"></div>
+
+<!-- CUERPO -->
+<div class="adm-body">
+
+  <div class="stats-6">
+    <div class="sc" style="--scl:#a78bfa;" onclick="window.location='{% url 'projects:reporte-list' %}'">
+      <div class="sc-ico" style="background:rgba(124,58,237,.12);color:#a78bfa;"><i class="fa-solid fa-folder-open"></i></div>
+      <div class="sc-val" style="color:#a78bfa;" id="st-total">{{ total_reportes }}</div>
+      <div class="sc-lbl">Total Reportes</div>
+    </div>
+    <div class="sc" style="--scl:#f87171;" onclick="window.location='{% url 'projects:reporte-list' %}?nivel=critico'">
+      <div class="sc-ico" style="background:rgba(239,68,68,.1);color:#f87171;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="sc-val" style="color:#f87171;" id="st-criticos">{{ reportes_urgentes }}</div>
+      <div class="sc-lbl">Críticos</div>
+    </div>
+    <div class="sc" style="--scl:#fbbf24;" onclick="window.location='{% url 'projects:reporte-list' %}?revisado=0'">
+      <div class="sc-ico" style="background:rgba(251,191,36,.1);color:#fbbf24;"><i class="fa-solid fa-eye-slash"></i></div>
+      <div class="sc-val" style="color:#fbbf24;" id="st-sinrevisar">{{ reportes_nuevos }}</div>
+      <div class="sc-lbl">Sin Revisar</div>
+    </div>
+    <div class="sc" style="--scl:#34d399;">
+      <div class="sc-ico" style="background:rgba(52,211,153,.1);color:#34d399;"><i class="fa-solid fa-users"></i></div>
+      <div class="sc-val" style="color:#34d399;" id="st-usuarios">{{ total_usuarios }}</div>
+      <div class="sc-lbl">Usuarios</div>
+    </div>
+    <div class="sc" style="--scl:#fb923c;" onclick="window.location='{% url 'projects:sugerencias-admin' %}?estado=pendiente'">
+      <div class="sc-ico" style="background:rgba(251,146,60,.1);color:#fb923c;"><i class="fa-solid fa-comment-medical"></i></div>
+      <div class="sc-val" style="color:#fb923c;">{{ sugerencias_pend }}</div>
+      <div class="sc-lbl">Sugerencias</div>
+    </div>
+    <div class="sc" style="--scl:#67e8f9;">
+      <div class="sc-ico" style="background:rgba(103,232,249,.1);color:#67e8f9;"><i class="fa-solid fa-shield-halved"></i></div>
+      <div class="sc-val" style="color:#67e8f9;font-size:1.3rem;">OK</div>
+      <div class="sc-lbl">Sistema</div>
+      <div class="sc-trend">v9.0 · Activo</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <div class="card">
+      <div class="card-hd"><span class="card-t"><i class="fa-solid fa-chart-line" style="color:#a78bfa;"></i>Reportes — últimos 7 días</span></div>
+      <div class="card-bd"><div class="chart-wrap"><canvas id="lineChart"></canvas></div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="card">
+        <div class="card-hd"><span class="card-t"><i class="fa-solid fa-chart-pie" style="color:#fb923c;"></i>Por Nivel</span></div>
+        <div class="card-bd"><div class="chart-wrap-sm"><canvas id="donaChart"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-t"><i class="fa-solid fa-chart-bar" style="color:#34d399;"></i>Por Estado</span></div>
+        <div class="card-bd"><div class="chart-wrap-sm"><canvas id="barChart"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-t"><i class="fa-solid fa-list-check" style="color:#67e8f9;"></i>Reportes Recientes <span style="font-size:.68rem;font-weight:400;color:var(--muted);margin-left:4px;">ordenados por urgencia</span></span>
+      <a href="{% url 'projects:reporte-list' %}" class="lnk">Ver todos <i class="fa-solid fa-arrow-right" style="font-size:.6rem;"></i></a>
+    </div>
+    <div style="padding:10px 20px;border-bottom:1px solid var(--border);display:flex;gap:.4rem;flex-wrap:wrap;">
+      <a href="{% url 'projects:reporte-list' %}" class="fp" style="border-color:rgba(124,58,237,.3);color:#a78bfa;">Todos</a>
+      <a href="{% url 'projects:reporte-list' %}?nivel=critico" class="fp" style="border-color:rgba(239,68,68,.3);color:#f87171;">Crítico</a>
+      <a href="{% url 'projects:reporte-list' %}?nivel=alto" class="fp" style="border-color:rgba(251,146,60,.3);color:#fb923c;">Alto</a>
+      <a href="{% url 'projects:reporte-list' %}?revisado=0" class="fp" style="border-color:rgba(251,191,36,.3);color:#fbbf24;">Sin revisar</a>
+      <a href="{% url 'projects:reporte-list' %}?revisado=1" class="fp" style="border-color:rgba(52,211,153,.3);color:#34d399;">Revisados</a>
+    </div>
+    {% if all_reportes %}
+    <div style="overflow-x:auto;">
+    <table class="rep-tbl">
+      <thead><tr><th>ID</th><th>Nivel</th><th>Reportante</th><th>Tipo</th><th>Descripción</th><th>Estado</th><th>Fecha</th><th>Acción</th></tr></thead>
+      <tbody>
+        {% for rep in all_reportes %}
+        <tr>
+          <td style="font-family:var(--mono);color:#67e8f9;font-size:.7rem;">#{{ rep.pk|stringformat:"04d" }}</td>
+          <td><span class="upill u-{{ rep.nivel_urgencia|default:'bajo' }}">{% if rep.nivel_urgencia == 'critico' %}🚨{% elif rep.nivel_urgencia == 'alto' %}⚠️{% elif rep.nivel_urgencia == 'medio' %}⚡{% else %}ℹ️{% endif %} {{ rep.get_nivel_urgencia_display|default:"—" }}</span></td>
+          <td style="font-size:.76rem;">{{ rep.nombre_reportante|default:"Anónimo"|truncatechars:20 }}</td>
+          <td style="font-size:.72rem;color:var(--muted);">{{ rep.tipo_acoso|default:"—"|truncatechars:18 }}</td>
+          <td style="font-size:.74rem;color:var(--muted);">{{ rep.descripcion|truncatechars:50 }}</td>
+          <td><span class="spill s-{{ rep.status }}">{{ rep.get_status_display }}</span></td>
+          <td style="font-family:var(--mono);font-size:.65rem;color:var(--muted);">{{ rep.creado_en|date:"d/m/y H:i" }}</td>
+          <td><a href="{% url 'projects:reporte-detail' rep.pk %}" class="ver-btn">Ver</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    <div class="tbl-empty"><i class="fa-solid fa-inbox" style="font-size:1.4rem;display:block;margin-bottom:8px;"></i>Sin reportes aún.</div>
+    {% endif %}
+  </div>
+
+  <div class="bottom-grid">
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-t"><i class="fa-solid fa-user-plus" style="color:#34d399;"></i>Usuarios Recientes</span>
+        <a href="{% url 'admin:auth_user_changelist' %}" class="lnk">Ver todos <i class="fa-solid fa-arrow-right" style="font-size:.6rem;"></i></a>
+      </div>
+      <div class="card-bd">
+        {% for u in usuarios_recientes %}
+        <div class="usr-item">
+          <div class="usr-av">{{ u.username|slice:":1"|upper }}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="usr-name">{{ u.username }}</div>
+            <div class="usr-date">{{ u.date_joined|date:"d/m/y H:i" }}</div>
+          </div>
+          {% if u.is_staff %}<span style="font-size:.55rem;font-weight:900;padding:2px 6px;border-radius:4px;background:rgba(239,68,68,.1);color:#f87171;">Admin</span>{% endif %}
+        </div>
+        {% empty %}
+        <div style="text-align:center;color:var(--muted);font-size:.78rem;padding:16px 0;">Sin usuarios</div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-t"><i class="fa-solid fa-comment-medical" style="color:#fb923c;"></i>Sugerencias</span>
+        <a href="{% url 'projects:sugerencias-admin' %}" class="lnk">Ver todas <i class="fa-solid fa-arrow-right" style="font-size:.6rem;"></i></a>
+      </div>
+      <div class="card-bd">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+          <div style="text-align:center;padding:10px;background:rgba(251,146,60,.06);border:1px solid rgba(251,146,60,.15);border-radius:10px;">
+            <div style="font-size:1.5rem;font-weight:900;color:#fb923c;">{{ sugerencias_pend }}</div>
+            <div style="font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Pendientes</div>
+          </div>
+          <div style="text-align:center;padding:10px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.15);border-radius:10px;">
+            <div style="font-size:1.5rem;font-weight:900;color:#34d399;">—</div>
+            <div style="font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Aprobadas</div>
+          </div>
+          <div style="text-align:center;padding:10px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:10px;">
+            <div style="font-size:1.5rem;font-weight:900;color:#f87171;">—</div>
+            <div style="font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Rechazadas</div>
+          </div>
+        </div>
+        <a href="{% url 'projects:sugerencias-admin' %}?estado=pendiente" style="display:flex;align-items:center;justify-content:center;gap:7px;padding:10px;border-radius:9px;font-size:.76rem;font-weight:800;background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.2);color:#fb923c;text-decoration:none;">
+          <i class="fa-solid fa-arrow-right"></i> Revisar pendientes
+        </a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><span class="card-t"><i class="fa-solid fa-bolt" style="color:#fbbf24;"></i>Acciones Rápidas</span></div>
+      <div class="card-bd">
+        <div class="qa-grid">
+          <a href="{% url 'projects:reporte-list' %}?nivel=critico&revisado=0" class="qa-item"><div class="qa-ico" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#f87171;"><i class="fa-solid fa-triangle-exclamation"></i></div><span style="font-size:.65rem;color:var(--muted);">Ver Críticos</span></a>
+          <a href="{% url 'projects:tipo-create' %}" class="qa-item"><div class="qa-ico" style="background:rgba(103,232,249,.1);border:1px solid rgba(103,232,249,.2);color:#67e8f9;"><i class="fa-solid fa-tag"></i></div><span style="font-size:.65rem;color:var(--muted);">Nuevo Tipo</span></a>
+          <a href="{% url 'projects:tip-create' %}" class="qa-item"><div class="qa-ico" style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);color:#fbbf24;"><i class="fa-solid fa-lightbulb"></i></div><span style="font-size:.65rem;color:var(--muted);">Nuevo Tip</span></a>
+          <a href="{% url 'projects:institucion-create' %}" class="qa-item"><div class="qa-ico" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);color:#34d399;"><i class="fa-solid fa-building"></i></div><span style="font-size:.65rem;color:var(--muted);">Nueva Inst.</span></a>
+          <a href="{% url 'admin:index' %}" class="qa-item"><div class="qa-ico" style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);color:#a78bfa;"><i class="fa-solid fa-gears"></i></div><span style="font-size:.65rem;color:var(--muted);">Django Admin</span></a>
+          <a href="{% url 'projects:sugerencias-admin' %}" class="qa-item"><div class="qa-ico" style="background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);color:#fb923c;"><i class="fa-solid fa-comments"></i></div><span style="font-size:.65rem;color:var(--muted);">Sugerencias</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="card">
+      <div class="card-hd"><span class="card-t"><i class="fa-solid fa-server" style="color:#34d399;"></i>Estado del Sistema</span></div>
+      <div class="card-bd">
+        <div class="sys-row"><span class="sys-k">Sentinel AI</span><span class="sys-v dot-ok">● Operativo</span></div>
+        <div class="sys-row"><span class="sys-k">Motor IA</span><span class="sys-v dot-vi">Anthropic Claude</span></div>
+        <div class="sys-row"><span class="sys-k">Base de datos</span><span class="sys-v dot-ok">MySQL · Online</span></div>
+        <div class="sys-row"><span class="sys-k">Versión</span><span class="sys-v dot-vi">Sentinel v9.0</span></div>
+        <div class="sys-row"><span class="sys-k">Cifrado</span><span class="sys-v dot-ok">🔒 AES-256</span></div>
+        <div class="sys-row"><span class="sys-k">Hora servidor</span><span class="sys-v" id="srv-clk" style="color:var(--cy);">--:--:--</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><span class="card-t"><i class="fa-solid fa-gauge" style="color:#fb923c;"></i>Métricas por Urgencia</span></div>
+      <div class="card-bd">
+        {% with dona_data as d %}
+        <div style="display:flex;flex-direction:column;gap:9px;">
+          <div><div style="display:flex;justify-content:space-between;font-size:.7rem;margin-bottom:4px;"><span style="color:#f87171;">Crítico</span><span style="font-family:var(--mono);color:var(--muted);">{{ d.critico }}</span></div><div style="height:4px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;"><div style="height:100%;background:#f87171;border-radius:2px;width:{% widthratio d.critico total_reportes 100 %}%;"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:.7rem;margin-bottom:4px;"><span style="color:#fb923c;">Alto</span><span style="font-family:var(--mono);color:var(--muted);">{{ d.alto }}</span></div><div style="height:4px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;"><div style="height:100%;background:#fb923c;border-radius:2px;width:{% widthratio d.alto total_reportes 100 %}%;"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:.7rem;margin-bottom:4px;"><span style="color:#fbbf24;">Medio</span><span style="font-family:var(--mono);color:var(--muted);">{{ d.medio }}</span></div><div style="height:4px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;"><div style="height:100%;background:#fbbf24;border-radius:2px;width:{% widthratio d.medio total_reportes 100 %}%;"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:.7rem;margin-bottom:4px;"><span style="color:#34d399;">Bajo</span><span style="font-family:var(--mono);color:var(--muted);">{{ d.bajo }}</span></div><div style="height:4px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;"><div style="height:100%;background:#34d399;border-radius:2px;width:{% widthratio d.bajo total_reportes 100 %}%;"></div></div></div>
+        </div>
+        {% endwith %}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST DINÁMICO -->
+<div id="adm-toast">
+  <div class="toast-t"><i class="fa-solid fa-bell"></i> <span id="toast-title">Alerta Crítica</span></div>
+  <div class="toast-b" id="toast-body"></div>
+  <div class="toast-list" id="toast-list"></div>
+  <div class="toast-acts">
+    <a href="{% url 'projects:reporte-list' %}?nivel=critico&revisado=0" class="tbtn tbtn-p">Ver críticos</a>
+    <button class="tbtn tbtn-c" onclick="closeToast()">Cerrar</button>
+  </div>
+</div>
+
+<script>
+/* ── Reloj ── */
+(function tick(){
+  var t=new Date().toLocaleTimeString('es-MX',{hour12:false});
+  ['adm-clk','srv-clk'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=t;});
+  setTimeout(tick,1000);
+})();
+
+Chart.defaults.color='#695d8c';
+Chart.defaults.borderColor='rgba(108,68,255,.07)';
+
+var lctx=document.getElementById('lineChart').getContext('2d');
+var gradL=lctx.createLinearGradient(0,0,0,200);
+gradL.addColorStop(0,'rgba(124,58,237,.3)');
+gradL.addColorStop(1,'rgba(124,58,237,.01)');
+var lineChart=new Chart(lctx,{type:'line',data:{labels:{{ grafica_labels|safe }},datasets:[{label:'Reportes',data:{{ grafica_data|safe }},borderColor:'#7c3aed',backgroundColor:gradL,borderWidth:2.5,pointBackgroundColor:'#a78bfa',pointRadius:5,pointHoverRadius:8,tension:.4,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{stepSize:1,precision:0},grid:{color:'rgba(108,68,255,.07)'}}}}});
+
+var dctx=document.getElementById('donaChart').getContext('2d');
+var dona={{ dona_data|safe }};
+var donaChart=new Chart(dctx,{type:'doughnut',data:{labels:['Crítico','Alto','Medio','Bajo'],datasets:[{data:[dona.critico,dona.alto,dona.medio,dona.bajo],backgroundColor:['rgba(239,68,68,.75)','rgba(251,146,60,.75)','rgba(251,191,36,.75)','rgba(52,211,153,.75)'],borderWidth:2,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{padding:10,font:{size:10,weight:'700'},color:'#948aaa',boxWidth:10}}}}});
+
+var bctx=document.getElementById('barChart').getContext('2d');
+var barChart=new Chart(bctx,{type:'bar',data:{labels:['Nuevo','Revisión','Proceso','Cerrado'],datasets:[{data:[{{ all_reportes|length }},0,0,0],backgroundColor:['rgba(52,211,153,.65)','rgba(251,191,36,.65)','rgba(103,232,249,.65)','rgba(107,114,128,.5)'],borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{stepSize:1,precision:0},grid:{color:'rgba(108,68,255,.07)'}}}}});
+
+/* ══════════════════════════════════════════
+   ALERTAS CRÍTICAS — LÓGICA CORREGIDA
+   
+   La clave del fix:
+   - isFirstLoad = true → en la primera llamada NUNCA muestra el toast,
+     solo actualiza el banner y guarda el conteo base.
+   - El toast SOLO aparece cuando llega un reporte NUEVO después
+     de la carga inicial (total > lastCritTotal).
+   - Si total baja (se revisó) → oculta banner y toast inmediatamente.
+══════════════════════════════════════════ */
+var toastDismissed = false;
+var lastCritTotal  = {{ total_alertas_criticas|default:0 }};
+var isFirstLoad    = true;  /* ← FIX PRINCIPAL */
+
+function closeToast(){
+  toastDismissed = true;
+  document.getElementById('adm-toast').classList.remove('show');
+}
+
+function renderBanner(total, alertas){
+  var zona = document.getElementById('crit-zona');
+  if(total === 0){
+    zona.innerHTML = '';
+    return;
+  }
+  var items = alertas.slice(0,5).map(function(a){
+    return '<div class="crit-item">' +
+      '<i class="fa-solid fa-circle-exclamation" style="color:#ef4444;font-size:.65rem;"></i>' +
+      '<a href="' + a.url + '">Reporte #' + String(a.pk).padStart(4,'0') + '</a>' +
+      '<span style="color:rgba(248,113,113,.45);">·</span>' +
+      '<span style="color:rgba(248,113,113,.65);font-size:.7rem;">' + (a.nombre||'Anónimo') + '</span>' +
+      (a.llamar_911 ? '<span style="color:#f87171;font-size:.65rem;margin-left:4px;">📞 Solicita 911</span>' : '') +
+      '<span style="color:rgba(248,113,113,.4);font-size:.63rem;margin-left:auto;">' + a.creado_en + '</span>' +
+    '</div>';
+  }).join('');
+  zona.innerHTML =
+    '<div style="padding:16px 26px 0;">' +
+    '<div class="crit-banner">' +
+    '<div class="crit-inner">' +
+    '<span style="font-size:1.3rem;flex-shrink:0;">🚨</span>' +
+    '<div class="crit-list">' +
+    '<div style="font-size:.82rem;font-weight:900;color:#f87171;margin-bottom:6px;">' +
+      total + ' reporte' + (total>1?'s':'') + ' CRÍTICO' + (total>1?'S':'') + ' sin revisar' +
+    '</div>' + items +
+    '</div>' +
+    '<button onclick="document.getElementById(\'crit-zona\').innerHTML=\'\'" ' +
+      'style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18);color:#f87171;padding:5px 10px;border-radius:7px;font-size:.68rem;cursor:pointer;flex-shrink:0;font-family:inherit;">✕</button>' +
+    '</div></div></div>';
+}
+
+function renderToast(total, alertas){
+  /* Ocultar si no hay críticos */
+  if(total === 0){
+    document.getElementById('adm-toast').classList.remove('show');
+    return;
+  }
+  /* ← FIX: en la primera carga nunca mostrar toast */
+  if(isFirstLoad) return;
+  /* Solo mostrar si llegaron reportes NUEVOS y el admin no lo cerró */
+  if(toastDismissed) return;
+
+  document.getElementById('toast-body').textContent =
+    'Hay ' + total + ' reporte' + (total>1?'s':'') + ' crítico' + (total>1?'s':'') + ' sin revisar.';
+  var list = document.getElementById('toast-list');
+  list.innerHTML = alertas.slice(0,3).map(function(a){
+    return '<div class="toast-li"><a href="' + a.url + '">#' + String(a.pk).padStart(4,'0') + '</a> · ' +
+      (a.nombre||'Anónimo') +
+      (a.llamar_911 ? ' · <span style="color:#f87171;">📞 911</span>' : '') +
+    '</div>';
+  }).join('');
+  document.getElementById('adm-toast').classList.add('show');
+  setTimeout(function(){ document.getElementById('adm-toast').classList.remove('show'); }, 12000);
+}
+
+async function pollAlertas(){
+  try{
+    var r = await fetch('{% url "projects:alertas-criticas-api" %}');
+    var d = await r.json();
+    var total = d.total || 0;
+    var alertas = d.alertas || [];
+
+    /* Si llegaron nuevos después de la carga, resetear dismiss */
+    if(!isFirstLoad && total > lastCritTotal){
+      toastDismissed = false;
+    }
+
+    renderBanner(total, alertas);
+    renderToast(total, alertas);
+
+    lastCritTotal = total;
+    isFirstLoad   = false;  /* ← después de la primera llamada, ya no es carga inicial */
+  }catch(e){ console.warn('poll alertas:', e); }
+}
+
+async function refreshStats(){
+  var btn=document.getElementById('btn-refresh');
+  btn.classList.add('loading'); btn.disabled=true;
+  try{
+    var r=await fetch('{% url "projects:reporte-stats-api" %}');
+    var d=await r.json();
+    lineChart.data.labels=d.labels; lineChart.data.datasets[0].data=d.data; lineChart.update('active');
+    donaChart.data.datasets[0].data=[d.dona.critico,d.dona.alto,d.dona.medio,d.dona.bajo]; donaChart.update('active');
+    document.getElementById('st-total').textContent=d.totales.total;
+    document.getElementById('st-criticos').textContent=d.totales.criticos;
+    document.getElementById('st-sinrevisar').textContent=d.totales.sin_revisar;
+    document.getElementById('st-usuarios').textContent=d.totales.usuarios;
+    await pollAlertas();
+    document.querySelectorAll('.sc').forEach(function(c){
+      c.style.borderColor='rgba(52,211,153,.4)';
+      setTimeout(function(){c.style.borderColor='';},1200);
+    });
+  }catch(e){console.error(e);}
+  finally{btn.classList.remove('loading');btn.disabled=false;}
+}
+
+/* Primera carga inmediata, luego cada 15s */
+pollAlertas();
+setInterval(pollAlertas, 15000);
+setInterval(refreshStats, 60000);
+</script>
+{% endblock %}

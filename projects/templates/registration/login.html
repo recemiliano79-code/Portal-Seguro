@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portal Seguro · Sentinel v9 · Acceso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* ═══════════════════════════════════════════
+   RESET + ROOT
+═══════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#05030f;
+  --s2:#0d0a20;--s3:#13102b;
+  --brd:rgba(120,70,255,.1);
+  --brd2:rgba(120,70,255,.22);
+  --brd3:rgba(120,70,255,.45);
+  --pu:#7c3aed;--pu2:#5b21b6;
+  --vi:#a78bfa;--vi2:#c4b5fd;
+  --ac:#3b82f6;--cy:#67e8f9;
+  --gr:#34d399;--re:#f87171;
+  --pk:#f472b6;--ye:#fbbf24;
+  --tx:#f2eeff;--mu:#7b6fa0;--mu2:#a498c0;
+  --syne:'Syne',sans-serif;
+  --dm:'DM Sans',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;}
+body{
+  font-family:var(--dm);background:var(--bg);color:var(--tx);
+  display:flex;min-height:100vh;overflow-x:hidden;
+}
+input:-webkit-autofill,input:-webkit-autofill:focus{
+  -webkit-box-shadow:0 0 0 1000px #0c0922 inset!important;
+  -webkit-text-fill-color:var(--tx)!important;
+  caret-color:var(--vi);
+}
+input,button,select,textarea{font-family:var(--dm);}
+button{cursor:pointer;background:none;border:none;outline:none;color:inherit;}
+a{color:inherit;text-decoration:none;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:var(--pu);border-radius:3px;}
+
+/* ═══════════════════════════════════════════
+   CANVAS + BACKGROUND
+═══════════════════════════════════════════ */
+#cv{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.mesh{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 55% at -5% 20%,rgba(124,58,237,.2) 0%,transparent 60%),
+    radial-gradient(ellipse 55% 45% at 105% 5%,rgba(59,130,246,.15) 0%,transparent 55%),
+    radial-gradient(ellipse 45% 60% at 48% 105%,rgba(244,114,182,.1) 0%,transparent 55%);
+  animation:meshA 14s ease-in-out infinite;
+}
+@keyframes meshA{0%,100%{opacity:1;}50%{opacity:.8;}}
+.gridline{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(120,70,255,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(120,70,255,.035) 1px,transparent 1px);
+  background-size:50px 50px;
+  mask-image:radial-gradient(ellipse 95% 95% at 50% 50%,black,transparent);
+}
+
+/* ═══════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════ */
+.wrap{
+  position:relative;z-index:1;
+  display:grid;grid-template-columns:1fr 500px;
+  width:100%;min-height:100vh;
+}
+@media(max-width:960px){.wrap{grid-template-columns:1fr;}}
+
+/* ══════════ LEFT PANEL ══════════ */
+.lp{
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:48px 60px;overflow:hidden;position:relative;
+}
+@media(max-width:960px){.lp{display:none;}}
+.lp::after{
+  content:'';position:absolute;top:8%;right:0;bottom:8%;width:1px;
+  background:linear-gradient(180deg,transparent,rgba(124,58,237,.45) 30%,rgba(59,130,246,.3) 70%,transparent);
+}
+.brand{display:flex;align-items:center;gap:14px;animation:fadeU .65s ease both;}
+.bshield{
+  width:52px;height:52px;border-radius:14px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--pu),var(--pu2));
+  display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#fff;
+  box-shadow:0 0 28px rgba(124,58,237,.5),inset 0 1px 0 rgba(255,255,255,.18);
+}
+.bname{font-family:var(--syne);font-size:1.12rem;font-weight:800;}
+.bver{font-size:.54rem;font-family:var(--mono);color:var(--gr);letter-spacing:2px;text-transform:uppercase;margin-top:2px;display:flex;align-items:center;gap:5px;}
+.bdot{width:5px;height:5px;border-radius:50%;background:var(--gr);box-shadow:0 0 6px var(--gr);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.15;}}
+.hero{animation:fadeU .65s ease .1s both;}
+.hero-pre{font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:3px;color:var(--mu);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.hero-pre::before{content:'';width:24px;height:1px;background:linear-gradient(90deg,transparent,var(--vi));}
+.hero-h{font-family:var(--syne);font-size:3.4rem;font-weight:800;line-height:1.04;letter-spacing:-2px;margin-bottom:18px;}
+.grad{background:linear-gradient(135deg,#c4b5fd 0%,#67e8f9 45%,#f472b6 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200%;animation:gsh 5s ease-in-out infinite;}
+@keyframes gsh{0%,100%{background-position:0%;}50%{background-position:100%;}}
+.hero-s{font-size:.92rem;color:var(--mu2);line-height:1.72;max-width:400px;}
+.stats{display:flex;gap:10px;animation:fadeU .65s ease .18s both;}
+.st{flex:1;padding:13px 16px;background:rgba(255,255,255,.03);border:1px solid var(--brd);border-radius:12px;text-align:center;}
+.st-n{font-family:var(--syne);font-size:1.5rem;font-weight:800;color:var(--vi);line-height:1;}
+.st-l{font-size:.58rem;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin-top:4px;}
+.feats{display:flex;flex-direction:column;gap:9px;animation:fadeU .65s ease .24s both;}
+.feat{
+  display:flex;align-items:center;gap:12px;padding:12px 15px;
+  background:rgba(255,255,255,.025);border:1px solid var(--brd);border-radius:12px;
+  transition:all .2s;cursor:default;position:relative;overflow:hidden;
+}
+.feat::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(124,58,237,.07),transparent);opacity:0;transition:opacity .2s;}
+.feat:hover{border-color:var(--brd2);transform:translateX(5px);}
+.feat:hover::before{opacity:1;}
+.fic{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.88rem;flex-shrink:0;}
+.fl-feat{font-size:.83rem;font-weight:700;}
+.fs-feat{font-size:.68rem;color:var(--mu);margin-top:1px;}
+.lclk{font-family:var(--mono);font-size:.72rem;color:var(--cy);letter-spacing:2.5px;margin-bottom:22px;}
+.emer{display:flex;gap:8px;animation:fadeU .65s ease .3s both;}
+.emb{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:10px;text-decoration:none;font-size:.73rem;font-weight:700;border:1px solid;transition:all .18s;}
+.emb-r{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.22);color:#f87171;}
+.emb-r:hover{background:rgba(248,113,113,.18);transform:translateY(-2px);box-shadow:0 5px 18px rgba(248,113,113,.22);}
+.emb-p{background:rgba(244,114,182,.08);border-color:rgba(244,114,182,.2);color:#f472b6;}
+.emb-p:hover{background:rgba(244,114,182,.18);transform:translateY(-2px);}
+.emb-v{background:rgba(124,58,237,.07);border-color:rgba(124,58,237,.2);color:#a78bfa;}
+.emb-v:hover{background:rgba(124,58,237,.16);transform:translateY(-2px);}
+@keyframes fadeU{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+/* ══════════ RIGHT PANEL ══════════ */
+.rp{
+  background:rgba(8,5,22,.92);backdrop-filter:blur(24px);
+  border-left:1px solid var(--brd2);
+  display:flex;flex-direction:column;
+  overflow-y:auto;overflow-x:hidden;
+  position:relative;
+}
+.rp::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--pu) 30%,var(--ac) 60%,var(--pk),transparent);
+  animation:scanLine 4s ease-in-out infinite;
+}
+@keyframes scanLine{0%,100%{opacity:.5;}50%{opacity:1;}}
+.rp-in{flex:1;padding:34px 38px;}
+@media(max-width:600px){.rp-in{padding:24px 18px;}}
+
+/* ── TAB BAR ── */
+.tabs{
+  display:flex;background:rgba(0,0,0,.4);border:1px solid var(--brd);
+  border-radius:14px;padding:4px;gap:4px;margin-bottom:28px;position:relative;
+}
+.tsl{
+  position:absolute;top:4px;bottom:4px;
+  background:linear-gradient(135deg,rgba(124,58,237,.32),rgba(59,130,246,.2));
+  border-radius:10px;border:1px solid rgba(124,58,237,.32);
+  transition:left .3s cubic-bezier(.4,0,.2,1),width .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 0 18px rgba(124,58,237,.18);
+}
+.tab{
+  flex:1;padding:11px;border-radius:10px;font-size:.82rem;font-weight:700;
+  cursor:pointer;color:var(--mu);transition:color .2s;position:relative;z-index:1;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  background:none;border:none;font-family:var(--dm);
+}
+.tab.on{color:var(--tx);}
+
+/* ── PANELS ── */
+.pnl{display:none;animation:pnlIn .26s ease;}
+.pnl.on{display:block;}
+@keyframes pnlIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── FORM HEADER ── */
+.fhd{margin-bottom:22px;}
+.badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.18);
+  color:var(--gr);padding:4px 12px;border-radius:20px;
+  font-size:.58rem;font-family:var(--mono);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;
+}
+.badge span{width:5px;height:5px;border-radius:50%;background:var(--gr);box-shadow:0 0 6px var(--gr);animation:blink 2s infinite;}
+.fhd-t{font-family:var(--syne);font-size:1.72rem;font-weight:800;letter-spacing:-.5px;line-height:1.1;margin-bottom:5px;}
+.fhd-t .a{color:var(--vi);}
+.fhd-s{font-size:.8rem;color:var(--mu2);line-height:1.6;}
+
+/* ── STEPS ── */
+.steps{display:flex;gap:0;margin-bottom:22px;}
+.step{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}
+.step:not(:last-child)::after{content:'';position:absolute;top:14px;left:55%;right:-5%;height:2px;background:var(--brd);transition:background .4s;}
+.step.done:not(:last-child)::after,.step.act:not(:last-child)::after{background:linear-gradient(90deg,var(--pu),var(--vi));}
+.sn{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--s2);border:2px solid var(--brd2);
+  display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;
+  color:var(--mu);margin-bottom:4px;position:relative;z-index:1;transition:all .3s;
+}
+.step.done .sn{background:var(--pu);border-color:var(--pu);color:#fff;}
+.step.act .sn{background:linear-gradient(135deg,var(--pu),var(--ac));border-color:var(--pu);color:#fff;box-shadow:0 0 14px rgba(124,58,237,.45);}
+.sl{font-size:.6rem;color:var(--mu);font-weight:700;text-transform:uppercase;letter-spacing:.5px;text-align:center;}
+.step.act .sl{color:var(--vi);}
+
+/* ── ERRORS ── */
+.djerr{
+  background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.2);
+  border-radius:10px;padding:10px 14px;margin-bottom:16px;
+}
+.djerr li{color:#f87171;font-size:.77rem;list-style:none;display:flex;align-items:center;gap:7px;padding:2px 0;}
+
+/* Django messages */
+.msg{padding:10px 14px;border-radius:9px;font-size:.78rem;margin-bottom:14px;}
+.msg-success{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);color:#34d399;}
+.msg-error{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171;}
+.msg-info{background:rgba(103,232,249,.08);border:1px solid rgba(103,232,249,.2);color:#67e8f9;}
+.msg-warning{background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);color:var(--ye);}
+
+/* ── FIELD ── */
+.fr{margin-bottom:15px;position:relative;}
+.fl{font-size:.68rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;display:flex;align-items:center;gap:5px;}
+.fl .opt{text-transform:none;letter-spacing:0;font-weight:400;font-size:.66rem;}
+.fw{position:relative;}
+.fi{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:.84rem;pointer-events:none;transition:color .2s;}
+.fw:focus-within .fi{color:var(--vi);}
+.inp{
+  width:100%;background:rgba(0,0,0,.32);
+  border:1px solid var(--brd2);border-radius:11px;
+  padding:12px 14px 12px 42px;
+  color:var(--tx);font-size:.87rem;font-family:var(--dm);
+  outline:none;transition:border-color .2s,box-shadow .2s,background .2s;
+  caret-color:var(--vi);
+}
+.inp::placeholder{color:var(--mu);}
+.inp:focus{border-color:var(--pu);background:rgba(124,58,237,.05);box-shadow:0 0 0 3px rgba(124,58,237,.12);}
+.inp.ok{border-color:rgba(52,211,153,.5);background:rgba(52,211,153,.04);}
+.inp.er{border-color:rgba(248,113,113,.5);background:rgba(248,113,113,.04);}
+.eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:.82rem;transition:color .15s;background:none;border:none;padding:3px;}
+.eye:hover{color:var(--vi);}
+select.inp{padding-right:14px;cursor:pointer;-webkit-appearance:none;appearance:none;}
+select.inp option{background:#0c0922;color:var(--tx);}
+.fhint{font-size:.68rem;margin-top:5px;display:none;align-items:center;gap:5px;line-height:1.35;}
+.fhint.show{display:flex;}
+.fhint.ok{color:var(--gr);}.fhint.er{color:var(--re);}.fhint.wa{color:var(--ye);}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:500px){.fgrid{grid-template-columns:1fr;}}
+
+/* ── PASSWORD STRENGTH ── */
+.pstr{margin-top:9px;display:none;}
+.pstr.on{display:block;}
+.sbars{display:flex;gap:3px;margin-bottom:5px;}
+.sbar{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.07);transition:all .3s;}
+.sm{display:flex;justify-content:space-between;align-items:center;}
+.slbl{font-size:.65rem;font-family:var(--mono);color:var(--mu);}
+.sreqs{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;}
+.sreq{font-size:.6rem;padding:2px 7px;border-radius:4px;font-weight:600;background:rgba(255,255,255,.04);border:1px solid var(--brd);color:var(--mu);transition:all .25s;}
+.sreq.met{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.25);color:var(--gr);}
+
+/* ── CAPS LOCK ── */
+.caps{display:none;align-items:center;gap:6px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.18);border-radius:7px;padding:6px 10px;font-size:.69rem;color:var(--ye);margin-top:6px;}
+.caps.on{display:flex;}
+
+/* ── AVATAR ── */
+.avapick{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;}
+.avao{
+  width:40px;height:40px;border-radius:50%;border:2px solid var(--brd2);
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer;
+  transition:all .18s;background:var(--s2);
+}
+.avao:hover{border-color:var(--brd3);transform:scale(1.08);}
+.avao.sel{border-color:var(--pu);box-shadow:0 0 12px rgba(124,58,237,.4);background:rgba(124,58,237,.12);}
+
+/* ── CHECKBOX ── */
+.cbox{display:flex;align-items:flex-start;gap:9px;cursor:pointer;margin-bottom:14px;}
+.cbox input{accent-color:var(--pu);width:15px;height:15px;cursor:pointer;flex-shrink:0;margin-top:2px;}
+.cbox-l{font-size:.77rem;color:var(--mu);line-height:1.5;}
+.cbox-l a{color:var(--vi);font-weight:600;}
+.cbox-l a:hover{text-decoration:underline;}
+
+/* ── DIVIDER ── */
+.dvd{display:flex;align-items:center;gap:10px;margin:16px 0;}
+.dvd-l{flex:1;height:1px;background:var(--brd);}
+.dvd-t{font-size:.67rem;color:var(--mu);white-space:nowrap;}
+
+/* ── BUTTONS ── */
+.btn{
+  width:100%;padding:14px;background:linear-gradient(135deg,var(--pu),var(--pu2));
+  border:none;border-radius:11px;color:#fff;font-family:var(--syne);
+  font-size:.9rem;font-weight:700;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 6px 22px rgba(124,58,237,.36),inset 0 1px 0 rgba(255,255,255,.12);
+  position:relative;overflow:hidden;letter-spacing:.2px;
+}
+.btn::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);transform:translateX(-100%);transition:transform .55s;}
+.btn:hover::before{transform:translateX(100%);}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(124,58,237,.48);}
+.btn:active{transform:translateY(0);}
+.btn-ghost{
+  width:100%;padding:12px;background:rgba(255,255,255,.03);border:1px solid var(--brd2);
+  border-radius:11px;color:var(--mu);font-family:var(--dm);font-size:.87rem;font-weight:600;
+  cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.btn-ghost:hover{background:rgba(124,58,237,.08);border-color:var(--brd3);color:var(--tx);}
+.nav-row{display:flex;gap:8px;}
+.btn-back{
+  width:42px;height:42px;background:rgba(255,255,255,.04);border:1px solid var(--brd2);
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .18s;color:var(--mu);font-size:.9rem;flex-shrink:0;
+}
+.btn-back:hover{background:rgba(124,58,237,.09);color:var(--tx);border-color:var(--brd3);}
+
+/* ── SECURITY ROW ── */
+.sec-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px;}
+.stag{display:flex;align-items:center;gap:5px;font-size:.6rem;font-weight:600;padding:4px 9px;border-radius:6px;}
+.stag-gr{background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.18);color:var(--gr);}
+.stag-vi{background:rgba(124,58,237,.07);border:1px solid rgba(124,58,237,.18);color:var(--vi);}
+.stag-cy{background:rgba(103,232,249,.06);border:1px solid rgba(103,232,249,.16);color:var(--cy);}
+
+/* ── PROOF ── */
+.proof{display:flex;align-items:center;gap:12px;padding:12px 15px;background:rgba(255,255,255,.03);border:1px solid var(--brd);border-radius:11px;margin-top:16px;}
+.pavs{display:flex;}
+.pav{width:27px;height:27px;border-radius:50%;border:2px solid rgba(8,5,22,.92);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff;margin-left:-7px;}
+.pav:first-child{margin-left:0;}
+.pt{font-size:.74rem;line-height:1.45;color:var(--mu2);}
+.pt strong{color:var(--vi);}
+
+/* ── SWITCH ── */
+.sw{text-align:center;font-size:.77rem;color:var(--mu);margin-top:14px;}
+.sw .lnk{color:var(--vi);font-weight:700;cursor:pointer;}
+.sw .lnk:hover{text-decoration:underline;}
+
+/* ── EMERGENCY CARD ── */
+.emgcard{background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.14);border-radius:10px;padding:13px;margin-bottom:15px;}
+.emgcard-t{font-size:.72rem;font-weight:700;color:var(--re);margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.emgcard-s{font-size:.7rem;color:var(--mu);line-height:1.55;}
+
+/* ── STEP TITLE ── */
+.step-title{font-family:var(--syne);font-size:.72rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.step-title::after{content:'';flex:1;height:1px;background:var(--brd);}
+
+/* ── ADMIN LINK ── */
+.panel-link{text-align:center;margin-top:12px;font-size:.75rem;color:var(--mu);}
+.panel-link a{color:var(--vi);font-weight:700;}
+.panel-link a:hover{color:var(--cy);}
+
+/* ── FOOTER ── */
+.rp-foot{padding:14px 38px;border-top:1px solid var(--brd);display:flex;justify-content:center;gap:14px;flex-shrink:0;}
+.rp-foot a{font-size:.68rem;color:var(--mu);display:flex;align-items:center;gap:4px;transition:color .15s;}
+.rp-foot a:hover{color:var(--vi);}
+
+/* ── FORGOT LINK ── */
+.forgot-link{display:block;text-align:right;font-size:.72rem;color:var(--mu);text-decoration:none;margin-bottom:14px;transition:color .15s;}
+.forgot-link:hover{color:var(--vi);}
+</style>
+</head>
+<body>
+
+<canvas id="cv"></canvas>
+<div class="mesh"></div>
+<div class="gridline"></div>
+
+<div class="wrap">
+
+  <!-- ════════════════ LEFT PANEL ════════════════ -->
+  <aside class="lp">
+    <div>
+      <div class="brand" style="margin-bottom:28px;">
+        <div class="bshield"><i class="fa-solid fa-shield-halved"></i></div>
+        <div>
+          <div class="bname">Portal Seguro</div>
+          <div class="bver"><span class="bdot"></span>Sentinel v9.0 · En línea</div>
+        </div>
+      </div>
+      <div class="lclk" id="lclk">--:--:--</div>
+
+      <div class="hero" style="margin-bottom:28px;">
+        <div class="hero-pre">Plataforma de protección CDMX</div>
+        <h1 class="hero-h">Tu seguridad<br>es nuestra<br><span class="grad">prioridad</span></h1>
+        <p class="hero-s">Sistema cifrado y confidencial para documentar, reportar y atender casos de acoso y violencia. Para todas las personas.</p>
+      </div>
+
+      <div class="stats" style="margin-bottom:22px;">
+        <div class="st"><div class="st-n" id="cnt">--</div><div class="st-l">Usuarias activas</div></div>
+        <div class="st"><div class="st-n" style="color:var(--gr);">24/7</div><div class="st-l">Sentinel AI</div></div>
+        <div class="st"><div class="st-n" style="color:var(--cy);">15</div><div class="st-l">Instituciones</div></div>
+      </div>
+
+      <div class="feats">
+        <div class="feat">
+          <div class="fic" style="background:rgba(52,211,153,.11);color:var(--gr);"><i class="fa-solid fa-lock"></i></div>
+          <div><div class="fl-feat">Cifrado AES-256 · 100% confidencial</div><div class="fs-feat">Tu expediente nunca se comparte con terceros</div></div>
+        </div>
+        <div class="feat">
+          <div class="fic" style="background:rgba(124,58,237,.11);color:var(--vi);"><i class="fa-solid fa-robot"></i></div>
+          <div><div class="fl-feat">Sentinel AI disponible 24/7</div><div class="fs-feat">Orientación legal, psicológica y de emergencia</div></div>
+        </div>
+        <div class="feat">
+          <div class="fic" style="background:rgba(103,232,249,.09);color:var(--cy);"><i class="fa-solid fa-map-location-dot"></i></div>
+          <div><div class="fl-feat">Red de 15+ instituciones en CDMX</div><div class="fs-feat">LUNAs, Fiscalías, Hospitales y ONGs en tu mapa</div></div>
+        </div>
+        <div class="feat">
+          <div class="fic" style="background:rgba(248,113,113,.1);color:var(--re);"><i class="fa-solid fa-siren-on"></i></div>
+          <div><div class="fl-feat">SOS con un toque · Ubicación instantánea</div><div class="fs-feat">Alerta a contactos de confianza en segundos</div></div>
+        </div>
+        <div class="feat">
+          <div class="fic" style="background:rgba(251,191,36,.09);color:var(--ye);"><i class="fa-solid fa-eye-slash"></i></div>
+          <div><div class="fl-feat">Modo camuflaje Wikipedia</div><div class="fs-feat">Oculta el portal al instante si hay riesgo</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="emer" style="margin-top:20px;">
+        <a href="tel:911" class="emb emb-r"><i class="fa-solid fa-phone-volume"></i>911</a>
+        <a href="tel:5556581111" class="emb emb-p"><i class="fa-solid fa-venus"></i>Línea Mujeres</a>
+        <a href="tel:5555757583" class="emb emb-v"><i class="fa-solid fa-scale-balanced"></i>CEJUR</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ════════════════ RIGHT PANEL ════════════════ -->
+  <div class="rp">
+    <div class="rp-in">
+
+      <!-- Django Messages -->
+      {% if messages %}
+        {% for message in messages %}
+        <div class="msg msg-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+
+      <!-- TABS -->
+      <div class="tabs" id="tabbar">
+        <div class="tsl" id="tsl"></div>
+        <button class="tab on" id="t-login" onclick="goTab('login')">
+          <i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión
+        </button>
+        <button class="tab" id="t-register" onclick="goTab('register')">
+          <i class="fa-solid fa-user-plus"></i> Registrarse
+        </button>
+      </div>
+
+      <!-- ══════ LOGIN PANEL ══════ -->
+      <div class="pnl on" id="pnl-login">
+        <div class="fhd">
+          <div class="badge"><span></span>Acceso seguro · Cifrado E2E</div>
+          <div class="fhd-t">Bienvenida <span class="a">de vuelta</span></div>
+          <div class="fhd-s">Ingresa tus credenciales para acceder al portal de forma segura.</div>
+        </div>
+
+        {% if form.errors and active_tab != 'register' %}
+        <ul class="djerr">
+          <li><i class="fa-solid fa-circle-exclamation"></i> Usuario o contraseña incorrectos. Verifica tus datos.</li>
+        </ul>
+        {% endif %}
+
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="form_type" value="login">
+
+          <div class="fr">
+            <div class="fl"><i class="fa-solid fa-at" style="font-size:.65rem;"></i> Usuario</div>
+            <div class="fw">
+              <i class="fa-solid fa-at fi"></i>
+              <input class="inp" type="text" name="username"
+                placeholder="Tu nombre de usuario"
+                autocomplete="username" autocapitalize="none" spellcheck="false" required
+                value="{{ form.username.value|default:'' }}">
+            </div>
+          </div>
+
+          <div class="fr">
+            <div class="fl"><i class="fa-solid fa-lock" style="font-size:.65rem;"></i> Contraseña</div>
+            <div class="fw">
+              <i class="fa-solid fa-lock fi"></i>
+              <input class="inp" type="password" name="password" id="lpw"
+                placeholder="Tu contraseña"
+                autocomplete="current-password" required>
+              <button type="button" class="eye" onclick="togEye('lpw','leye')"><i class="fa-solid fa-eye" id="leye"></i></button>
+            </div>
+            <div class="caps" id="capsl"><i class="fa-solid fa-triangle-exclamation"></i> Bloq Mayús activo</div>
+          </div>
+
+          <!-- Forgot password link -->
+          <a href="{% url 'password_reset' %}" class="forgot-link">
+            <i class="fa-solid fa-key" style="margin-right:4px;"></i>¿Olvidaste tu contraseña?
+          </a>
+
+          <div class="sec-row">
+            <span class="stag stag-gr"><i class="fa-solid fa-shield-check"></i> Conexión cifrada</span>
+            <span class="stag stag-vi"><i class="fa-solid fa-eye-slash"></i> Sin rastro</span>
+            <span class="stag stag-cy"><i class="fa-solid fa-server"></i> CDMX 2026</span>
+          </div>
+
+          <button type="submit" class="btn">
+            <i class="fa-solid fa-shield-halved"></i> Acceder al Portal Seguro
+          </button>
+        </form>
+
+        <div class="dvd"><div class="dvd-l"></div><div class="dvd-t">¿Emergencia ahora?</div><div class="dvd-l"></div></div>
+        <div style="display:flex;gap:8px;">
+          <a href="tel:911" class="btn-ghost" style="flex:1;text-decoration:none;font-size:.8rem;">
+            <i class="fa-solid fa-phone-volume" style="color:var(--re);"></i> Llamar 911
+          </a>
+          <a href="tel:5556581111" class="btn-ghost" style="flex:1;text-decoration:none;font-size:.8rem;">
+            <i class="fa-solid fa-venus" style="color:var(--pk);"></i> Línea Mujeres
+          </a>
+        </div>
+        <div class="panel-link">¿Eres administrador? <a href="/admin/">Accede al panel Django →</a></div>
+        <div class="sw">¿Sin cuenta? <span class="lnk" onclick="goTab('register')">Regístrate gratis →</span></div>
+      </div>
+
+      <!-- ══════ REGISTER PANEL ══════ -->
+      <div class="pnl" id="pnl-register">
+
+        <div class="steps" id="steps">
+          <div class="step act" id="stp1"><div class="sn" id="sn1">1</div><div class="sl">Cuenta</div></div>
+          <div class="step" id="stp2"><div class="sn" id="sn2">2</div><div class="sl">Seguridad</div></div>
+          <div class="step" id="stp3"><div class="sn" id="sn3">3</div><div class="sl">Perfil</div></div>
+        </div>
+
+        <div class="fhd">
+          <div class="badge"><span></span>Registro gratuito · Confidencial</div>
+          <div class="fhd-t" id="reg-title">Crea tu <span class="a">cuenta segura</span></div>
+          <div class="fhd-s" id="reg-sub">Paso 1 de 3 · Información básica de acceso</div>
+        </div>
+
+        {% if register_form and register_form.errors and active_tab == 'register' %}
+        <ul class="djerr">
+          {% for field in register_form %}{% for e in field.errors %}
+          <li><i class="fa-solid fa-circle-exclamation"></i> {% if field.name != '__all__' %}{{ field.label }}: {% endif %}{{ e }}</li>
+          {% endfor %}{% endfor %}
+          {% for e in register_form.non_field_errors %}
+          <li><i class="fa-solid fa-circle-exclamation"></i> {{ e }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+
+        <form method="post" id="regform">
+          {% csrf_token %}
+          <input type="hidden" name="form_type" value="register">
+
+          <!-- ── STEP 1: Cuenta ── -->
+          <div id="fp1">
+            <div class="step-title">Información de acceso</div>
+            <div class="fgrid">
+              <div class="fr">
+                <div class="fl"><i class="fa-solid fa-user" style="font-size:.64rem;"></i> Usuario</div>
+                <div class="fw">
+                  <i class="fa-solid fa-at fi"></i>
+                  <input class="inp" type="text" name="username" id="ru"
+                    placeholder="ej: maria_cdmx"
+                    autocomplete="username" autocapitalize="none" spellcheck="false"
+                    oninput="valU(this)"
+                    value="{{ register_form.username.value|default:'' }}">
+                </div>
+                <div class="fhint" id="hu"></div>
+              </div>
+              <div class="fr">
+                <div class="fl"><i class="fa-solid fa-envelope" style="font-size:.64rem;"></i> Correo <span class="opt">(para recuperar contraseña)</span></div>
+                <div class="fw">
+                  <i class="fa-solid fa-envelope fi"></i>
+                  <input class="inp" type="email" name="email" id="rem"
+                    placeholder="tu@correo.com"
+                    autocomplete="email"
+                    oninput="valE(this)">
+                </div>
+                <div class="fhint" id="hem"></div>
+              </div>
+            </div>
+            <div class="emgcard">
+              <div class="emgcard-t"><i class="fa-solid fa-shield-heart"></i> Consejo de seguridad</div>
+              <div class="emgcard-s">Tu cuenta es 100% anónima. Nadie sabrá tu identidad real a menos que tú decidas compartirla. El portal funciona para cualquier tipo de acoso o violencia — sin importar tu género.</div>
+            </div>
+            <button type="button" class="btn" onclick="gS2()">
+              <i class="fa-solid fa-arrow-right"></i> Continuar
+            </button>
+            <div class="dvd"><div class="dvd-l"></div><div class="dvd-t">¿Ya tienes cuenta?</div><div class="dvd-l"></div></div>
+            <button type="button" class="btn-ghost" onclick="goTab('login')">
+              <i class="fa-solid fa-right-to-bracket" style="color:var(--vi);"></i> Iniciar sesión
+            </button>
+          </div>
+
+          <!-- ── STEP 2: Contraseña ── -->
+          <div id="fp2" style="display:none;">
+            <div class="step-title">Protege tu acceso</div>
+            <div class="fgrid">
+              <div class="fr">
+                <div class="fl"><i class="fa-solid fa-lock" style="font-size:.64rem;"></i> Contraseña</div>
+                <div class="fw">
+                  <i class="fa-solid fa-lock fi"></i>
+                  <input class="inp" type="password" name="password1" id="rp1"
+                    placeholder="Mín. 8 caracteres"
+                    autocomplete="new-password"
+                    oninput="valPw(this.value)">
+                  <button type="button" class="eye" onclick="togEye('rp1','reye1')"><i class="fa-solid fa-eye" id="reye1"></i></button>
+                </div>
+                <div class="pstr" id="pstr">
+                  <div class="sbars"><div class="sbar" id="pb1"></div><div class="sbar" id="pb2"></div><div class="sbar" id="pb3"></div><div class="sbar" id="pb4"></div></div>
+                  <div class="sm"><span class="slbl" id="plbl">Sin contraseña</span></div>
+                  <div class="sreqs">
+                    <span class="sreq" id="r-len">8+ car.</span>
+                    <span class="sreq" id="r-up">Mayúsc.</span>
+                    <span class="sreq" id="r-num">Número</span>
+                    <span class="sreq" id="r-sym">Símbolo</span>
+                  </div>
+                </div>
+                <div class="caps" id="capsr"><i class="fa-solid fa-triangle-exclamation"></i> Bloq Mayús activo</div>
+              </div>
+              <div class="fr">
+                <div class="fl"><i class="fa-solid fa-lock-open" style="font-size:.64rem;"></i> Confirmar</div>
+                <div class="fw">
+                  <i class="fa-solid fa-lock-open fi"></i>
+                  <input class="inp" type="password" name="password2" id="rp2"
+                    placeholder="Repite tu contraseña"
+                    autocomplete="new-password"
+                    oninput="valM()">
+                  <button type="button" class="eye" onclick="togEye('rp2','reye2')"><i class="fa-solid fa-eye" id="reye2"></i></button>
+                </div>
+                <div class="fhint" id="hpw2"></div>
+              </div>
+            </div>
+            <label class="cbox">
+              <input type="checkbox" id="rterms" required>
+              <div class="cbox-l">Acepto que mis datos están protegidos y son <strong style="color:var(--vi);">100% confidenciales</strong>. Nunca serán compartidos. <a href="#">Política de privacidad</a>.</div>
+            </label>
+            <div class="nav-row">
+              <button type="button" class="btn-back" onclick="gS(1)"><i class="fa-solid fa-arrow-left"></i></button>
+              <button type="button" class="btn" style="flex:1;" onclick="gS3()">
+                <i class="fa-solid fa-arrow-right"></i> Continuar
+              </button>
+            </div>
+          </div>
+
+          <!-- ── STEP 3: Perfil ── -->
+          <div id="fp3" style="display:none;">
+            <div class="step-title">Personaliza tu perfil</div>
+
+            <div class="fr">
+              <div class="fl">Elige tu avatar</div>
+              <div class="avapick">
+                <div class="avao sel" data-v="🛡️" onclick="selAva(this)">🛡️</div>
+                <div class="avao" data-v="🌸" onclick="selAva(this)">🌸</div>
+                <div class="avao" data-v="🦋" onclick="selAva(this)">🦋</div>
+                <div class="avao" data-v="⭐" onclick="selAva(this)">⭐</div>
+                <div class="avao" data-v="🌙" onclick="selAva(this)">🌙</div>
+                <div class="avao" data-v="🔐" onclick="selAva(this)">🔐</div>
+                <div class="avao" data-v="💜" onclick="selAva(this)">💜</div>
+                <div class="avao" data-v="🌺" onclick="selAva(this)">🌺</div>
+              </div>
+              <input type="hidden" name="avatar" id="fava" value="🛡️">
+            </div>
+
+            <div class="fgrid">
+              <div class="fr">
+                <div class="fl"><i class="fa-solid fa-location-dot" style="font-size:.64rem;"></i> Alcaldía <span class="opt">(opcional)</span></div>
+                <div class="fw">
+                  <i class="fa-solid fa-location-dot fi"></i>
+                  <select class="inp" name="delegacion">
+                    <option value="">Selecciona...</option>
+                    <option>Álvaro Obregón</option><option>Azcapotzalco</option>
+                    <option>Benito Juárez</option><option>Coyoacán</option>
+                    <option>Cuajimalpa</option><option>Cuauhtémoc</option>
+                    <option>Gustavo A. Madero</option><option>Iztacalco</option>
+                    <option>Iztapalapa</option><option>La Magdalena Contreras</option>
+                    <option>Milpa Alta</option><option>Miguel Hidalgo</option>
+                    <option>Tláhuac</option><option>Tlalpan</option>
+                    <option>Venustiano Carranza</option><option>Xochimilco</option>
+                    <option>Otra ciudad</option>
+                  </select>
+                </div>
+              </div>
+              <div class="fr">
+                <div class="fl"><i class="fa-solid fa-share-nodes" style="font-size:.64rem;"></i> ¿Cómo nos conociste? <span class="opt">(opcional)</span></div>
+                <div class="fw">
+                  <i class="fa-solid fa-share-nodes fi"></i>
+                  <select class="inp" name="referido">
+                    <option value="">Selecciona...</option>
+                    <option>Redes sociales</option><option>Recomendación</option>
+                    <option>Institución pública</option><option>ONG / Refugio</option>
+                    <option>Búsqueda en internet</option><option>Otro</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="fr">
+              <div class="fl"><i class="fa-solid fa-phone" style="font-size:.64rem;"></i> Tel. emergencia <span class="opt">(SOS)</span></div>
+              <div class="fw">
+                <i class="fa-solid fa-phone fi"></i>
+                <input class="inp" type="tel" name="telefono_emergencia" id="rtel"
+                  placeholder="55 1234 5678" autocomplete="tel" oninput="fmtTel(this)">
+              </div>
+              <div class="fhint show" style="display:flex!important;color:var(--cy);"><i class="fa-solid fa-circle-info" style="color:var(--cy);"></i> Este número recibirá tu ubicación al activar SOS</div>
+            </div>
+
+            <div class="nav-row">
+              <button type="button" class="btn-back" onclick="gS(2)"><i class="fa-solid fa-arrow-left"></i></button>
+              <button type="submit" class="btn" style="flex:1;" onclick="return valSub()">
+                <i class="fa-solid fa-user-shield"></i> Crear mi cuenta segura
+              </button>
+            </div>
+          </div>
+
+        </form>
+
+        <div class="proof">
+          <div class="pavs">
+            <div class="pav" style="background:#7c3aed;">A</div>
+            <div class="pav" style="background:#3b82f6;">M</div>
+            <div class="pav" style="background:#db2777;">S</div>
+            <div class="pav" style="background:#059669;">L</div>
+          </div>
+          <div class="pt"><strong>+1,284 personas</strong> ya usan Portal Seguro.<br>Gratuito, sin publicidad, sin rastreo.</div>
+        </div>
+
+        <div class="sw">¿Ya tienes cuenta? <span class="lnk" onclick="goTab('login')">← Iniciar sesión</span></div>
+      </div>
+
+    </div><!-- /rp-in -->
+
+    <div class="rp-foot">
+      <a href="tel:911"><i class="fa-solid fa-phone" style="color:var(--re);"></i>911</a>
+      <a href="tel:5556581111"><i class="fa-solid fa-venus" style="color:var(--pk);"></i>Línea Mujeres</a>
+      <a href="tel:8009008000"><i class="fa-solid fa-building-ngo" style="color:var(--vi);"></i>CONAVIM</a>
+      <a href="#"><i class="fa-solid fa-shield" style="color:var(--gr);"></i>Privacidad</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ── CLOCK ── */
+(function tick(){const e=document.getElementById('lclk');if(e)e.textContent=new Date().toLocaleTimeString('es-MX',{hour12:false});setTimeout(tick,1000);})();
+
+/* ── CANVAS PARTICLES ── */
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+let W,H,ps=[];
+function rs(){W=cv.width=innerWidth;H=cv.height=innerHeight;}rs();addEventListener('resize',rs);
+for(let i=0;i<55;i++)ps.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.2,vy:(Math.random()-.5)*.2,r:Math.random()*1.3+.4});
+(function loop(){
+  cx.clearRect(0,0,W,H);
+  ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);cx.fillStyle='rgba(167,139,250,.32)';cx.fill();});
+  for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){const dx=ps[i].x-ps[j].x,dy=ps[i].y-ps[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<130){cx.beginPath();cx.moveTo(ps[i].x,ps[i].y);cx.lineTo(ps[j].x,ps[j].y);cx.strokeStyle=`rgba(124,58,237,${(1-d/130)*.12})`;cx.lineWidth=.5;cx.stroke();}}
+  requestAnimationFrame(loop);
+})();
+
+/* ── COUNTER ANIM ── */
+function animCnt(el,to,ms){const s=performance.now();(function f(n){const t=Math.min((n-s)/ms,1);el.textContent=Math.round(t*to).toLocaleString('es-MX');if(t<1)requestAnimationFrame(f);})(performance.now());}
+window.addEventListener('DOMContentLoaded',()=>setTimeout(()=>animCnt(document.getElementById('cnt'),1284,1400),300));
+
+/* ── TAB SWITCHING ── */
+function goTab(t){
+  ['login','register'].forEach(x=>{
+    document.getElementById('pnl-'+x).classList.toggle('on',x===t);
+    document.getElementById('t-'+x).classList.toggle('on',x===t);
+  });
+  posSlider(t==='login'?0:1);
+}
+function posSlider(i){
+  const bar=document.getElementById('tabbar'),sl=document.getElementById('tsl');
+  const hw=bar.offsetWidth/2;
+  sl.style.left=(i===0?4:(hw+2))+'px';
+  sl.style.width=(hw-6)+'px';
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  posSlider(0);
+  /* Django: si active_tab es register, abrir ese panel */
+  {% if active_tab == 'register' %}goTab('register');{% endif %}
+});
+window.addEventListener('resize',()=>posSlider(document.getElementById('t-login').classList.contains('on')?0:1));
+
+/* ── TOGGLE EYE ── */
+function togEye(id,eid){const f=document.getElementById(id),e=document.getElementById(eid);f.type=f.type==='password'?'text':'password';e.className=f.type==='text'?'fa-solid fa-eye-slash':'fa-solid fa-eye';}
+
+/* ── CAPS LOCK ── */
+document.addEventListener('keyup',e=>{if(!e.getModifierState)return;const c=e.getModifierState('CapsLock'),a=document.activeElement;if(a&&a.type==='password'){const id=a.id==='lpw'?'capsl':'capsr';const el=document.getElementById(id);if(el)el.classList.toggle('on',c);}});
+
+/* ── VALIDATION ── */
+function valU(inp){
+  const v=inp.value.trim(),h=document.getElementById('hu');
+  if(!v){h.className='fhint';inp.classList.remove('ok','er');return;}
+  const ok=v.length>=3&&v.length<=20&&!/\s/.test(v);
+  h.className='fhint '+(ok?'ok':'er')+' show';
+  h.innerHTML=ok?'<i class="fa-solid fa-circle-check"></i> Nombre válido':'<i class="fa-solid fa-circle-xmark"></i> 3-20 caracteres, sin espacios';
+  inp.classList.toggle('ok',ok);inp.classList.toggle('er',!ok);
+}
+function valE(inp){
+  const v=inp.value,h=document.getElementById('hem');
+  if(!v){h.className='fhint';inp.classList.remove('ok','er');return;}
+  const ok=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  h.className='fhint '+(ok?'ok':'er')+' show';
+  h.innerHTML=ok?'<i class="fa-solid fa-circle-check"></i> Correo válido':'<i class="fa-solid fa-circle-xmark"></i> Formato inválido';
+  inp.classList.toggle('ok',ok);inp.classList.toggle('er',!ok);
+}
+function valPw(v){
+  const pstr=document.getElementById('pstr');pstr.classList.add('on');
+  const bars=[1,2,3,4].map(i=>document.getElementById('pb'+i));
+  const lbl=document.getElementById('plbl');
+  bars.forEach(b=>b&&(b.style.background='rgba(255,255,255,.07)'));
+  const len=v.length>=8,up=/[A-Z]/.test(v),num=/\d/.test(v),sym=/[^a-zA-Z0-9]/.test(v);
+  let sc=0;if(len)sc++;if(up)sc++;if(num)sc++;if(sym)sc++;
+  ['r-len','r-up','r-num','r-sym'].forEach((id,i)=>document.getElementById(id).classList.toggle('met',[len,up,num,sym][i]));
+  const cols=['#f87171','#fb923c','#fbbf24','#34d399'],lbls=['Muy débil','Débil','Buena','Muy fuerte'];
+  for(let i=0;i<sc;i++)if(bars[i])bars[i].style.background=cols[Math.min(sc-1,3)];
+  lbl.textContent=v?lbls[Math.min(sc-1,3)]:'Sin contraseña';lbl.style.color=v?cols[Math.min(sc-1,3)]:'var(--mu)';
+  const inp=document.getElementById('rp1');inp.classList.toggle('ok',sc>=3);inp.classList.toggle('er',v.length>0&&sc<2);
+}
+function valM(){
+  const p1=document.getElementById('rp1').value,p2=document.getElementById('rp2'),h=document.getElementById('hpw2');
+  if(!p2.value){h.className='fhint';p2.classList.remove('ok','er');return;}
+  const ok=p1===p2.value;
+  h.className='fhint '+(ok?'ok':'er')+' show';
+  h.innerHTML=ok?'<i class="fa-solid fa-circle-check"></i> Coinciden':'<i class="fa-solid fa-circle-xmark"></i> No coinciden';
+  p2.classList.toggle('ok',ok);p2.classList.toggle('er',!ok);
+}
+function fmtTel(inp){let v=inp.value.replace(/\D/g,'').slice(0,10);if(v.length>=6)v=v.slice(0,2)+' '+v.slice(2,6)+' '+v.slice(6);else if(v.length>=2)v=v.slice(0,2)+' '+v.slice(2);inp.value=v;}
+
+/* ── AVATAR ── */
+function selAva(el){document.querySelectorAll('.avao').forEach(a=>a.classList.remove('sel'));el.classList.add('sel');document.getElementById('fava').value=el.dataset.v;}
+
+/* ── STEP SYSTEM ── */
+const TITLES=['Crea tu <span class="a">cuenta segura</span>','Protege tu <span class="a">acceso</span>','Personaliza tu <span class="a">perfil</span>'];
+const SUBS=['Paso 1 de 3 · Información básica','Paso 2 de 3 · Crea una contraseña segura','Paso 3 de 3 · Perfil y datos opcionales'];
+let curS=1;
+function gS(n){
+  [1,2,3].forEach(i=>{document.getElementById('fp'+i).style.display=i===n?'block':'none';});
+  curS=n;
+  for(let i=1;i<=3;i++){
+    const st=document.getElementById('stp'+i),sn=document.getElementById('sn'+i);
+    st.classList.remove('act','done');
+    if(i<n){st.classList.add('done');sn.innerHTML='<i class="fa-solid fa-check" style="font-size:.6rem"></i>';}
+    else if(i===n){st.classList.add('act');sn.textContent=i;}
+    else{sn.textContent=i;}
+  }
+  document.getElementById('reg-title').innerHTML=TITLES[n-1];
+  document.getElementById('reg-sub').textContent=SUBS[n-1];
+  document.querySelector('.rp').scrollTo({top:0,behavior:'smooth'});
+}
+function gS2(){
+  const u=document.getElementById('ru').value.trim();
+  if(u.length<3){alert('El nombre de usuario debe tener al menos 3 caracteres.');return;}
+  if(/\s/.test(u)){alert('El nombre de usuario no puede tener espacios.');return;}
+  gS(2);
+}
+function gS3(){
+  const pw1=document.getElementById('rp1').value,pw2=document.getElementById('rp2').value;
+  const terms=document.getElementById('rterms').checked;
+  if(pw1.length<8){alert('La contraseña debe tener al menos 8 caracteres.');return;}
+  if(pw1!==pw2){alert('Las contraseñas no coinciden.');return;}
+  if(!terms){alert('Debes aceptar la política de privacidad.');return;}
+  gS(3);
+}
+function valSub(){
+  const pw1=document.getElementById('rp1').value,pw2=document.getElementById('rp2').value;
+  if(pw1!==pw2){alert('Las contraseñas no coinciden.');return false;}
+  if(pw1.length<8){alert('La contraseña debe tener al menos 8 caracteres.');return false;}
+  return true;
+}
+</script>
+</body>
+</html>

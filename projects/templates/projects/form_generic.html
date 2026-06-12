@@ -1,0 +1,131 @@
+{% extends "projects/base_dashboard.html" %}
+{% block dashboard_content %}
+<style>
+.fg-wrap{max-width:680px;margin:0 auto;}
+.page-hero{background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(59,130,246,.08));border:1px solid rgba(124,58,237,.2);border-radius:18px;padding:22px 26px;margin-bottom:22px;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;}
+.page-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--primary),var(--accent));}
+.hero-icon{width:52px;height:52px;border-radius:13px;background:linear-gradient(135deg,#7c3aed,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;box-shadow:0 6px 18px rgba(124,58,237,.3);}
+.page-hero h1{font-size:1.5rem;font-weight:900;letter-spacing:-.4px;margin-bottom:3px;}
+.page-hero p{color:var(--muted);font-size:.81rem;}
+.badge-secure{display:inline-flex;align-items:center;gap:4px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);color:#34d399;padding:3px 10px;border-radius:6px;font-size:.65rem;font-weight:700;margin-top:6px;}
+
+.sec-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px;}
+.sec-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);display:flex;align-items:center;gap:7px;margin-bottom:18px;padding-bottom:11px;border-bottom:1px solid var(--border);}
+
+.field{margin-bottom:18px;}
+.field:last-child{margin-bottom:0;}
+.field label{display:flex;align-items:center;gap:7px;font-size:.81rem;font-weight:700;color:var(--text);margin-bottom:8px;}
+.field label i{color:#a78bfa;font-size:.73rem;width:13px;text-align:center;}
+.field label .req{color:#ef4444;margin-left:2px;font-size:.75rem;}
+.field label .opt{color:var(--muted);font-size:.67rem;font-weight:400;margin-left:4px;}
+.field input,.field textarea,.field select{width:100%;background:rgba(0,0,0,.28);border:1px solid rgba(130,90,255,.18);border-radius:10px;padding:11px 15px;color:var(--text);font-family:var(--font);font-size:.86rem;outline:none;transition:all .16s;resize:vertical;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.12);}
+.field input::placeholder,.field textarea::placeholder{color:var(--muted);}
+.field select option{background:#0e0b1f;}
+.field-hint{font-size:.72rem;color:var(--muted);margin-top:6px;line-height:1.5;display:flex;align-items:flex-start;gap:6px;}
+.field-hint i{flex-shrink:0;margin-top:1px;font-size:.64rem;color:#a78bfa;}
+.field-err{color:#f87171;font-size:.74rem;margin-top:4px;display:flex;align-items:center;gap:5px;}
+.field-err::before{content:'⚠';font-size:.7rem;}
+
+.check-wrap{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.14);border-radius:10px;cursor:pointer;transition:all .15s;}
+.check-wrap:hover{background:rgba(124,58,237,.1);}
+.check-wrap input[type=checkbox]{width:17px;height:17px;accent-color:#7c3aed;cursor:pointer;flex-shrink:0;margin-top:1px;}
+.check-body .check-name{font-size:.84rem;font-weight:700;color:var(--text);}
+.check-body .check-desc{font-size:.72rem;color:var(--muted);margin-top:2px;line-height:1.4;}
+
+.action-row{display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;padding-top:4px;}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 22px;border-radius:10px;font-size:.83rem;font-weight:700;cursor:pointer;transition:all .16s;text-decoration:none;border:1px solid;}
+.btn-submit{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:white;border-color:transparent;box-shadow:0 4px 16px rgba(124,58,237,.3);}
+.btn-submit:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(124,58,237,.4);}
+.btn-cancel{background:rgba(255,255,255,.04);border-color:rgba(130,90,255,.2);color:var(--muted);}
+.btn-cancel:hover{color:var(--text);border-color:rgba(130,90,255,.35);}
+</style>
+
+<div class="fg-wrap">
+
+<div class="page-hero">
+  <div class="hero-icon">
+    {% if form_type == 'tip' %}<i class="fa-solid fa-lightbulb" style="color:#fbbf24;"></i>
+    {% elif form_type == 'institucion' %}<i class="fa-solid fa-building-ngo" style="color:#34d399;"></i>
+    {% elif form_type == 'tipo' %}<i class="fa-solid fa-book-open" style="color:#67e8f9;"></i>
+    {% else %}<i class="fa-solid fa-pen-to-square" style="color:#a78bfa;"></i>{% endif %}
+  </div>
+  <div>
+    <h1>{{ title|default:"Nuevo registro" }}</h1>
+    <p>{{ subtitle|default:"Conexión cifrada AES-256 · Tus datos son confidenciales" }}</p>
+    <div class="badge-secure"><i class="fa-solid fa-lock"></i> SEGURO</div>
+  </div>
+</div>
+
+<form method="post" novalidate>
+  {% csrf_token %}
+
+  {% if form.errors %}
+  <div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.22);border-radius:11px;padding:13px 16px;margin-bottom:16px;font-size:.8rem;color:#f87171;display:flex;align-items:flex-start;gap:9px;">
+    <i class="fa-solid fa-triangle-exclamation" style="flex-shrink:0;margin-top:1px;"></i>
+    <div><strong>Corrige los siguientes errores:</strong>
+      {% for field in form %}{% for error in field.errors %}<div>· {{ field.label }}: {{ error }}</div>{% endfor %}{% endfor %}
+      {% for error in form.non_field_errors %}<div>· {{ error }}</div>{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="sec-card">
+    <div class="sec-title"><i class="fa-solid fa-pencil"></i> Información</div>
+
+    {% for field in form %}
+    <div class="field">
+      <label for="{{ field.id_for_label }}">
+        <i class="fa-solid {% if 'nombre' in field.name or 'titulo' in field.name %}fa-heading{% elif 'descripcion' in field.name or 'contenido' in field.name or 'notas' in field.name %}fa-align-left{% elif 'telefono' in field.name %}fa-phone{% elif 'email' in field.name or 'correo' in field.name %}fa-envelope{% elif 'sitio_web' in field.name %}fa-globe{% elif 'direccion' in field.name %}fa-location-dot{% elif 'publicado' in field.name %}fa-eye{% else %}fa-circle-dot{% endif %}"></i>
+        {{ field.label }}
+        {% if field.field.required %}<span class="req">*</span>{% else %}<span class="opt">(opcional)</span>{% endif %}
+      </label>
+
+      {% if field.field.widget.input_type == 'checkbox' %}
+      <label class="check-wrap" for="{{ field.id_for_label }}" style="cursor:pointer;">
+        <input type="checkbox" name="{{ field.html_name }}" id="{{ field.id_for_label }}" {% if field.value %}checked{% endif %}>
+        <div class="check-body">
+          <div class="check-name">{{ field.label }}</div>
+          <div class="check-desc">{% if 'publicado' in field.name %}Marcar para que este contenido sea visible para las usuarias.{% else %}{{ field.help_text|default:"Activa esta opción si aplica." }}{% endif %}</div>
+        </div>
+      </label>
+      {% elif field.field.widget.input_type == 'textarea' or 'descripcion' in field.name or 'contenido' in field.name or 'notas' in field.name %}
+      <textarea name="{{ field.html_name }}" id="{{ field.id_for_label }}" rows="5" placeholder="{{ field.field.widget.attrs.placeholder|default:field.label }}">{{ field.value|default:'' }}</textarea>
+      {% else %}
+      {{ field }}
+      {% endif %}
+
+      <!-- Hints by field type -->
+      {% if 'nombre' in field.name and 'reportante' not in field.name %}
+      <div class="field-hint"><i class="fa-solid fa-circle-info"></i> Elige un nombre claro y descriptivo que identifique bien este contenido.</div>
+      {% elif 'titulo' in field.name %}
+      <div class="field-hint"><i class="fa-solid fa-circle-info"></i> El título debe ser breve y descriptivo. Será lo primero que verán las usuarias.</div>
+      {% elif 'descripcion' in field.name or 'contenido' in field.name %}
+      <div class="field-hint"><i class="fa-solid fa-circle-info"></i> Sé tan detallado como sea posible. Puedes incluir contexto, fuentes y consejos prácticos.</div>
+      {% elif 'notas' in field.name %}
+      <div class="field-hint"><i class="fa-solid fa-circle-info"></i> Información adicional interna. No visible para todas las usuarias.</div>
+      {% elif 'telefono' in field.name %}
+      <div class="field-hint"><i class="fa-solid fa-circle-info"></i> Incluye el código de área. Ej: 55 1234-5678</div>
+      {% elif 'email' in field.name or 'correo' in field.name %}
+      <div class="field-hint"><i class="fa-solid fa-circle-info"></i> Correo de contacto oficial de la institución.</div>
+      {% elif 'sitio_web' in field.name %}
+      <div class="field-hint"><i class="fa-solid fa-circle-info"></i> URL completa incluyendo https://</div>
+      {% elif 'direccion' in field.name %}
+      <div class="field-hint"><i class="fa-solid fa-circle-info"></i> Dirección completa: calle, número, colonia, delegación.</div>
+      {% endif %}
+
+      {% if field.errors %}
+      {% for error in field.errors %}<div class="field-err">{{ error }}</div>{% endfor %}
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="action-row">
+    <button type="submit" class="btn btn-submit"><i class="fa-solid fa-floppy-disk"></i> {{ submit_label|default:"Guardar" }}</button>
+    <a href="{{ cancel_url|default:'javascript:history.back()' }}" class="btn btn-cancel"><i class="fa-solid fa-xmark"></i> Cancelar</a>
+  </div>
+</form>
+
+</div>
+{% endblock %}

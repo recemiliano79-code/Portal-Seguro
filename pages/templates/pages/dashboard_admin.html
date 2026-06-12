@@ -1,0 +1,259 @@
+{% extends "projects/base_dashboard.html" %}
+{% block dashboard_content %}
+<style>
+.admin-hero{
+  background:linear-gradient(135deg,rgba(79,142,247,.1),rgba(99,102,241,.06));
+  border:1px solid rgba(79,142,247,.2);border-radius:20px;
+  padding:1.8rem 2.2rem;display:flex;align-items:center;justify-content:space-between;gap:1.5rem;flex-wrap:wrap;
+}
+.admin-hero h1{font-size:1.7rem;font-weight:900;color:#fff;letter-spacing:-.03em;}
+.admin-hero h1 span{color:var(--primary);}
+
+/* Reporte admin row */
+.rep-row{
+  display:flex;align-items:flex-start;gap:1rem;padding:1rem 1.3rem;
+  border-bottom:1px solid rgba(255,255,255,.04);
+  transition:background .15s;
+}
+.rep-row:last-child{border-bottom:none;}
+.rep-row:hover{background:rgba(255,255,255,.02);}
+.rep-row.critico .rr-urg{color:var(--red);}
+.rep-row.alto    .rr-urg{color:var(--orange);}
+.rep-row.medio   .rr-urg{color:var(--yellow);}
+.rep-row.bajo    .rr-urg{color:var(--green);}
+.rr-icon{width:38px;height:38px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:.9rem;}
+.rr-info{flex:1;min-width:0;}
+.rr-title{font-size:.85rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rr-meta{font-size:.7rem;color:var(--tl);margin-top:.18rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;}
+.rr-actions{display:flex;gap:.3rem;align-items:center;flex-shrink:0;}
+
+/* Usuario row */
+.usr-row{
+  display:flex;align-items:center;gap:.9rem;
+  padding:.85rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.04);
+  transition:background .15s;
+}
+.usr-row:last-child{border-bottom:none;}
+.usr-row:hover{background:rgba(255,255,255,.02);}
+.usr-avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--primary),var(--p2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:.82rem;font-weight:800;color:#fff;}
+.usr-name{font-size:.82rem;font-weight:700;color:#fff;}
+.usr-meta{font-size:.68rem;color:var(--tl);}
+
+/* panel split */
+.admin-split{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+@media(max-width:900px){.admin-split{grid-template-columns:1fr;}}
+
+/* Urgente alert */
+.urgente-alert{
+  background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(220,38,38,.06));
+  border:1.5px solid rgba(239,68,68,.35);border-radius:16px;
+  padding:1rem 1.3rem;
+  display:flex;align-items:center;gap:.8rem;
+  animation:border-pulse 2s ease-in-out infinite;
+}
+@keyframes border-pulse{0%,100%{border-color:rgba(239,68,68,.35);}50%{border-color:rgba(239,68,68,.65);}}
+
+/* msg form */
+.msg-form-compact{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.7rem;}
+.msg-form-compact textarea{flex:1;min-width:180px;background:var(--bg-input);border:1.5px solid var(--border);border-radius:9px;padding:.5rem .8rem;color:var(--text);font-family:var(--font);font-size:.78rem;resize:none;}
+.msg-form-compact textarea:focus{outline:none;border-color:var(--primary);}
+</style>
+
+<!-- Hero Admin -->
+<div class="admin-hero">
+  <div>
+    <h1>Panel <span>Sentinel</span> · Admin</h1>
+    <p style="font-size:.82rem;color:var(--ts);margin-top:.35rem;display:flex;align-items:center;gap:.5rem;">
+      <span class="live-dot"></span> {{ request.user.username }} · Administrador del sistema
+    </p>
+  </div>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+    <a href="{% url 'projects:reporte-create' %}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Nuevo reporte</a>
+    <a href="{% url 'projects:sugerencias-admin' %}" class="btn btn-ghost btn-sm">
+      <i class="fa-solid fa-inbox"></i> Sugerencias
+      {% if pendientes_global %}<span style="background:var(--red);color:#fff;font-size:.58rem;padding:0 5px;border-radius:99px;font-weight:800;margin-left:2px;">{{ pendientes_global }}</span>{% endif %}
+    </a>
+  </div>
+</div>
+
+<!-- Stats principales -->
+<div class="stat-grid">
+  <div class="stat-card sc-red">
+    <div class="sc-label">Críticos sin revisar</div>
+    <div class="sc-val">{{ reportes_urgentes }}</div>
+    <div class="sc-sub">Atención inmediata</div>
+    <i class="fa-solid fa-siren-on sc-icon"></i>
+  </div>
+  <div class="stat-card sc-yellow">
+    <div class="sc-label">Sin revisar</div>
+    <div class="sc-val">{{ reportes_nuevos }}</div>
+    <div class="sc-sub">Pendientes de respuesta</div>
+    <i class="fa-solid fa-hourglass sc-icon"></i>
+  </div>
+  <div class="stat-card sc-blue">
+    <div class="sc-label">Total reportes</div>
+    <div class="sc-val">{{ total_reportes }}</div>
+    <div class="sc-sub">En el sistema</div>
+    <i class="fa-solid fa-folder sc-icon"></i>
+  </div>
+  <div class="stat-card sc-green">
+    <div class="sc-label">Usuarios registrados</div>
+    <div class="sc-val">{{ total_usuarios }}</div>
+    <div class="sc-sub">En la plataforma</div>
+    <i class="fa-solid fa-users sc-icon"></i>
+  </div>
+</div>
+
+<!-- Alertas críticas -->
+{% if reportes_urgentes_list %}
+<div style="display:flex;flex-direction:column;gap:.6rem;">
+  <h2 style="font-size:.9rem;font-weight:800;color:var(--red);display:flex;align-items:center;gap:.5rem;padding:.2rem 0;">
+    <i class="fa-solid fa-triangle-exclamation"></i> REPORTES CRÍTICOS — Requieren atención inmediata
+  </h2>
+  {% for rep in reportes_urgentes_list %}
+  <div class="urgente-alert">
+    <div style="width:40px;height:40px;border-radius:10px;background:rgba(239,68,68,.15);display:flex;align-items:center;justify-content:center;color:var(--red);font-size:1rem;flex-shrink:0;"><i class="fa-solid fa-siren-on"></i></div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:.85rem;font-weight:700;color:#fff;">{{ rep.descripcion|truncatechars:80 }}</div>
+      <div style="font-size:.7rem;color:var(--tl);margin-top:.15rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+        <span><i class="fa-solid fa-user"></i> {{ rep.user.username }}</span>
+        <span>·</span>
+        <span><i class="fa-regular fa-clock"></i> {{ rep.creado_en|date:"d/m/Y H:i" }}</span>
+        {% if rep.llamar_911 %}<span class="badge badge-red" style="font-size:.58rem;">🚨 Llamar 911</span>{% endif %}
+      </div>
+    </div>
+    <a href="{% url 'projects:reporte-detail' rep.pk %}" class="btn btn-danger btn-sm">
+      <i class="fa-solid fa-eye"></i> Revisar
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Panel dividido: reportes + usuarios -->
+<div class="admin-split">
+
+  <!-- Todos los reportes -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-l">
+        <i class="fa-solid fa-folder-open" style="color:var(--primary);"></i>
+        <span style="color:var(--text);">Reportes Recientes</span>
+      </div>
+      <a href="{% url 'projects:reporte-list' %}" class="btn btn-ghost btn-sm">Ver todos</a>
+    </div>
+    <div style="max-height:400px;overflow-y:auto;">
+      {% for rep in all_reportes %}
+      <div class="rep-row {{ rep.nivel_urgencia|default:'bajo' }}">
+        <div class="rr-icon
+          {% if rep.nivel_urgencia == 'critico' %}style='background:rgba(239,68,68,.1);'
+          {% elif rep.nivel_urgencia == 'alto' %}style='background:rgba(249,115,22,.1);'
+          {% else %}style='background:rgba(79,142,247,.1);'{% endif %}">
+          <i class="fa-solid fa-file-circle-exclamation rr-urg"></i>
+        </div>
+        <div class="rr-info">
+          <div class="rr-title">{{ rep.descripcion|default:"Reporte"|truncatechars:45 }}</div>
+          <div class="rr-meta">
+            <span><i class="fa-solid fa-user" style="font-size:.6rem;"></i> {{ rep.user.username }}</span>
+            <span>·</span>
+            <span>{{ rep.creado_en|date:"d/m H:i" }}</span>
+            {% if rep.nivel_urgencia and rep.nivel_urgencia != 'bajo' %}
+            <span class="badge
+              {% if rep.nivel_urgencia == 'critico' %}badge-red
+              {% elif rep.nivel_urgencia == 'alto' %}badge-orange
+              {% else %}badge-yellow{% endif %}" style="font-size:.58rem;padding:.12rem .45rem;">
+              {{ rep.get_nivel_urgencia_display|default:rep.nivel_urgencia }}
+            </span>
+            {% endif %}
+            {% if rep.revisado %}<span class="badge badge-green" style="font-size:.58rem;padding:.12rem .45rem;"><i class="fa-solid fa-check"></i></span>{% endif %}
+          </div>
+        </div>
+        <div class="rr-actions">
+          <a href="{% url 'projects:reporte-detail' rep.pk %}" class="btn btn-ghost btn-sm btn-icon" title="Ver y responder">
+            <i class="fa-solid fa-reply"></i>
+          </a>
+        </div>
+      </div>
+      {% empty %}
+      <div style="padding:2rem;text-align:center;color:var(--tl);font-size:.82rem;">Sin reportes aún</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Usuarios -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-l">
+        <i class="fa-solid fa-users" style="color:var(--cyan);"></i>
+        <span style="color:var(--text);">Usuarios Registrados</span>
+      </div>
+      <span class="badge badge-cyan">{{ total_usuarios }} total</span>
+    </div>
+    <div style="max-height:400px;overflow-y:auto;">
+      {% for usr in usuarios_recientes %}
+      <div class="usr-row">
+        <div class="usr-avatar">{{ usr.username|first|upper }}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="usr-name">{{ usr.username }}</div>
+          <div class="usr-meta">
+            {{ usr.email|default:"Sin email" }} ·
+            {{ usr.date_joined|date:"d/m/Y" }}
+          </div>
+        </div>
+        <div style="display:flex;gap:.3rem;align-items:center;">
+          {% if usr.is_staff %}
+          <span class="badge badge-blue" style="font-size:.58rem;">Admin</span>
+          {% endif %}
+          <span class="badge badge-green" style="font-size:.58rem;">
+            {{ usr.reporte_set.count|default:"0" }} rep
+          </span>
+        </div>
+      </div>
+      {% empty %}
+      <div style="padding:2rem;text-align:center;color:var(--tl);font-size:.82rem;">Sin usuarios</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Accesos rápidos admin -->
+<div class="card">
+  <div class="card-head">
+    <div class="card-head-l"><i class="fa-solid fa-bolt" style="color:var(--yellow);"></i><span style="color:var(--text);">Acciones Rápidas</span></div>
+  </div>
+  <div class="card-body" style="padding:1rem 1.4rem;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.6rem;">
+      <a href="{% url 'projects:reporte-list' %}?revisado=0" class="btn btn-ghost" style="flex-direction:column;gap:.3rem;padding:.9rem;height:auto;">
+        <i class="fa-solid fa-hourglass" style="font-size:1.1rem;color:var(--yellow);"></i>
+        <span style="font-size:.75rem;">Sin revisar</span>
+      </a>
+      <a href="{% url 'projects:reporte-list' %}?nivel=critico" class="btn btn-ghost" style="flex-direction:column;gap:.3rem;padding:.9rem;height:auto;">
+        <i class="fa-solid fa-siren-on" style="font-size:1.1rem;color:var(--red);"></i>
+        <span style="font-size:.75rem;">Críticos</span>
+      </a>
+      <a href="{% url 'projects:sugerencias-admin' %}?estado=pendiente" class="btn btn-ghost" style="flex-direction:column;gap:.3rem;padding:.9rem;height:auto;">
+        <i class="fa-solid fa-inbox" style="font-size:1.1rem;color:var(--primary);"></i>
+        <span style="font-size:.75rem;">Sugerencias</span>
+        {% if pendientes_global %}<span style="background:var(--red);color:#fff;font-size:.58rem;padding:0 5px;border-radius:99px;font-weight:800;">{{ pendientes_global }}</span>{% endif %}
+      </a>
+      <a href="{% url 'projects:tip-create' %}" class="btn btn-ghost" style="flex-direction:column;gap:.3rem;padding:.9rem;height:auto;">
+        <i class="fa-solid fa-lightbulb" style="font-size:1.1rem;color:var(--yellow);"></i>
+        <span style="font-size:.75rem;">Nuevo tip</span>
+      </a>
+      <a href="{% url 'projects:institucion-create' %}" class="btn btn-ghost" style="flex-direction:column;gap:.3rem;padding:.9rem;height:auto;">
+        <i class="fa-solid fa-building-ngo" style="font-size:1.1rem;color:var(--cyan);"></i>
+        <span style="font-size:.75rem;">Nueva inst.</span>
+      </a>
+      <a href="{% url 'projects:tipo-create' %}" class="btn btn-ghost" style="flex-direction:column;gap:.3rem;padding:.9rem;height:auto;">
+        <i class="fa-solid fa-book-open" style="font-size:1.1rem;color:var(--cyan);"></i>
+        <span style="font-size:.75rem;">Nuevo glosario</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

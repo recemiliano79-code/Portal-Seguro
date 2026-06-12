@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Portal Anti-Acoso{% endblock %}</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Animate.css -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Chart.js (Necesario para las gráficas del admin) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --accent: #7c3aed;
+      --accent-2: #06b6d4;
+      --text: #e6eef8;
+    }
+
+    body {
+      background: linear-gradient(180deg, #071024 0%, #0b1220 100%);
+      color: var(--text);
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Navbar estándar (se mostrará solo si no se oculta en los hijos) */
+    .navbar-custom {
+      background: linear-gradient(90deg, rgba(124,58,237,0.95), rgba(6,182,212,0.95));
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      z-index: 1000;
+    }
+    .brand { font-weight: 800; color: white !important; letter-spacing: 1px; }
+  </style>
+  
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- 
+  DEFINICIÓN ÚNICA DEL NAVBAR
+  Aquí definimos el bloque una sola vez. 
+  Si la página hija (como home.html) quiere quitarlo, lo dejará vacío.
+-->
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-custom navbar-dark">
+  <div class="container">
+    <a class="navbar-brand brand" href="/"><i class="fa-solid fa-shield-halved"></i> Portal Anti-Acoso</a>
+    
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navContent">
+      <ul class="navbar-nav ms-auto align-items-center">
+        {% if user.is_authenticated %}
+           <li class="nav-item"><span class="nav-link text-white">Hola, {{ user.username }}</span></li>
+           <li class="nav-item"><a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm ms-2" style="border-radius:50px;">Salir</a></li>
+        {% else %}
+           <li class="nav-item"><a href="{% url 'login' %}" class="nav-link text-white">Entrar</a></li>
+           <li class="nav-item"><a href="{% url 'register' %}" class="btn btn-light btn-sm ms-2 text-dark" style="border-radius:50px;">Registro</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+
+<!-- CONTENIDO PRINCIPAL -->
+<!-- Definimos container_class para permitir que home.html use pantalla completa (p-0) -->
+<main class="{% block container_class %}container py-4{% endblock %}">
+  
+  <!-- Mensajes de Django (Alertas) -->
+  {% if messages %}
+    <div class="container mt-3" style="position: absolute; z-index: 2000; left: 0; right: 0;">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% block content %}{% endblock %}
+</main>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

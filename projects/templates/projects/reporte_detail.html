@@ -1,0 +1,390 @@
+{% extends "projects/base_dashboard.html" %}
+{% block dashboard_content %}
+<style>
+/* ── Layout ── */
+.detail-wrap{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start;}
+@media(max-width:1020px){.detail-wrap{grid-template-columns:1fr;}}
+
+/* ── Breadcrumb ── */
+.bc{display:flex;align-items:center;gap:7px;font-size:.74rem;margin-bottom:18px;flex-wrap:wrap;}
+.bc a{color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:4px;transition:color .14s;}
+.bc a:hover{color:var(--text);}
+.bc-sep{color:rgba(130,90,255,.3);}
+
+/* ── Hero report card ── */
+.rep-hero{
+  border-radius:16px;padding:22px 24px;margin-bottom:16px;position:relative;overflow:hidden;
+  background:var(--surface);border:1px solid var(--border);
+}
+.rep-hero-bar{position:absolute;top:0;left:0;right:0;height:3px;}
+.c-critico .rep-hero-bar{background:linear-gradient(90deg,#ef4444,#dc2626);}
+.c-alto .rep-hero-bar{background:linear-gradient(90deg,#fb923c,#ea580c);}
+.c-medio .rep-hero-bar{background:linear-gradient(90deg,#fbbf24,#d97706);}
+.c-bajo .rep-hero-bar, .c-none .rep-hero-bar{background:linear-gradient(90deg,#34d399,#059669);}
+
+.rep-hero-id{font-size:1.5rem;font-weight:900;letter-spacing:-.4px;display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.rep-hero-id i{font-size:1.2rem;color:#a78bfa;}
+
+/* Badges */
+.bdg{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+.bdg-critico{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.22);}
+.bdg-alto{background:rgba(251,146,60,.12);color:#fb923c;border:1px solid rgba(251,146,60,.22);}
+.bdg-medio{background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.22);}
+.bdg-bajo{background:rgba(52,211,153,.12);color:#34d399;border:1px solid rgba(52,211,153,.22);}
+.bdg-nuevo{background:rgba(52,211,153,.1);color:#34d399;border:1px solid rgba(52,211,153,.18);}
+.bdg-revision{background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.18);}
+.bdg-proceso{background:rgba(59,130,246,.1);color:#67e8f9;border:1px solid rgba(59,130,246,.18);}
+.bdg-cerrado{background:rgba(107,114,128,.1);color:var(--muted);border:1px solid rgba(107,114,128,.15);}
+.bdg-revisado{background:rgba(52,211,153,.1);color:#34d399;border:1px solid rgba(52,211,153,.18);}
+.bdg-urg{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.18);animation:urgP 2s infinite;}
+@keyframes urgP{0%,100%{opacity:1;}50%{opacity:.6;}}
+
+/* Description box */
+.desc-box{background:rgba(0,0,0,.22);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin:14px 0;}
+.desc-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+.desc-text{font-size:.9rem;line-height:1.75;color:var(--text);}
+.desc-date{font-size:.7rem;color:var(--muted);margin-top:8px;font-family:var(--mono);display:flex;align-items:center;gap:5px;}
+
+/* Meta grid */
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+@media(max-width:600px){.meta-grid{grid-template-columns:1fr;}}
+.meta-item{background:rgba(0,0,0,.18);border:1px solid var(--border);border-radius:10px;padding:10px 13px;}
+.meta-lbl{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:3px;}
+.meta-val{font-size:.84rem;font-weight:600;color:var(--text);}
+
+/* ── CHAT ── */
+.chat-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;}
+.chat-head{padding:14px 20px;border-bottom:1px solid var(--border);background:rgba(0,0,0,.12);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.chat-title{font-size:.88rem;font-weight:800;display:flex;align-items:center;gap:9px;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 7px #34d399;display:inline-block;animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+.chat-messages{min-height:260px;max-height:400px;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:13px;}
+.chat-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;color:var(--muted);min-height:200px;}
+.ce-icon{width:55px;height:55px;border-radius:50%;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.14);display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 12px;}
+
+/* Bubbles */
+.bw{display:flex;gap:9px;align-items:flex-end;}
+.bw.admin{flex-direction:row;}
+.bw.user{flex-direction:row-reverse;}
+.bav{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;flex-shrink:0;}
+.bav.av-admin{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:white;}
+.bav.av-user{background:rgba(255,255,255,.07);color:var(--text);border:1px solid var(--border);}
+.bubble{max-width:78%;padding:10px 14px;border-radius:14px;font-size:.84rem;line-height:1.65;}
+.bubble.adm-b{background:linear-gradient(135deg,rgba(124,58,237,.17),rgba(59,130,246,.1));border:1px solid rgba(124,58,237,.24);color:var(--text);border-bottom-left-radius:4px;}
+.bubble.usr-b{background:rgba(255,255,255,.055);border:1px solid var(--border);color:var(--text);border-bottom-right-radius:4px;}
+.b-sender{font-size:.6rem;color:#a78bfa;font-weight:700;margin-bottom:4px;font-family:var(--mono);}
+.b-time{font-size:.62rem;color:var(--muted);margin-top:5px;font-family:var(--mono);}
+.bw.user .b-time{text-align:right;}
+
+/* Chat input */
+.chat-footer{padding:14px 18px;border-top:1px solid var(--border);background:rgba(0,0,0,.1);flex-shrink:0;}
+.ci-row{display:flex;gap:.5rem;align-items:flex-end;}
+.chat-ta{flex:1;background:rgba(0,0,0,.3);border:1px solid rgba(130,90,255,.18);border-radius:11px;padding:10px 14px;color:var(--text);font-family:var(--font);font-size:.84rem;outline:none;resize:none;min-height:42px;max-height:120px;transition:border-color .14s;}
+.chat-ta:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.1);}
+.chat-ta::placeholder{color:var(--muted);}
+.send-btn{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.88rem;transition:all .14s;flex-shrink:0;}
+.send-btn:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(124,58,237,.35);}
+.ci-meta{display:flex;align-items:center;gap:.7rem;margin-top:9px;flex-wrap:wrap;}
+.admin-chk{display:flex;align-items:center;gap:7px;font-size:.75rem;color:var(--muted);cursor:pointer;}
+.admin-chk input{accent-color:#7c3aed;width:15px;height:15px;}
+.ci-hint{font-size:.67rem;color:var(--muted);display:flex;align-items:center;gap:4px;margin-left:auto;}
+
+/* ── RIGHT SIDEBAR ── */
+.side-stack{display:flex;flex-direction:column;gap:14px;}
+.scard{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.scard-head{padding:13px 16px;border-bottom:1px solid var(--border);background:rgba(0,0,0,.1);display:flex;align-items:center;justify-content:space-between;}
+.scard-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1.1px;color:var(--muted);display:flex;align-items:center;gap:7px;}
+.scard-body{padding:14px 16px;}
+
+/* Info table */
+.it{width:100%;border-collapse:collapse;}
+.it tr{border-bottom:1px solid var(--border);}
+.it tr:last-child{border-bottom:none;}
+.it td{padding:8px 0;font-size:.8rem;vertical-align:middle;}
+.it td:first-child{color:var(--muted);font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;width:42%;}
+.it td:last-child{text-align:right;font-weight:600;}
+
+/* Resource links */
+.rl{display:flex;align-items:center;gap:9px;padding:9px 12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;text-decoration:none;transition:all .14s;}
+.rl:last-child{margin-bottom:0;}
+.rl:hover{border-color:rgba(130,90,255,.28);background:rgba(124,58,237,.07);transform:translateX(3px);}
+.rl-ico{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.82rem;flex-shrink:0;}
+.rl-title{font-size:.78rem;font-weight:700;color:var(--text);}
+.rl-sub{font-size:.64rem;color:var(--muted);}
+
+/* Admin action grid */
+.aab-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.aab{display:flex;align-items:center;justify-content:center;gap:5px;padding:9px 8px;border-radius:9px;font-size:.71rem;font-weight:700;cursor:pointer;transition:all .14s;text-decoration:none;border:1px solid;text-align:center;}
+.aab-b{background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.18);color:#67e8f9;}
+.aab-b:hover{background:rgba(59,130,246,.16);}
+.aab-g{background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.18);color:#34d399;}
+.aab-g:hover{background:rgba(52,211,153,.15);}
+.aab-y{background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.18);color:#fbbf24;}
+.aab-y:hover{background:rgba(251,191,36,.14);}
+.aab-r{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.18);color:#f87171;}
+.aab-r:hover{background:rgba(248,113,113,.14);}
+.aab-v{background:rgba(124,58,237,.1);border-color:rgba(124,58,237,.22);color:#a78bfa;}
+.aab-v:hover{background:rgba(124,58,237,.18);}
+
+/* btn */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;font-size:.74rem;font-weight:700;cursor:pointer;transition:all .14s;text-decoration:none;border:1px solid;}
+.btn-ghost{background:rgba(255,255,255,.03);border-color:rgba(130,90,255,.18);color:var(--muted);}
+.btn-ghost:hover{color:var(--text);background:rgba(124,58,237,.08);}
+.btn-sm{padding:5px 11px;font-size:.7rem;}
+</style>
+
+<!-- BREADCRUMB -->
+<div class="bc">
+  <a href="{% url 'projects:home' %}"><i class="fa-solid fa-house" style="font-size:.65rem;"></i> Dashboard</a>
+  <span class="bc-sep">/</span>
+  <a href="{% url 'projects:reporte-list' %}"><i class="fa-solid fa-folder-open" style="font-size:.65rem;"></i> Mis Reportes</a>
+  <span class="bc-sep">/</span>
+  <span style="color:#a78bfa;font-weight:600;">Reporte #{{ reporte.pk|stringformat:"04d" }}</span>
+</div>
+
+<div class="detail-wrap">
+
+  <!-- ═══ LEFT ═══ -->
+  <div>
+
+    <!-- HERO -->
+    <div class="rep-hero c-{{ reporte.nivel_urgencia|default:'bajo' }}">
+      <div class="rep-hero-bar"></div>
+      <div class="rep-hero-id">
+        <i class="fa-solid fa-file-circle-exclamation"></i>
+        Reporte #{{ reporte.pk|stringformat:"04d" }}
+      </div>
+
+      <!-- Badges row -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+        <!-- Urgencia -->
+        {% if reporte.nivel_urgencia == 'critico' %}<span class="bdg bdg-critico"><i class="fa-solid fa-siren-on" style="font-size:.55rem;"></i> Crítico</span>
+        {% elif reporte.nivel_urgencia == 'alto' %}<span class="bdg bdg-alto"><i class="fa-solid fa-triangle-exclamation" style="font-size:.55rem;"></i> Alto</span>
+        {% elif reporte.nivel_urgencia == 'medio' %}<span class="bdg bdg-medio"><i class="fa-solid fa-bolt" style="font-size:.55rem;"></i> Medio</span>
+        {% else %}<span class="bdg bdg-bajo"><i class="fa-solid fa-circle-info" style="font-size:.55rem;"></i> Bajo</span>{% endif %}
+        <!-- Estado -->
+        {% if reporte.status == 'nuevo' %}<span class="bdg bdg-nuevo"><i class="fa-solid fa-circle" style="font-size:.35rem;"></i> Nuevo</span>
+        {% elif reporte.status == 'revision' %}<span class="bdg bdg-revision"><i class="fa-solid fa-magnifying-glass" style="font-size:.55rem;"></i> En Revisión</span>
+        {% elif reporte.status == 'proceso' %}<span class="bdg bdg-proceso"><i class="fa-solid fa-gears" style="font-size:.55rem;"></i> En Proceso</span>
+        {% else %}<span class="bdg bdg-cerrado"><i class="fa-solid fa-check" style="font-size:.55rem;"></i> Cerrado</span>{% endif %}
+        {% if reporte.revisado %}<span class="bdg bdg-revisado"><i class="fa-solid fa-shield-check" style="font-size:.55rem;"></i> Revisado</span>{% endif %}
+        {% if reporte.llamar_911 %}<span class="bdg bdg-urg"><i class="fa-solid fa-phone-volume" style="font-size:.55rem;"></i> Contacto urgente</span>{% endif %}
+      </div>
+
+      <!-- Description -->
+      <div class="desc-box">
+        <div class="desc-label"><i class="fa-solid fa-align-left"></i> Descripción del incidente</div>
+        <div class="desc-text">{{ reporte.descripcion }}</div>
+        <div class="desc-date"><i class="fa-solid fa-clock" style="font-size:.58rem;"></i> Registrado el {{ reporte.creado_en|date:"d \d\e F \d\e Y · H:i" }}</div>
+      </div>
+
+      <!-- Meta -->
+      <div class="meta-grid">
+        {% if reporte.tipo_acoso %}
+        <div class="meta-item">
+          <div class="meta-lbl"><i class="fa-solid fa-tag" style="font-size:.6rem;color:#a78bfa;"></i> Tipo de acoso</div>
+          <div class="meta-val" style="color:#a78bfa;">{{ reporte.tipo_acoso.nombre }}</div>
+        </div>
+        {% endif %}
+        {% if reporte.fecha_suceso %}
+        <div class="meta-item">
+          <div class="meta-lbl"><i class="fa-solid fa-calendar" style="font-size:.6rem;color:#67e8f9;"></i> Fecha del suceso</div>
+          <div class="meta-val">{{ reporte.fecha_suceso|date:"d/m/Y" }}</div>
+        </div>
+        {% endif %}
+        {% if reporte.lugar %}
+        <div class="meta-item" style="grid-column:1/-1;">
+          <div class="meta-lbl"><i class="fa-solid fa-location-dot" style="font-size:.6rem;color:#f472b6;"></i> Lugar</div>
+          <div class="meta-val">{{ reporte.lugar }}</div>
+        </div>
+        {% endif %}
+        {% if reporte.nombre_reportante %}
+        <div class="meta-item">
+          <div class="meta-lbl">Nombre</div>
+          <div class="meta-val">{{ reporte.nombre_reportante }}</div>
+        </div>
+        {% endif %}
+        {% if reporte.telefono_reportante %}
+        <div class="meta-item">
+          <div class="meta-lbl">Teléfono</div>
+          <div class="meta-val"><a href="tel:{{ reporte.telefono_reportante }}" style="color:#34d399;text-decoration:none;">{{ reporte.telefono_reportante }}</a></div>
+        </div>
+        {% endif %}
+        {% if reporte.correo_reportante %}
+        <div class="meta-item" style="grid-column:1/-1;">
+          <div class="meta-lbl">Correo</div>
+          <div class="meta-val"><a href="mailto:{{ reporte.correo_reportante }}" style="color:#67e8f9;text-decoration:none;">{{ reporte.correo_reportante }}</a></div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ═══ CHAT ═══ -->
+    <div class="chat-card">
+      <div class="chat-head">
+        <div class="chat-title">
+          <span class="live-dot"></span>
+          <i class="fa-solid fa-comments" style="color:#a78bfa;"></i>
+          Comunicación con el equipo
+          {% if mensajes.count %}<span style="background:rgba(124,58,237,.14);border:1px solid rgba(124,58,237,.22);color:#a78bfa;padding:2px 8px;border-radius:5px;font-size:.62rem;font-weight:700;">{{ mensajes.count }} mensaje{{ mensajes.count|pluralize:"s" }}</span>{% endif %}
+        </div>
+        <span style="font-size:.7rem;color:var(--muted);display:flex;align-items:center;gap:4px;font-family:var(--mono);">
+          <i class="fa-solid fa-lock" style="font-size:.6rem;color:#34d399;"></i> Cifrado
+        </span>
+      </div>
+
+      <div class="chat-messages" id="chat-msgs">
+        {% if mensajes %}
+          {% for msg in mensajes %}
+          <div class="bw {% if msg.es_del_admin %}admin{% else %}user{% endif %}">
+            <div class="bav {% if msg.es_del_admin %}av-admin{% else %}av-user{% endif %}">
+              {% if msg.es_del_admin %}<i class="fa-solid fa-shield-halved" style="font-size:.65rem;"></i>
+              {% else %}{{ msg.autor.username|first|upper }}{% endif %}
+            </div>
+            <div>
+              <div class="bubble {% if msg.es_del_admin %}adm-b{% else %}usr-b{% endif %}">
+                {% if msg.es_del_admin %}<div class="b-sender">SENTINEL · {{ msg.autor.username }}</div>{% endif %}
+                {{ msg.texto|linebreaksbr }}
+              </div>
+              <div class="b-time">{{ msg.creado_en|date:"d/m/Y · H:i" }}{% if msg.leido and not msg.es_del_admin %} <i class="fa-solid fa-check-double" style="color:#34d399;font-size:.55rem;"></i>{% endif %}</div>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="chat-empty">
+            <div class="ce-icon"><i class="fa-solid fa-comments" style="color:#a78bfa;"></i></div>
+            <div style="font-size:.86rem;font-weight:700;margin-bottom:6px;">Sin mensajes aún</div>
+            <div style="font-size:.77rem;line-height:1.55;max-width:300px;">El equipo revisará tu reporte y te responderá aquí. También puedes escribir si tienes información adicional.</div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- INPUT -->
+      <div class="chat-footer">
+        <form method="post" id="chat-form">
+          {% csrf_token %}
+          <div class="ci-row">
+            <textarea class="chat-ta" name="texto" placeholder="Escribe un mensaje para el equipo…" rows="1"
+              oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';"
+              onkeypress="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();this.closest('form').submit();}"></textarea>
+            <button type="submit" class="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+          </div>
+          <div class="ci-meta">
+            {% if is_admin %}
+            <label class="admin-chk">
+              <input type="checkbox" name="marcar_revisado" {% if reporte.revisado %}checked{% endif %}>
+              <i class="fa-solid fa-shield-check" style="font-size:.68rem;color:#34d399;"></i>
+              Marcar como revisado
+            </label>
+            {% endif %}
+            <span class="ci-hint"><i class="fa-solid fa-keyboard" style="font-size:.58rem;"></i> Enter = enviar · Shift+Enter = nueva línea</span>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div><!-- end left -->
+
+  <!-- ═══ RIGHT SIDEBAR ═══ -->
+  <div class="side-stack">
+
+    <!-- INFO -->
+    <div class="scard">
+      <div class="scard-head">
+        <div class="scard-title"><i class="fa-solid fa-circle-info" style="color:#67e8f9;"></i> Información del Reporte</div>
+        <a href="{% url 'projects:reporte-list' %}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+      </div>
+      <div class="scard-body">
+        <table class="it">
+          <tr><td>ID</td><td style="font-family:var(--mono);color:#67e8f9;">#{{ reporte.pk|stringformat:"04d" }}</td></tr>
+          <tr><td>Reportante</td><td style="color:#a78bfa;">{{ reporte.user.username|default:"Anónimo" }}</td></tr>
+          <tr><td>Registrado</td><td style="font-family:var(--mono);font-size:.72rem;">{{ reporte.creado_en|date:"d/m/Y H:i" }}</td></tr>
+          <tr><td>Urgencia</td><td><span class="bdg bdg-{{ reporte.nivel_urgencia|default:'bajo' }}" style="font-size:.58rem;">{{ reporte.get_nivel_urgencia_display|default:"—" }}</span></td></tr>
+          <tr><td>Estado</td><td><span class="bdg bdg-{{ reporte.status }}" style="font-size:.58rem;">{{ reporte.get_status_display }}</span></td></tr>
+          {% if reporte.revisado %}<tr><td>Revisado</td><td style="color:#34d399;font-size:.8rem;"><i class="fa-solid fa-check"></i> Sí</td></tr>{% endif %}
+        </table>
+      </div>
+    </div>
+
+    <!-- ADMIN STATUS PANEL -->
+    {% if is_admin %}
+    <div class="scard">
+      <div class="scard-head">
+        <div class="scard-title"><i class="fa-solid fa-terminal" style="color:#a78bfa;"></i> Panel Admin</div>
+      </div>
+      <div class="scard-body">
+        <form method="post">
+          {% csrf_token %}
+          <div style="font-size:.72rem;color:var(--muted);font-weight:600;margin-bottom:6px;">Estado del reporte:</div>
+          <select name="nuevo_status" style="width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(130,90,255,.18);border-radius:8px;padding:8px 11px;color:var(--text);font-size:.8rem;outline:none;margin-bottom:8px;cursor:pointer;">
+            <option value="nuevo" {% if reporte.status == 'nuevo' %}selected{% endif %}>🟢 Nuevo</option>
+            <option value="revision" {% if reporte.status == 'revision' %}selected{% endif %}>🟡 En Revisión</option>
+            <option value="proceso" {% if reporte.status == 'proceso' %}selected{% endif %}>🔵 En Proceso</option>
+            <option value="cerrado" {% if reporte.status == 'cerrado' %}selected{% endif %}>⬛ Cerrado</option>
+          </select>
+          <button type="submit" name="cambiar_status" value="1" style="width:100%;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.22);color:#a78bfa;padding:9px;border-radius:8px;font-size:.76rem;font-weight:700;cursor:pointer;transition:all .14s;">
+            <i class="fa-solid fa-arrows-rotate"></i> Actualizar estado
+          </button>
+        </form>
+        <div class="aab-grid" style="margin-top:10px;">
+          <a href="{% url 'projects:reporte-list' %}" class="aab aab-b"><i class="fa-solid fa-list"></i> Ver todos</a>
+          <a href="{% url 'projects:sugerencias-admin' %}" class="aab aab-v"><i class="fa-solid fa-inbox"></i> Sugerencias</a>
+          <a href="{% url 'projects:tip-create' %}" class="aab aab-y"><i class="fa-solid fa-plus"></i> Nuevo Tip</a>
+          <a href="{% url 'projects:reporte-create' %}" class="aab aab-g"><i class="fa-solid fa-plus"></i> Nuevo Rep.</a>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <!-- USER QUICK ACTIONS -->
+    <div class="scard">
+      <div class="scard-head"><div class="scard-title"><i class="fa-solid fa-bolt" style="color:#fbbf24;"></i> Acciones Rápidas</div></div>
+      <div class="scard-body">
+        <div class="aab-grid">
+          <a href="{% url 'projects:reporte-create' %}" class="aab aab-v"><i class="fa-solid fa-plus"></i> Nuevo</a>
+          <a href="{% url 'projects:reporte-list' %}" class="aab aab-b"><i class="fa-solid fa-list"></i> Mis rep.</a>
+          <a href="{% url 'projects:tip-list' %}" class="aab aab-y"><i class="fa-solid fa-lightbulb"></i> Tips</a>
+          <a href="{% url 'projects:institucion-list' %}" class="aab aab-g"><i class="fa-solid fa-building-ngo"></i> Apoyo</a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- EMERGENCIAS -->
+    <div class="scard">
+      <div class="scard-head">
+        <div class="scard-title"><i class="fa-solid fa-phone-volume" style="color:#f87171;animation:blink 1.5s infinite;"></i> Líneas de Emergencia</div>
+      </div>
+      <div class="scard-body">
+        <a href="tel:911" class="rl">
+          <div class="rl-ico" style="background:rgba(248,113,113,.12);color:#f87171;"><i class="fa-solid fa-phone-volume"></i></div>
+          <div><div class="rl-title">911 — Emergencias</div><div class="rl-sub">Nacional · 24/7 gratuito</div></div>
+          <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--muted);font-size:.65rem;"></i>
+        </a>
+        <a href="tel:5556581111" class="rl">
+          <div class="rl-ico" style="background:rgba(244,114,182,.12);color:#f472b6;"><i class="fa-solid fa-venus"></i></div>
+          <div><div class="rl-title">Línea Mujeres CDMX</div><div class="rl-sub">55 5658-1111 · 24/7</div></div>
+          <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--muted);font-size:.65rem;"></i>
+        </a>
+        <a href="tel:5555757583" class="rl">
+          <div class="rl-ico" style="background:rgba(103,232,249,.1);color:#67e8f9;"><i class="fa-solid fa-scale-balanced"></i></div>
+          <div><div class="rl-title">CEJUR</div><div class="rl-sub">55 5575-7583 · Asesoría legal</div></div>
+          <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--muted);font-size:.65rem;"></i>
+        </a>
+        <a href="tel:8009008000" class="rl">
+          <div class="rl-ico" style="background:rgba(124,58,237,.1);color:#a78bfa;"><i class="fa-solid fa-building-ngo"></i></div>
+          <div><div class="rl-title">CONAVIM</div><div class="rl-sub">800 900-8000 · Sin costo</div></div>
+          <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--muted);font-size:.65rem;"></i>
+        </a>
+      </div>
+    </div>
+
+  </div><!-- end sidebar -->
+</div><!-- end detail-wrap -->
+
+<script>
+// Scroll to bottom of chat
+const msgs=document.getElementById('chat-msgs');
+if(msgs)msgs.scrollTop=msgs.scrollHeight;
+</script>
+{% endblock %}

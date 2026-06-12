@@ -1,0 +1,675 @@
+{% extends "projects/base_dashboard.html" %}
+{% block dashboard_content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+:root{
+  --s2:#0d0b26;--s3:#13103a;--brd:rgba(110,70,255,.07);--brd2:rgba(110,70,255,.18);
+  --tx:#f0edff;--mu:#5e5478;--mu2:#9488b8;--mu3:#c4b8e0;
+  --pu:#7c3aed;--vi:#a78bfa;--cy:#67e8f9;--pk:#f472b6;--gr:#34d399;
+  --ye:#fbbf24;--re:#f87171;--or:#fb923c;--mono:'JetBrains Mono',monospace;--r:14px;
+}
+*{box-sizing:border-box;}
+button,a{font-family:inherit;cursor:pointer;}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+@keyframes flowBar{to{background-position:300%;}}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.15;}}
+@keyframes orbPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+@keyframes wave{0%,100%{transform:scaleY(1);}50%{transform:scaleY(.35);}}
+@keyframes ping{0%{transform:scale(1);opacity:.8;}100%{transform:scale(2.2);opacity:0;}}
+@keyframes heartbeat{0%,100%{transform:scale(1);}14%{transform:scale(1.15);}28%{transform:scale(1);}42%{transform:scale(1.08);}70%{transform:scale(1);}}
+@keyframes shimmer{0%{background-position:-200%;}100%{background-position:200%;}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-20px);}to{opacity:1;transform:translateX(0);}}
+
+/* ── HERO ── */
+.hero{
+  position:relative;overflow:hidden;
+  padding:26px 28px 22px;
+  background:linear-gradient(135deg,#060417 0%,#110833 45%,#07041a 100%);
+  border-bottom:1px solid var(--brd2);
+}
+.hero::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,#7c3aed,#f472b6,#67e8f9,#34d399,#a78bfa,#7c3aed);
+  background-size:300%;animation:flowBar 5s linear infinite;
+}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);pointer-events:none;}
+.orb1{width:380px;height:380px;background:rgba(124,58,237,.07);top:-180px;right:40px;animation:orbPulse 8s ease-in-out infinite;}
+.orb2{width:240px;height:240px;background:rgba(244,114,182,.05);bottom:-130px;left:8%;animation:orbPulse 10s ease-in-out infinite 2s;}
+.hero-inner{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;position:relative;z-index:2;}
+.hero-greet{font-size:.54rem;font-weight:900;text-transform:uppercase;letter-spacing:3.5px;color:var(--vi);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.hero-dot{width:5px;height:5px;border-radius:50%;background:var(--gr);box-shadow:0 0 8px var(--gr);animation:blink 2s infinite;}
+.hero-name{
+  font-size:2.4rem;font-weight:900;letter-spacing:-1px;margin-bottom:10px;
+  background:linear-gradient(135deg,#f8f5ff,#c4b5fd 45%,#67e8f9);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-tags{display:flex;gap:.4rem;flex-wrap:wrap;}
+.htag{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;font-size:.6rem;font-weight:800;}
+.htag-gr{background:rgba(52,211,153,.09);border:1px solid rgba(52,211,153,.2);color:#34d399;}
+.htag-vi{background:rgba(124,58,237,.09);border:1px solid rgba(124,58,237,.2);color:#a78bfa;}
+.hero-r{text-align:right;}
+.hero-clk{font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--cy);letter-spacing:3px;}
+.hero-clk-sub{font-size:.56rem;color:var(--mu2);margin-top:3px;font-family:var(--mono);}
+
+/* ── EMERGENCY BANNER ── */
+.em{
+  padding:14px 22px;
+  background:linear-gradient(135deg,rgba(239,68,68,.09),rgba(248,113,113,.05));
+  border-bottom:1px solid rgba(239,68,68,.15);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  animation:slideIn .4s ease-out;
+}
+.em-l{display:flex;align-items:center;gap:10px;}
+.em-ico{width:38px;height:38px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.em-title{font-size:.86rem;font-weight:900;color:#f8a4a4;margin-bottom:1px;}
+.em-sub{font-size:.65rem;color:rgba(248,113,113,.55);}
+.em-r{display:flex;gap:.35rem;flex-wrap:wrap;}
+.ebtn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:9px;font-size:.72rem;font-weight:800;border:1px solid;transition:all .15s;text-decoration:none;}
+.ebtn:hover{transform:translateY(-2px);}
+.eb-r{background:rgba(239,68,68,.12)!important;border-color:rgba(239,68,68,.25);color:#f87171;}
+.eb-p{background:rgba(244,114,182,.1)!important;border-color:rgba(244,114,182,.22);color:#f472b6;}
+.eb-v{background:rgba(124,58,237,.1)!important;border-color:rgba(124,58,237,.24);color:#a78bfa;}
+
+/* ── BODY ── */
+.body{padding:20px 24px 40px;display:flex;flex-direction:column;gap:20px;}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sec-t{font-size:.54rem;font-weight:900;text-transform:uppercase;letter-spacing:3px;color:var(--mu);display:flex;align-items:center;gap:8px;}
+.sec-t i{font-size:.72rem;color:var(--vi);}
+
+/* ── STATS ── */
+.stats4{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;}
+@media(max-width:900px){.stats4{grid-template-columns:repeat(2,1fr);}}
+.stc{
+  background:var(--s2);border:1px solid var(--brd);border-radius:var(--r);
+  padding:18px 16px;position:relative;overflow:hidden;cursor:pointer;
+  transition:all .2s cubic-bezier(.4,0,.2,1);
+  animation:fadeUp .5s ease-out both;
+}
+.stc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--scl,var(--pu));opacity:.55;}
+.stc:hover{background:var(--s3);border-color:var(--brd2);transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,0,0,.4);}
+.stc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
+.stc-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.9rem;}
+.stc-badge{font-size:.54rem;font-weight:900;padding:2px 7px;border-radius:5px;border:1px solid;}
+.stc-val{font-size:2.2rem;font-weight:900;line-height:1;font-family:var(--mono);}
+.stc-lbl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:var(--mu2);margin-top:4px;}
+
+/* ── NOTIFICACIONES ── */
+.notif-banner{
+  padding:12px 18px;border-radius:var(--r);margin-bottom:4px;
+  display:flex;align-items:flex-start;gap:10px;
+  border:1px solid;animation:slideIn .4s ease-out;font-size:.79rem;
+}
+.nb-r{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.18);}
+.nb-y{background:rgba(251,191,36,.06);border-color:rgba(251,191,36,.16);}
+.nb-b{background:rgba(103,232,249,.05);border-color:rgba(103,232,249,.15);}
+.nb-g{background:rgba(52,211,153,.05);border-color:rgba(52,211,153,.15);}
+.nb-v{background:rgba(124,58,237,.06);border-color:rgba(124,58,237,.16);}
+.notif-ico{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;}
+
+/* ── QUICK ACTIONS ── */
+.qa8{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;}
+.qa8-2{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-top:11px;}
+@media(max-width:1000px){.qa8,.qa8-2{grid-template-columns:repeat(2,1fr);}}
+.qa{
+  background:var(--s2);border:1px solid var(--brd);border-radius:var(--r);
+  padding:18px 14px 14px;display:flex;flex-direction:column;align-items:center;gap:10px;
+  text-align:center;text-decoration:none;cursor:pointer;position:relative;overflow:hidden;
+  transition:all .2s cubic-bezier(.4,0,.2,1);color:inherit;font-family:inherit;border:none;
+  background:var(--s2);border:1px solid var(--brd);
+}
+.qa::after{content:'';position:absolute;inset:0;opacity:0;background:radial-gradient(ellipse at top,var(--qc,rgba(124,58,237,.06)),transparent 65%);transition:opacity .2s;}
+.qa:hover{background:var(--s3);border-color:var(--brd2);transform:translateY(-5px) scale(1.02);box-shadow:0 14px 38px rgba(0,0,0,.45);}
+.qa:hover::after{opacity:1;}
+.qa-ico2{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.35rem;transition:transform .2s;box-shadow:0 5px 18px rgba(0,0,0,.3);}
+.qa:hover .qa-ico2{transform:scale(1.1) rotate(-3deg);}
+.qa-name{font-size:.84rem;font-weight:800;color:var(--tx);}
+.qa-sub2{font-size:.62rem;color:var(--mu2);}
+
+/* ── TWO COL ── */
+.two-col{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;}
+@media(max-width:1050px){.two-col{grid-template-columns:1fr;}}
+.three-col{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:16px;}
+@media(max-width:1050px){.three-col{grid-template-columns:1fr 1fr;}}
+@media(max-width:680px){.three-col{grid-template-columns:1fr;}}
+
+/* ── CARD ── */
+.card{background:var(--s2);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden;}
+.chd{padding:14px 18px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;}
+.cht{font-size:.82rem;font-weight:800;display:flex;align-items:center;gap:8px;}
+.cbd{padding:14px 18px;}
+.lnk{color:#a78bfa;font-size:.66rem;font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:color .12s;border:none;background:transparent;font-family:inherit;}
+.lnk:hover{color:var(--cy);}
+
+/* ── REPORTES LIST ── */
+.rep-item{display:flex;align-items:flex-start;gap:11px;padding:11px 0;border-bottom:1px solid var(--brd);text-decoration:none;transition:background .12s;margin:0 -18px;padding-left:18px;padding-right:18px;}
+.rep-item:hover{background:rgba(124,58,237,.04);}
+.rep-item:last-child{border-bottom:none;}
+.rico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;}
+.rid{font-size:.67rem;font-weight:900;font-family:var(--mono);margin-bottom:2px;}
+.rdesc{font-size:.78rem;font-weight:600;margin-bottom:4px;color:var(--tx);}
+.rmeta{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;}
+.tag{display:inline-flex;align-items:center;padding:2px 7px;border-radius:5px;font-size:.56rem;font-weight:800;}
+.t-r{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.18);color:#f87171;}
+.t-o{background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.18);color:#fb923c;}
+.t-y{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.18);color:#fbbf24;}
+.t-g{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.18);color:#34d399;}
+.t-v{background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.18);color:#a78bfa;}
+.t-a{background:rgba(103,232,249,.1);border:1px solid rgba(103,232,249,.18);color:#67e8f9;}
+.t-m{background:rgba(255,255,255,.04);border:1px solid var(--brd);color:var(--mu2);}
+.rdate{font-size:.58rem;color:var(--mu2);font-family:var(--mono);}
+
+/* ── TIPS ── */
+.tip-item{padding:9px 0;border-bottom:1px solid var(--brd);}
+.tip-item:last-child{border-bottom:none;}
+.tip-row{display:flex;align-items:flex-start;gap:8px;}
+.tip-dot{width:5px;height:5px;border-radius:50%;background:var(--ye);box-shadow:0 0 6px var(--ye);flex-shrink:0;margin-top:5px;}
+.tip-title{font-size:.78rem;font-weight:800;margin-bottom:2px;}
+.tip-body{font-size:.7rem;color:var(--mu2);line-height:1.6;}
+
+/* ── AI CARD ── */
+.ai-card{
+  padding:20px 18px;text-align:center;
+  background:linear-gradient(135deg,rgba(124,58,237,.07),rgba(59,130,246,.04));
+  border:1px solid rgba(124,58,237,.16);border-radius:var(--r);cursor:pointer;transition:all .2s;
+}
+.ai-card:hover{background:linear-gradient(135deg,rgba(124,58,237,.13),rgba(59,130,246,.07))!important;border-color:rgba(124,58,237,.28);transform:translateY(-3px);box-shadow:0 14px 36px rgba(124,58,237,.18);}
+.ai-bot{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(59,130,246,.12));border:1px solid rgba(124,58,237,.25);display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 12px;box-shadow:0 6px 24px rgba(124,58,237,.25);animation:heartbeat 3s ease-in-out infinite;}
+.ai-modes{display:flex;gap:.3rem;flex-wrap:wrap;justify-content:center;margin:10px 0 12px;}
+.ai-mb{padding:4px 10px;border-radius:6px;font-size:.62rem;font-weight:800;cursor:pointer;border:1px solid rgba(124,58,237,.18);background:rgba(124,58,237,.07)!important;color:#a78bfa;transition:all .13s;font-family:inherit;}
+.ai-mb:hover{background:rgba(124,58,237,.16)!important;}
+.ai-open{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;font-size:.78rem;font-weight:800;background:linear-gradient(135deg,#7c3aed,#5b21b6)!important;border:1px solid rgba(124,58,237,.3);color:white;cursor:pointer;transition:all .15s;font-family:inherit;box-shadow:0 4px 16px rgba(124,58,237,.38);}
+.ai-open:hover{transform:translateY(-2px);box-shadow:0 7px 24px rgba(124,58,237,.52);}
+
+/* ── MAPA ── */
+#u-map{height:280px;background:#0a0818;}
+.mf-bar{padding:9px 14px;border-bottom:1px solid var(--brd);display:flex;gap:.35rem;flex-wrap:wrap;align-items:center;justify-content:space-between;}
+.mfb{padding:4px 11px;border-radius:6px;font-size:.61rem;font-weight:800;cursor:pointer;border:1px solid;transition:all .13s;font-family:inherit;background:transparent!important;}
+.mfb.active{filter:brightness(1.4);}
+
+/* ── HOTLINES ── */
+.hl{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:11px;background:rgba(255,255,255,.025);border:1px solid var(--brd);margin-bottom:6px;cursor:pointer;text-decoration:none;transition:all .14s;}
+.hl:hover{border-color:var(--brd2);transform:translateX(3px);}
+.hl-ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;}
+.hl-name{font-size:.77rem;font-weight:800;color:var(--tx);}
+.hl-num{font-size:.6rem;color:var(--mu2);font-family:var(--mono);}
+
+/* ── PLAN ── */
+.plan-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--brd);}
+.plan-item:last-child{border-bottom:none;}
+.plan-n{width:22px;height:22px;border-radius:6px;flex-shrink:0;background:rgba(124,58,237,.13);border:1px solid rgba(124,58,237,.22);color:#a78bfa;font-size:.62rem;font-weight:900;display:flex;align-items:center;justify-content:center;font-family:var(--mono);}
+.plan-txt{font-size:.78rem;color:var(--mu3);line-height:1.6;}
+
+/* ── PROGRESS ── */
+.prog-item{margin-bottom:9px;}
+.prog-top{display:flex;justify-content:space-between;margin-bottom:4px;font-size:.7rem;}
+.prog-track{height:4px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:2px;}
+
+/* ── SISTEMA ── */
+.sys-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--brd);font-size:.78rem;}
+.sys-row:last-child{border-bottom:none;}
+.sys-k{color:var(--mu2);}
+.sys-v{font-weight:700;font-family:var(--mono);font-size:.72rem;}
+
+/* ── TEST RIESGO MODAL ── */
+#risk-modal{display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);align-items:center;justify-content:center;}
+#risk-modal.open{display:flex;}
+.risk-box{background:#0d0b26;border:1px solid rgba(124,58,237,.3);border-radius:20px;padding:28px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.6);}
+.risk-q{font-size:.9rem;font-weight:800;margin-bottom:16px;line-height:1.5;}
+.risk-opts{display:flex;flex-direction:column;gap:8px;}
+.risk-opt{padding:11px 16px;border-radius:9px;border:1px solid var(--brd2);background:rgba(255,255,255,.02);font-size:.8rem;cursor:pointer;transition:all .14s;text-align:left;font-family:inherit;color:var(--tx);}
+.risk-opt:hover{background:rgba(124,58,237,.1);border-color:rgba(124,58,237,.3);}
+.risk-prog{height:4px;background:rgba(255,255,255,.06);border-radius:2px;margin-bottom:18px;overflow:hidden;}
+.risk-prog-fill{height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:2px;transition:width .4s;}
+
+/* ── SOUND WAVE ── */
+.sw{display:flex;align-items:center;gap:2.5px;height:16px;}
+.sw-b{width:2.5px;background:var(--gr);border-radius:2px;animation:wave 1s ease-in-out infinite;}
+.sw-b:nth-child(2){animation-delay:.1s;height:65%;}
+.sw-b:nth-child(3){animation-delay:.2s;height:100%;}
+.sw-b:nth-child(4){animation-delay:.3s;height:55%;}
+.sw-b:nth-child(5){animation-delay:.4s;height:80%;}
+
+/* ── EMPTY ── */
+.empty-box{text-align:center;padding:28px;background:rgba(255,255,255,.01);border:1px dashed rgba(124,58,237,.16);border-radius:11px;}
+.create-btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;font-size:.78rem;font-weight:800;background:linear-gradient(135deg,#7c3aed,#5b21b6)!important;border:1px solid rgba(124,58,237,.28);color:white;cursor:pointer;transition:all .15s;font-family:inherit;text-decoration:none;box-shadow:0 4px 16px rgba(124,58,237,.35);}
+.create-btn:hover{transform:translateY(-2px);}
+
+@media(max-width:768px){.body{padding:14px 14px 28px;}.hero{padding:18px 16px 16px;}.hero-name{font-size:1.7rem;}}
+</style>
+
+<!-- ████ HERO ████ -->
+<div class="hero">
+  <div class="orb orb1"></div><div class="orb orb2"></div>
+  <div class="hero-inner">
+    <div>
+      <div class="hero-greet"><span class="hero-dot"></span>Bienvenida de vuelta</div>
+      <h1 class="hero-name">{{ request.user.username }}</h1>
+      <div class="hero-tags">
+        <span class="htag htag-gr">● Sistema activo</span>
+        <span class="htag htag-vi">🔒 AES-256</span>
+        <span class="htag" style="background:rgba(103,232,249,.07);border:1px solid rgba(103,232,249,.16);color:#67e8f9;font-size:.6rem;padding:4px 10px;border-radius:7px;">Portal Seguro · CDMX</span>
+      </div>
+    </div>
+    <div class="hero-r">
+      <div class="hero-clk" id="u-clk">--:--:--</div>
+      <div class="hero-clk-sub">HORA LOCAL CDMX</div>
+    </div>
+  </div>
+</div>
+
+<!-- ████ EMERGENCY BANNER ████ -->
+<div class="em">
+  <div class="em-l">
+    <div class="em-ico"><i class="fa-solid fa-triangle-exclamation" style="color:#f87171;"></i></div>
+    <div>
+      <div class="em-title">¿Estás en peligro ahora mismo?</div>
+      <div class="em-sub">Activa una alerta inmediata · respuesta 24/7 garantizada</div>
+    </div>
+  </div>
+  <div class="em-r">
+    <a href="tel:911" class="ebtn eb-r"><i class="fa-solid fa-phone-volume"></i>Llamar 911</a>
+    <a href="tel:5556581111" class="ebtn eb-p"><i class="fa-solid fa-venus"></i>Línea Mujeres</a>
+    <button class="ebtn eb-v" onclick="openAI('emocional')"><i class="fa-solid fa-robot"></i>Sentinel AI</button>
+  </div>
+</div>
+
+<!-- ████ CUERPO ████ -->
+<div class="body">
+
+  <!-- ── NOTIFICACIONES ── -->
+  {% if notificaciones %}
+  <div>
+    <div class="sec-hd"><span class="sec-t"><i class="fa-solid fa-bell"></i>Notificaciones</span></div>
+    {% for n in notificaciones %}
+    <div class="notif-banner {% if n.tipo == 'revision' %}nb-y{% elif n.tipo == 'proceso' %}nb-b{% elif n.tipo == 'cerrado' %}nb-g{% elif n.tipo == 'mensaje' %}nb-r{% else %}nb-v{% endif %}" style="margin-bottom:6px;">
+      <div class="notif-ico" style="{% if n.tipo == 'revision' %}background:rgba(251,191,36,.12);{% elif n.tipo == 'proceso' %}background:rgba(103,232,249,.1);{% elif n.tipo == 'cerrado' %}background:rgba(52,211,153,.1);{% elif n.tipo == 'mensaje' %}background:rgba(239,68,68,.1);{% else %}background:rgba(124,58,237,.1);{% endif %}">
+        {% if n.tipo == 'revision' %}⏳{% elif n.tipo == 'proceso' %}⚙️{% elif n.tipo == 'cerrado' %}✅{% elif n.tipo == 'mensaje' %}💬{% else %}📢{% endif %}
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:.8rem;font-weight:700;margin-bottom:2px;">{{ n.texto }}</div>
+        {% if n.reporte %}<a href="{% url 'projects:reporte-detail' n.reporte.pk %}" style="font-size:.68rem;color:#a78bfa;text-decoration:none;">Ver reporte #{{ n.reporte.pk|stringformat:"04d" }} →</a>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ── STATS ── -->
+  <div>
+    <div class="sec-hd"><span class="sec-t"><i class="fa-solid fa-chart-simple"></i>Tu Actividad</span></div>
+    <div class="stats4">
+      <div class="stc" style="--scl:#fb923c;" onclick="window.location='{% url 'projects:reporte-list' %}'">
+        <div class="stc-top">
+          <div class="stc-ico" style="background:rgba(251,146,60,.1);"><i class="fa-solid fa-folder" style="color:#fb923c;"></i></div>
+          <span class="stc-badge" style="background:rgba(251,146,60,.1);border-color:rgba(251,146,60,.2);color:#fb923c;">Total</span>
+        </div>
+        <div class="stc-val" style="color:#fb923c;">{{ mis_reportes_count|default:0 }}</div>
+        <div class="stc-lbl">Mis Reportes</div>
+      </div>
+      <div class="stc" style="--scl:#f87171;" onclick="window.location='{% url 'projects:reporte-list' %}'">
+        <div class="stc-top">
+          <div class="stc-ico" style="background:rgba(248,113,113,.1);"><i class="fa-solid fa-comment-dots" style="color:#f87171;"></i></div>
+          {% if mensajes_no_leidos %}<span class="stc-badge" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.2);color:#f87171;">Nuevos</span>{% endif %}
+        </div>
+        <div class="stc-val" style="color:#f87171;">{{ mensajes_no_leidos|default:0 }}</div>
+        <div class="stc-lbl">Mensajes</div>
+      </div>
+      <div class="stc" style="--scl:#34d399;cursor:pointer;" onclick="openAI('chat')">
+        <div class="stc-top">
+          <div class="stc-ico" style="background:rgba(52,211,153,.07);"><i class="fa-solid fa-robot" style="color:#34d399;"></i></div>
+          <span class="stc-badge" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.2);color:#34d399;">ON</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;">
+          <span class="stc-val" style="color:#34d399;font-size:1.3rem;">ACTIVO</span>
+          <div class="sw"><div class="sw-b" style="height:40%;"></div><div class="sw-b"></div><div class="sw-b"></div><div class="sw-b"></div><div class="sw-b" style="height:50%;"></div></div>
+        </div>
+        <div class="stc-lbl">Sentinel AI</div>
+      </div>
+      <div class="stc" style="--scl:#67e8f9;">
+        <div class="stc-top">
+          <div class="stc-ico" style="background:rgba(103,232,249,.07);"><i class="fa-solid fa-shield-halved" style="color:#67e8f9;"></i></div>
+          <span class="stc-badge" style="background:rgba(103,232,249,.1);border-color:rgba(103,232,249,.2);color:#67e8f9;">MX</span>
+        </div>
+        <div class="stc-val" style="color:#67e8f9;font-size:1.3rem;">Segura</div>
+        <div class="stc-lbl">Tu Estado</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ACCIONES RÁPIDAS ── -->
+  <div>
+    <div class="sec-hd"><span class="sec-t"><i class="fa-solid fa-bolt"></i>Acciones Rápidas</span></div>
+    <div class="qa8">
+      <a href="{% url 'projects:reporte-create' %}" class="qa" style="--qc:rgba(248,113,113,.08);border:1px solid var(--brd);">
+        <div class="qa-ico2" style="background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.2);"><i class="fa-solid fa-file-circle-plus" style="color:#f87171;"></i></div>
+        <div><div class="qa-name">Nuevo Reporte</div><div class="qa-sub2">Documentar incidente</div></div>
+      </a>
+      <button class="qa" style="--qc:rgba(251,146,60,.08);border:1px solid var(--brd);" onclick="openAI('chat')">
+        <div class="qa-ico2" style="background:rgba(251,146,60,.12);border:1px solid rgba(251,146,60,.2);"><i class="fa-solid fa-robot" style="color:#fb923c;"></i></div>
+        <div><div class="qa-name">Sentinel AI</div><div class="qa-sub2">Asistente 24/7</div></div>
+      </button>
+      <button class="qa" style="--qc:rgba(244,114,182,.08);border:1px solid var(--brd);" onclick="startFakeCall()">
+        <div class="qa-ico2" style="background:rgba(244,114,182,.12);border:1px solid rgba(244,114,182,.2);"><i class="fa-solid fa-phone-flip" style="color:#f472b6;"></i></div>
+        <div><div class="qa-name">Llamada Falsa</div><div class="qa-sub2">Escapar situación</div></div>
+      </button>
+      <button class="qa" style="--qc:rgba(52,211,153,.08);border:1px solid var(--brd);" onclick="shareLocation()">
+        <div class="qa-ico2" style="background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.2);"><i class="fa-solid fa-location-dot" style="color:#34d399;"></i></div>
+        <div><div class="qa-name">SOS Ubicación</div><div class="qa-sub2">Enviar WhatsApp</div></div>
+      </button>
+    </div>
+    <div class="qa8-2">
+      <a href="{% url 'projects:tip-list' %}" class="qa" style="--qc:rgba(251,191,36,.07);border:1px solid var(--brd);">
+        <div class="qa-ico2" style="background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.2);"><i class="fa-solid fa-lightbulb" style="color:#fbbf24;"></i></div>
+        <div><div class="qa-name">Tips Seguridad</div><div class="qa-sub2">Consejos prácticos</div></div>
+      </a>
+      <a href="{% url 'projects:institucion-list' %}" class="qa" style="--qc:rgba(52,211,153,.07);border:1px solid var(--brd);">
+        <div class="qa-ico2" style="background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.2);"><i class="fa-solid fa-building-ngo" style="color:#34d399;"></i></div>
+        <div><div class="qa-name">Instituciones</div><div class="qa-sub2">Directorio CDMX</div></div>
+      </a>
+      <a href="{% url 'projects:tipo-list' %}" class="qa" style="--qc:rgba(103,232,249,.07);border:1px solid var(--brd);">
+        <div class="qa-ico2" style="background:rgba(103,232,249,.12);border:1px solid rgba(103,232,249,.2);"><i class="fa-solid fa-book-open" style="color:#67e8f9;"></i></div>
+        <div><div class="qa-name">Glosario Legal</div><div class="qa-sub2">Definiciones MX</div></div>
+      </a>
+      <button class="qa" style="--qc:rgba(239,68,68,.07);border:1px solid var(--brd);" onclick="document.getElementById('risk-modal').classList.add('open')">
+        <div class="qa-ico2" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.2);"><i class="fa-solid fa-gauge-high" style="color:#f87171;"></i></div>
+        <div><div class="qa-name">Test de Riesgo</div><div class="qa-sub2">Evaluar situación</div></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── REPORTES + SIDEBAR ── -->
+  <div class="two-col">
+    <div class="card">
+      <div class="chd">
+        <span class="cht"><i class="fa-solid fa-folder-open" style="color:#fb923c;"></i>Mis Reportes</span>
+        <a href="{% url 'projects:reporte-list' %}" class="lnk">Ver todos <i class="fa-solid fa-arrow-right" style="font-size:.58rem;"></i></a>
+      </div>
+      <div class="cbd">
+        {% for r in mis_reportes %}
+        <a href="{% url 'projects:reporte-detail' r.pk %}" class="rep-item">
+          <div class="rico" style="{% if r.nivel_urgencia == 'critico' %}background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.2);{% elif r.nivel_urgencia == 'alto' %}background:rgba(251,146,60,.12);border:1px solid rgba(251,146,60,.2);{% else %}background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.2);{% endif %}">
+            <i class="fa-solid fa-file-alt" style="color:{% if r.nivel_urgencia == 'critico' %}#f87171{% elif r.nivel_urgencia == 'alto' %}#fb923c{% else %}#a78bfa{% endif %};"></i>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div class="rid" style="color:{% if r.nivel_urgencia == 'critico' %}#f87171{% elif r.nivel_urgencia == 'alto' %}#fb923c{% else %}#a78bfa{% endif %};">#{{ r.id|stringformat:"04d" }}</div>
+            <div class="rdesc">{{ r.descripcion|truncatechars:55 }}</div>
+            <div class="rmeta">
+              {% if r.nivel_urgencia == 'critico' %}<span class="tag t-r">🚨 Crítico</span>
+              {% elif r.nivel_urgencia == 'alto' %}<span class="tag t-o">⚠️ Alto</span>
+              {% elif r.nivel_urgencia == 'medio' %}<span class="tag t-y">⚡ Medio</span>
+              {% else %}<span class="tag t-g">ℹ️ Bajo</span>{% endif %}
+              {% if r.status == 'nuevo' %}<span class="tag t-a">Nuevo</span>
+              {% elif r.status == 'revision' %}<span class="tag t-y">Revisión</span>
+              {% elif r.status == 'proceso' %}<span class="tag t-o">En proceso</span>
+              {% else %}<span class="tag t-m">Cerrado</span>{% endif %}
+              <span class="rdate">{{ r.creado_en|date:"d/m/y H:i" }}</span>
+            </div>
+          </div>
+        </a>
+        {% empty %}
+        <div class="empty-box">
+          <div style="font-size:2rem;margin-bottom:8px;opacity:.45;">📁</div>
+          <div style="font-size:.78rem;color:var(--mu2);margin-bottom:12px;">Aún no tienes reportes.<br>Documenta incidentes de forma segura y confidencial.</div>
+          <a href="{% url 'projects:reporte-create' %}" class="create-btn"><i class="fa-solid fa-plus"></i>Crear primero</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <!-- Tips -->
+      <div class="card">
+        <div class="chd">
+          <span class="cht"><i class="fa-solid fa-lightbulb" style="color:#fbbf24;"></i>Tips de Seguridad</span>
+          <a href="{% url 'projects:tip-list' %}" class="lnk">Ver todos <i class="fa-solid fa-arrow-right" style="font-size:.58rem;"></i></a>
+        </div>
+        <div class="cbd">
+          {% for t in tips_destacados %}
+          <div class="tip-item">
+            <div class="tip-row">
+              <div class="tip-dot"></div>
+              <div>
+                <div class="tip-title">{{ t.titulo|truncatechars:42 }}</div>
+                <div class="tip-body">{{ t.contenido|truncatechars:75 }}</div>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <p style="font-size:.75rem;color:var(--mu);text-align:center;padding:14px 0;">Sin tips disponibles</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Sentinel AI -->
+      <div class="ai-card" onclick="openAI('chat')">
+        <div class="ai-bot">🤖</div>
+        <div style="font-size:1rem;font-weight:900;margin-bottom:5px;">Sentinel AI</div>
+        <div style="font-size:.72rem;color:var(--mu2);line-height:1.6;margin-bottom:10px;">Orientación en crisis, apoyo emocional, asesoría legal y plan de seguridad personalizado.</div>
+        <div class="ai-modes">
+          <button class="ai-mb" onclick="event.stopPropagation();openAI('emocional')">💙 Apoyo</button>
+          <button class="ai-mb" onclick="event.stopPropagation();openAI('legal')">⚖️ Legal</button>
+          <button class="ai-mb" onclick="event.stopPropagation();openAI('plan')">🛡 Plan</button>
+          <button class="ai-mb" onclick="event.stopPropagation();openAI('orientacion')">🔒 Ciber</button>
+        </div>
+        <button class="ai-open"><i class="fa-solid fa-robot"></i>Abrir Sentinel AI</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MAPA + LÍNEAS + PLAN ── -->
+  <div class="three-col">
+    <!-- Mapa -->
+    <div class="card" style="grid-column:span 1;">
+      <div class="chd">
+        <span class="cht"><i class="fa-solid fa-map-location-dot" style="color:var(--cy);"></i>Instituciones Cercanas</span>
+        <button class="lnk" onclick="goMyLoc()"><i class="fa-solid fa-crosshairs"></i>Mi ubicación</button>
+      </div>
+      <div class="mf-bar">
+        <div style="display:flex;gap:.3rem;flex-wrap:wrap;">
+          <button class="mfb active" style="border-color:rgba(124,58,237,.3);color:#a78bfa;" onclick="filterMap('all',this)">Todas</button>
+          <button class="mfb" style="border-color:rgba(248,113,113,.3);color:#f87171;" onclick="filterMap('justice',this)">Fiscalía</button>
+          <button class="mfb" style="border-color:rgba(244,114,182,.3);color:#f472b6;" onclick="filterMap('luna',this)">LUNA</button>
+          <button class="mfb" style="border-color:rgba(52,211,153,.3);color:#34d399;" onclick="filterMap('health',this)">Salud</button>
+          <button class="mfb" style="border-color:rgba(103,232,249,.3);color:#67e8f9;" onclick="filterMap('ong',this)">ONG</button>
+        </div>
+      </div>
+      <div id="u-map"></div>
+    </div>
+
+    <!-- Líneas de emergencia -->
+    <div class="card">
+      <div class="chd"><span class="cht"><i class="fa-solid fa-phone-volume" style="color:var(--re);"></i>Líneas de Emergencia</span></div>
+      <div class="cbd">
+        <a href="tel:911" class="hl"><div class="hl-ico" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.2);"><i class="fa-solid fa-phone" style="color:#f87171;"></i></div><div><div class="hl-name">911 — Emergencias</div><div class="hl-num">24h · Nacional gratuito</div></div></a>
+        <a href="tel:5556581111" class="hl"><div class="hl-ico" style="background:rgba(244,114,182,.12);border:1px solid rgba(244,114,182,.2);"><i class="fa-solid fa-venus" style="color:#f472b6;"></i></div><div><div class="hl-name">Línea Mujeres CDMX</div><div class="hl-num">55 5658-1111 · 24h</div></div></a>
+        <a href="tel:8008224460" class="hl"><div class="hl-ico" style="background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.2);"><i class="fa-solid fa-house-chimney-heart" style="color:#34d399;"></i></div><div><div class="hl-name">Red Nac. de Refugios</div><div class="hl-num">800-822-4460 · 24h</div></div></a>
+        <a href="tel:5553468000" class="hl"><div class="hl-ico" style="background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.2);"><i class="fa-solid fa-shield" style="color:#7c3aed;"></i></div><div><div class="hl-name">CAVI</div><div class="hl-num">55 5346-8000 · 24h</div></div></a>
+        <a href="tel:5555757583" class="hl"><div class="hl-ico" style="background:rgba(103,232,249,.12);border:1px solid rgba(103,232,249,.2);"><i class="fa-solid fa-scale-balanced" style="color:#67e8f9;"></i></div><div><div class="hl-name">CEJUR</div><div class="hl-num">55 5575-7583 · Legal</div></div></a>
+        <a href="tel:8009008000" class="hl"><div class="hl-ico" style="background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.2);"><i class="fa-solid fa-building-shield" style="color:#a78bfa;"></i></div><div><div class="hl-name">CONAVIM</div><div class="hl-num">800 900-8000</div></div></a>
+      </div>
+    </div>
+
+    <!-- Plan + Estado sistema -->
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="card">
+        <div class="chd">
+          <span class="cht"><i class="fa-solid fa-shield" style="color:var(--vi);"></i>Plan de Seguridad</span>
+          <button class="lnk" onclick="openAI('plan')"><i class="fa-solid fa-robot"></i>AI +</button>
+        </div>
+        <div class="cbd">
+          <div class="plan-item"><div class="plan-n">1</div><div class="plan-txt">Guarda números de emergencia en favoritos de tu teléfono.</div></div>
+          <div class="plan-item"><div class="plan-n">2</div><div class="plan-txt">Documenta cada incidente: fecha, lugar y testigos.</div></div>
+          <div class="plan-item"><div class="plan-n">3</div><div class="plan-txt">Comparte tu ubicación con alguien de confianza.</div></div>
+          <div class="plan-item"><div class="plan-n">4</div><div class="plan-txt">Conoce la ruta de salida de tus lugares habituales.</div></div>
+          <div class="plan-item"><div class="plan-n">5</div><div class="plan-txt">Usa Sentinel AI para orientación inmediata — 24/7.</div></div>
+        </div>
+      </div>
+
+      <!-- Estado sistema -->
+      <div class="card">
+        <div class="chd"><span class="cht"><i class="fa-solid fa-server" style="color:var(--gr);"></i>Estado del Sistema</span></div>
+        <div class="cbd">
+          <div class="sys-row"><span class="sys-k">Sentinel AI</span><span class="sys-v" style="color:#34d399;">● Operativo</span></div>
+          <div class="sys-row"><span class="sys-k">Motor IA</span><span class="sys-v" style="color:#a78bfa;">Claude</span></div>
+          <div class="sys-row"><span class="sys-k">Versión</span><span class="sys-v" style="color:#a78bfa;">v9.0</span></div>
+          <div class="sys-row"><span class="sys-k">Cifrado</span><span class="sys-v" style="color:#34d399;">🔒 AES-256</span></div>
+          <div class="sys-row"><span class="sys-k">Sesión</span><span class="sys-v" style="color:var(--cy);" id="u-ses">--:--:--</span></div>
+          <div style="margin-top:12px;">
+            <div class="prog-item">
+              <div class="prog-top"><span style="color:var(--vi);font-size:.7rem;">Mis reportes</span><span style="font-family:var(--mono);font-size:.65rem;color:var(--mu2);">{{ mis_reportes_count|default:0 }}</span></div>
+              <div class="prog-track"><div class="prog-fill" style="background:#a78bfa;width:{{ mis_reportes_count|default:0 }}0%;max-width:100%;"></div></div>
+            </div>
+            <div class="prog-item">
+              <div class="prog-top"><span style="color:var(--gr);font-size:.7rem;">Cobertura mapa</span><span style="font-family:var(--mono);font-size:.65rem;color:var(--mu2);">26 pts</span></div>
+              <div class="prog-track"><div class="prog-fill" style="background:#34d399;width:88%;"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /body -->
+
+<!-- ████ TEST DE RIESGO MODAL ████ -->
+<div id="risk-modal">
+  <div class="risk-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-size:.82rem;font-weight:900;color:#a78bfa;display:flex;align-items:center;gap:7px;"><i class="fa-solid fa-gauge-high" style="color:#f87171;"></i>Test de Nivel de Riesgo</div>
+      <button onclick="closeRisk()" style="background:none;border:none;color:var(--mu2);cursor:pointer;font-size:1.1rem;">✕</button>
+    </div>
+    <div class="risk-prog"><div class="risk-prog-fill" id="r-prog" style="width:0%;"></div></div>
+    <div class="risk-q" id="r-q">Cargando...</div>
+    <div class="risk-opts" id="r-opts"></div>
+    <div id="r-result" style="display:none;text-align:center;padding:16px 0;">
+      <div style="font-size:2rem;margin-bottom:8px;" id="r-ico"></div>
+      <div style="font-size:.9rem;font-weight:900;margin-bottom:6px;" id="r-lvl"></div>
+      <div style="font-size:.76rem;color:var(--mu2);line-height:1.6;margin-bottom:16px;" id="r-txt"></div>
+      <div style="display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;">
+        <a href="{% url 'projects:reporte-create' %}" style="padding:9px 18px;border-radius:9px;font-size:.76rem;font-weight:800;background:linear-gradient(135deg,#7c3aed,#5b21b6)!important;border:1px solid rgba(124,58,237,.3);color:white;text-decoration:none;">Crear Reporte</a>
+        <button onclick="openAI('emocional')" style="padding:9px 18px;border-radius:9px;font-size:.76rem;font-weight:800;background:rgba(124,58,237,.1)!important;border:1px solid rgba(124,58,237,.2);color:#a78bfa;font-family:inherit;">Hablar con AI</button>
+        <button onclick="closeRisk()" style="padding:9px 18px;border-radius:9px;font-size:.76rem;font-weight:800;background:rgba(255,255,255,.04)!important;border:1px solid var(--brd);color:var(--mu2);font-family:inherit;">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ██ SCRIPTS ██ -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* Clock */
+(function tick(){
+  const t=new Date().toLocaleTimeString('es-MX',{hour12:false});
+  ['u-clk','u-ses'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=t;});
+  setTimeout(tick,1000);
+})();
+
+/* Mapa Leaflet */
+const INSTS=[
+  {n:'FGJCDMX — Fiscalía Central',lat:19.4284,lng:-99.1362,t:'justice'},
+  {n:'LUNA Iztapalapa',lat:19.3573,lng:-98.9823,t:'luna'},
+  {n:'LUNA Gustavo A. Madero',lat:19.4848,lng:-99.1181,t:'luna'},
+  {n:'LUNA Tlalpan',lat:19.2972,lng:-99.1648,t:'luna'},
+  {n:'Hospital de la Mujer',lat:19.4256,lng:-99.1623,t:'health'},
+  {n:'INMUJERES CDMX',lat:19.4269,lng:-99.1718,t:'ong'},
+  {n:'CEJUR Centro',lat:19.4330,lng:-99.1390,t:'justice'},
+  {n:'Centro Atención Víctimas',lat:19.4310,lng:-99.1297,t:'health'},
+  {n:'Cruz Roja Polanco',lat:19.4322,lng:-99.1958,t:'health'},
+  {n:'LUNA Coyoacán',lat:19.3487,lng:-99.1615,t:'luna'},
+  {n:'ONG Semillas',lat:19.4271,lng:-99.1753,t:'ong'},
+  {n:'Equis Justicia Mujeres',lat:19.4218,lng:-99.1831,t:'ong'},
+  {n:'LUNA Xochimilco',lat:19.2567,lng:-99.1025,t:'luna'},
+  {n:'LUNA Álvaro Obregón',lat:19.3600,lng:-99.2066,t:'luna'},
+  {n:'CAVI Tepepan',lat:19.2801,lng:-99.1108,t:'justice'},
+];
+const COLS={justice:'#f87171',luna:'#f472b6',health:'#34d399',ong:'#67e8f9'};
+let umap=null,mkrs=[];
+function mkI(c){return L.divIcon({className:'',html:`<div style="width:11px;height:11px;background:${c};border-radius:50%;border:2px solid white;box-shadow:0 0 7px ${c}88;"></div>`,iconSize:[11,11],iconAnchor:[5.5,5.5]});}
+window.addEventListener('load',()=>{
+  umap=L.map('u-map',{zoomControl:true,scrollWheelZoom:false}).setView([19.38,-99.13],11);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© Leaflet · CARTO',maxZoom:19}).addTo(umap);
+  INSTS.forEach(i=>{
+    const m=L.marker([i.lat,i.lng],{icon:mkI(COLS[i.t]||'#a78bfa')}).addTo(umap)
+      .bindPopup(`<b style="color:${COLS[i.t]}">${i.n}</b><br><a href="https://maps.google.com/?q=${i.lat},${i.lng}" target="_blank" style="color:#a78bfa;font-size:.73rem;">Ver en Google Maps →</a>`);
+    m._cat=i.t;mkrs.push(m);
+  });
+});
+function filterMap(cat,btn){
+  document.querySelectorAll('.mfb').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  mkrs.forEach(m=>{cat==='all'||m._cat===cat?umap.addLayer(m):umap.removeLayer(m);});
+}
+function goMyLoc(){
+  if(!navigator.geolocation)return alert('No disponible');
+  navigator.geolocation.getCurrentPosition(p=>{
+    umap.setView([p.coords.latitude,p.coords.longitude],14);
+    L.marker([p.coords.latitude,p.coords.longitude],{icon:mkI('#a78bfa')}).addTo(umap).bindPopup('📍 Tu ubicación').openPopup();
+  },()=>alert('No se pudo obtener ubicación'));
+}
+
+/* SOS Location */
+function shareLocation(){
+  if(!navigator.geolocation)return alert('GPS no disponible');
+  navigator.geolocation.getCurrentPosition(p=>{
+    const url=`https://wa.me/?text=🆘 Necesito ayuda. Mi ubicación: https://maps.google.com/?q=${p.coords.latitude},${p.coords.longitude}`;
+    window.open(url,'_blank');
+  },()=>alert('No se pudo obtener ubicación'));
+}
+
+/* Fake call */
+function startFakeCall(){
+  if('vibrate' in navigator)navigator.vibrate([200,100,200,100,200]);
+  alert('📱 Simulando llamada entrante... (Esta función completa requiere implementación adicional)');
+}
+
+/* Test de Riesgo */
+const QUESTIONS=[
+  {q:'¿Has experimentado comentarios, miradas o tocamientos no deseados recientemente?',opts:['Sí, con frecuencia','Sí, ocasionalmente','No'],scores:[3,1,0]},
+  {q:'¿La persona que te acosa comparte tu espacio de trabajo o estudio?',opts:['Sí, diariamente','A veces','No'],scores:[3,1,0]},
+  {q:'¿Has recibido mensajes o llamadas no deseadas de alguien?',opts:['Sí, constantemente','Sí, pocas veces','No'],scores:[3,1,0]},
+  {q:'¿Sientes que tu seguridad física está en riesgo?',opts:['Sí, tengo miedo','Tal vez','No'],scores:[3,1,0]},
+  {q:'¿Has documentado los incidentes?',opts:['No, nunca','Algunos','Sí, todos'],scores:[2,1,0]},
+];
+let rQ=0,rScore=0;
+function showRiskQ(){
+  if(rQ>=QUESTIONS.length){showRiskResult();return;}
+  const q=QUESTIONS[rQ];
+  document.getElementById('r-q').textContent=q.q;
+  document.getElementById('r-prog').style.width=((rQ/QUESTIONS.length)*100)+'%';
+  const opts=document.getElementById('r-opts');
+  opts.innerHTML='';
+  q.opts.forEach((o,i)=>{
+    const b=document.createElement('button');
+    b.className='risk-opt';b.textContent=o;
+    b.onclick=()=>{rScore+=q.scores[i];rQ++;showRiskQ();};
+    opts.appendChild(b);
+  });
+}
+function showRiskResult(){
+  document.getElementById('r-opts').style.display='none';
+  document.getElementById('r-q').style.display='none';
+  document.getElementById('r-prog').style.width='100%';
+  document.getElementById('r-result').style.display='block';
+  let ico,lvl,txt;
+  if(rScore>=9){ico='🚨';lvl='Riesgo Alto';txt='Tu situación requiere atención inmediata. Te recomendamos crear un reporte, hablar con Sentinel AI y contactar a una línea de apoyo.';}
+  else if(rScore>=5){ico='⚠️';lvl='Riesgo Medio';txt='Hay señales preocupantes. Documenta los incidentes y considera hablar con alguien de confianza o con nuestro equipo.';}
+  else{ico='✅';lvl='Riesgo Bajo';txt='Por ahora estás bien, pero recuerda que siempre puedes documentar cualquier situación y pedir orientación.';}
+  document.getElementById('r-ico').textContent=ico;
+  document.getElementById('r-lvl').textContent=lvl;
+  document.getElementById('r-txt').textContent=txt;
+}
+function closeRisk(){
+  document.getElementById('risk-modal').classList.remove('open');
+  rQ=0;rScore=0;
+  document.getElementById('r-opts').style.display='';
+  document.getElementById('r-q').style.display='';
+  document.getElementById('r-result').style.display='none';
+  showRiskQ();
+}
+showRiskQ();
+document.getElementById('risk-modal').addEventListener('click',function(e){if(e.target===this)closeRisk();});
+</script>
+{% endblock %}

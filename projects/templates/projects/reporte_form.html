@@ -1,0 +1,384 @@
+{% extends "projects/base_dashboard.html" %}
+{% block dashboard_content %}
+<style>
+:root{
+  --pu:#7c3aed;--vi:#a78bfa;--cy:#67e8f9;--gr:#34d399;--re:#f87171;
+  --or:#fb923c;--ye:#fbbf24;--pk:#f472b6;--s2:#0d0b26;--brd:rgba(110,70,255,.1);
+  --muted:#5e5478;--mono:'JetBrains Mono',monospace;
+}
+
+/* ── HEADER ── */
+.rf-header{
+  position:relative;overflow:hidden;padding:24px 28px 20px;
+  background:linear-gradient(135deg,#060417,#0f0830 50%,#07041a);
+  border-bottom:1px solid rgba(108,68,255,.15);
+}
+.rf-header::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,#7c3aed,#f472b6,#67e8f9,#34d399,#7c3aed);
+  background-size:300%;animation:flowBar 5s linear infinite;
+}
+@keyframes flowBar{to{background-position:300%;}}
+.rf-title{font-size:1.5rem;font-weight:900;letter-spacing:-.5px;
+  background:linear-gradient(135deg,#f8f5ff,#c4b5fd 50%,#67e8f9);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.rf-sub{font-size:.7rem;color:var(--muted);margin-top:4px;}
+
+/* ── CONTAINER ── */
+.rf-body{padding:24px 28px 48px;max-width:840px;margin:0 auto;}
+
+/* ── URGENCY SELECTOR ── */
+.urg-section{margin-bottom:28px;}
+.urg-label{font-size:.56rem;font-weight:900;text-transform:uppercase;letter-spacing:3px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:7px;}
+.urg-label i{font-size:.7rem;color:var(--re);}
+.urg-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+@media(max-width:680px){.urg-grid{grid-template-columns:repeat(2,1fr);}}
+.urg-opt{position:relative;}
+.urg-opt input[type=radio]{position:absolute;opacity:0;width:0;height:0;}
+.urg-card{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  padding:18px 12px;border-radius:14px;cursor:pointer;
+  border:2px solid var(--brd);background:rgba(255,255,255,.02);
+  transition:all .2s cubic-bezier(.4,0,.2,1);text-align:center;
+}
+.urg-card:hover{border-color:var(--uc,rgba(124,58,237,.3));background:rgba(255,255,255,.04);transform:translateY(-2px);}
+.urg-opt input:checked + .urg-card{
+  border-color:var(--uc);background:var(--ub);
+  box-shadow:0 0 0 1px var(--uc), 0 8px 24px rgba(0,0,0,.4);
+  transform:translateY(-4px);
+}
+.urg-ico{font-size:1.6rem;line-height:1;}
+.urg-name{font-size:.82rem;font-weight:900;color:var(--tx,#f0edff);}
+.urg-desc{font-size:.62rem;color:var(--muted);line-height:1.4;}
+.urg-badge{font-size:.55rem;font-weight:900;padding:2px 8px;border-radius:5px;border:1px solid;margin-top:2px;}
+
+/* Colores por nivel */
+.urg-critico{--uc:rgba(239,68,68,.7);--ub:rgba(239,68,68,.08);}
+.urg-alto{--uc:rgba(251,146,60,.7);--ub:rgba(251,146,60,.07);}
+.urg-medio{--uc:rgba(251,191,36,.7);--ub:rgba(251,191,36,.06);}
+.urg-bajo{--uc:rgba(52,211,153,.7);--ub:rgba(52,211,153,.06);}
+
+/* ── SECCIÓN DATOS PERSONALES ── */
+.rf-section{
+  background:var(--s2);border:1px solid var(--brd);border-radius:16px;
+  padding:22px 22px;margin-bottom:18px;
+}
+.rf-section-title{font-size:.56rem;font-weight:900;text-transform:uppercase;letter-spacing:3px;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:7px;}
+.rf-section-title i{font-size:.72rem;color:var(--vi);}
+.autofill-banner{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;
+  background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.18);
+  margin-bottom:14px;font-size:.74rem;
+}
+.autofill-banner i{color:#34d399;}
+
+/* ── GRID DE CAMPOS ── */
+.form-row{display:grid;gap:14px;margin-bottom:14px;}
+.form-row-2{grid-template-columns:1fr 1fr;}
+.form-row-3{grid-template-columns:1fr 1fr 1fr;}
+@media(max-width:680px){.form-row-2,.form-row-3{grid-template-columns:1fr;}}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-lbl{font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.form-ctrl{
+  padding:11px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);color:#f0edff;font-size:.84rem;
+  transition:border-color .15s,box-shadow .15s;width:100%;font-family:inherit;
+}
+.form-ctrl:focus{outline:none;border-color:rgba(124,58,237,.4);box-shadow:0 0 0 3px rgba(124,58,237,.1);}
+.form-ctrl::placeholder{color:rgba(255,255,255,.22);}
+select.form-ctrl option{background:#0d0b26;color:#f0edff;}
+textarea.form-ctrl{resize:vertical;min-height:100px;}
+
+/* ── LLAMAR 911 ── */
+.call911-box{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:16px 20px;border-radius:14px;
+  background:rgba(239,68,68,.06);border:2px solid rgba(239,68,68,.2);
+  margin-bottom:18px;cursor:pointer;transition:all .15s;
+}
+.call911-box:hover{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.35);}
+.call911-box input[type=checkbox]{display:none;}
+.call911-chk{
+  width:22px;height:22px;border-radius:6px;border:2px solid rgba(239,68,68,.4);
+  background:rgba(239,68,68,.08);flex-shrink:0;margin-top:2px;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.call911-chk.checked{background:rgba(239,68,68,.3);border-color:#f87171;}
+.call911-chk.checked::after{content:'✓';color:#f87171;font-size:.8rem;font-weight:900;}
+.call911-text .call911-title{font-size:.88rem;font-weight:900;color:#f8a4a4;}
+.call911-text .call911-sub{font-size:.72rem;color:rgba(248,113,113,.55);margin-top:3px;line-height:1.5;}
+
+/* ── SUBMIT ── */
+.rf-submit-row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:6px;}
+.btn-send{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:13px 28px;border-radius:12px;font-size:.88rem;font-weight:900;
+  border:1px solid rgba(124,58,237,.3);color:white;cursor:pointer;
+  transition:all .18s;font-family:inherit;
+  background:linear-gradient(135deg,#7c3aed,#5b21b6)!important;
+  box-shadow:0 4px 18px rgba(124,58,237,.4);
+}
+.btn-send:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(124,58,237,.55);}
+.btn-send.critico{background:linear-gradient(135deg,#dc2626,#991b1b)!important;border-color:rgba(239,68,68,.35);box-shadow:0 4px 18px rgba(239,68,68,.4);}
+.btn-send.critico:hover{box-shadow:0 8px 28px rgba(239,68,68,.55);}
+.btn-cancel{padding:13px 22px;border-radius:12px;font-size:.85rem;font-weight:800;background:rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.08);color:var(--muted);cursor:pointer;transition:all .15s;font-family:inherit;text-decoration:none;}
+.btn-cancel:hover{background:rgba(255,255,255,.07)!important;color:#f0edff;}
+
+/* ── URGENCY INFO BOX ── */
+.urg-info{
+  display:none;padding:12px 16px;border-radius:10px;margin-top:14px;
+  font-size:.78rem;line-height:1.6;
+  border:1px solid;animation:fadeIn .25s ease-out;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+.urg-info.show{display:block;}
+.ui-critico{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.2);color:#fca5a5;}
+.ui-alto{background:rgba(251,146,60,.07);border-color:rgba(251,146,60,.2);color:#fdba74;}
+.ui-medio{background:rgba(251,191,36,.06);border-color:rgba(251,191,36,.18);color:#fde68a;}
+.ui-bajo{background:rgba(52,211,153,.05);border-color:rgba(52,211,153,.16);color:#6ee7b7;}
+</style>
+
+<!-- ── HEADER ── -->
+<div class="rf-header">
+  <div style="position:relative;z-index:2;">
+    <div class="rf-title">📋 Nuevo Reporte de Incidente</div>
+    <div class="rf-sub">Toda la información es confidencial · Cifrado AES-256 · Solo el equipo Sentinel puede verlo</div>
+  </div>
+</div>
+
+<div class="rf-body">
+<form method="post" id="reporte-form">
+  {% csrf_token %}
+
+  <!-- ══ 1. NIVEL DE URGENCIA ══ -->
+  <div class="urg-section">
+    <div class="urg-label"><i class="fa-solid fa-gauge-high"></i>Nivel de Urgencia del Incidente</div>
+    <div class="urg-grid">
+
+      <label class="urg-opt urg-critico">
+        <input type="radio" name="nivel_urgencia" value="critico"
+          {% if form.nivel_urgencia.value == 'critico' %}checked{% endif %}
+          onchange="onUrgChange('critico')">
+        <div class="urg-card">
+          <span class="urg-ico">🚨</span>
+          <span class="urg-name" style="color:#f87171;">Crítico</span>
+          <span class="urg-desc">Riesgo físico inmediato o situación de peligro activo</span>
+          <span class="urg-badge" style="background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.25);color:#f87171;">Atención inmediata</span>
+        </div>
+      </label>
+
+      <label class="urg-opt urg-alto">
+        <input type="radio" name="nivel_urgencia" value="alto"
+          {% if form.nivel_urgencia.value == 'alto' %}checked{% endif %}
+          onchange="onUrgChange('alto')">
+        <div class="urg-card">
+          <span class="urg-ico">⚠️</span>
+          <span class="urg-name" style="color:#fb923c;">Alto</span>
+          <span class="urg-desc">Situación grave que requiere atención pronta</span>
+          <span class="urg-badge" style="background:rgba(251,146,60,.12);border-color:rgba(251,146,60,.25);color:#fb923c;">Prioridad alta</span>
+        </div>
+      </label>
+
+      <label class="urg-opt urg-medio">
+        <input type="radio" name="nivel_urgencia" value="medio"
+          {% if form.nivel_urgencia.value == 'medio' or not form.nivel_urgencia.value %}checked{% endif %}
+          onchange="onUrgChange('medio')">
+        <div class="urg-card">
+          <span class="urg-ico">⚡</span>
+          <span class="urg-name" style="color:#fbbf24;">Medio</span>
+          <span class="urg-desc">Situación preocupante sin peligro inmediato</span>
+          <span class="urg-badge" style="background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.25);color:#fbbf24;">Seguimiento</span>
+        </div>
+      </label>
+
+      <label class="urg-opt urg-bajo">
+        <input type="radio" name="nivel_urgencia" value="bajo"
+          {% if form.nivel_urgencia.value == 'bajo' %}checked{% endif %}
+          onchange="onUrgChange('bajo')">
+        <div class="urg-card">
+          <span class="urg-ico">ℹ️</span>
+          <span class="urg-name" style="color:#34d399;">Bajo</span>
+          <span class="urg-desc">Información o incidente menor que requiere registro</span>
+          <span class="urg-badge" style="background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.25);color:#34d399;">Informativo</span>
+        </div>
+      </label>
+
+    </div>
+
+    <!-- Info contextual según nivel -->
+    <div class="urg-info ui-critico" id="info-critico">
+      🚨 <strong>Nivel CRÍTICO:</strong> Tu reporte llegará al equipo Sentinel con alarma inmediata. Si estás en peligro ahora mismo, también llama al <strong>911</strong> o activa la llamada de evasión.
+    </div>
+    <div class="urg-info ui-alto" id="info-alto">
+      ⚠️ <strong>Nivel ALTO:</strong> Tu reporte será atendido con prioridad. El equipo te contactará lo antes posible.
+    </div>
+    <div class="urg-info ui-medio show" id="info-medio">
+      ⚡ <strong>Nivel MEDIO:</strong> Tu reporte quedará registrado y será revisado en las próximas horas.
+    </div>
+    <div class="urg-info ui-bajo" id="info-bajo">
+      ℹ️ <strong>Nivel BAJO:</strong> Gracias por registrar la información. El equipo lo tendrá en cuenta.
+    </div>
+  </div>
+
+  <!-- ══ 2. DATOS PERSONALES ══ -->
+  <div class="rf-section">
+    <div class="rf-section-title"><i class="fa-solid fa-user"></i>Datos de Contacto</div>
+
+    {% if ultimo_reporte %}
+    <div class="autofill-banner">
+      <i class="fa-solid fa-wand-magic-sparkles"></i>
+      <span>Datos auto-rellenados desde tu reporte anterior. Puedes modificarlos si es necesario.</span>
+    </div>
+    {% endif %}
+
+    <div class="form-row form-row-3">
+      <div class="form-group">
+        <label class="form-lbl">Nombre completo</label>
+        <input type="text" name="nombre_reportante" class="form-ctrl"
+          value="{{ form.nombre_reportante.value|default:'' }}"
+          placeholder="Tu nombre completo">
+      </div>
+      <div class="form-group">
+        <label class="form-lbl">Correo electrónico</label>
+        <input type="email" name="correo_reportante" class="form-ctrl"
+          value="{{ form.correo_reportante.value|default:'' }}"
+          placeholder="correo@ejemplo.com">
+      </div>
+      <div class="form-group">
+        <label class="form-lbl">Teléfono de contacto</label>
+        <input type="tel" name="telefono_reportante" class="form-ctrl"
+          value="{{ form.telefono_reportante.value|default:'' }}"
+          placeholder="55 0000 0000">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 3. DETALLES DEL INCIDENTE ══ -->
+  <div class="rf-section">
+    <div class="rf-section-title"><i class="fa-solid fa-file-lines"></i>Detalles del Incidente</div>
+
+    <div class="form-row form-row-2">
+      <div class="form-group">
+        <label class="form-lbl">Tipo de acoso</label>
+        <select name="tipo_acoso" class="form-ctrl">
+          <option value="">— Selecciona un tipo —</option>
+          {% for tipo in tipos_acoso %}
+          <option value="{{ tipo.pk }}" {% if form.tipo_acoso.value|stringformat:"s" == tipo.pk|stringformat:"s" %}selected{% endif %}>{{ tipo.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-lbl">Institución (opcional)</label>
+        <select name="institucion" class="form-ctrl">
+          <option value="">— Ninguna —</option>
+          {% for inst in instituciones %}
+          <option value="{{ inst.pk }}" {% if form.institucion.value|stringformat:"s" == inst.pk|stringformat:"s" %}selected{% endif %}>{{ inst.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row form-row-2">
+      <div class="form-group">
+        <label class="form-lbl">Fecha del suceso</label>
+        <input type="date" name="fecha_suceso" class="form-ctrl"
+          value="{{ form.fecha_suceso.value|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label class="form-lbl">Lugar del suceso</label>
+        <input type="text" name="lugar" class="form-ctrl"
+          value="{{ form.lugar.value|default:'' }}"
+          placeholder="Ej: Metro Hidalgo, Línea 2">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-lbl">Descripción detallada de los hechos</label>
+      <textarea name="descripcion" class="form-ctrl" rows="6"
+        placeholder="Describe lo que sucedió con el mayor detalle posible: qué pasó, quién estuvo involucrado, qué dijeron o hicieron, si hubo testigos...">{{ form.descripcion.value|default:'' }}</textarea>
+    </div>
+  </div>
+
+  <!-- ══ 4. LLAMAR AL 911 ══ -->
+  <label class="call911-box" id="call911-label" onclick="toggleCall911()">
+    <input type="checkbox" name="llamar_911" id="llamar_911"
+      {% if form.llamar_911.value %}checked{% endif %}>
+    <div class="call911-chk" id="call911-chk" {% if form.llamar_911.value %}class="call911-chk checked"{% endif %}></div>
+    <div class="call911-text">
+      <div class="call911-title">🚨 Necesito contacto urgente con autoridades</div>
+      <div class="call911-sub">
+        Marca esta casilla si tu situación requiere intervención inmediata de las autoridades.
+        El equipo Sentinel coordinará la respuesta de emergencia y te contactará de inmediato.
+      </div>
+    </div>
+  </label>
+
+  <!-- ══ BOTONES ══ -->
+  <div class="rf-submit-row">
+    <a href="{% url 'projects:reporte-list' %}" class="btn-cancel">Cancelar</a>
+    <button type="submit" class="btn-send" id="btn-submit">
+      <i class="fa-solid fa-paper-plane"></i>
+      <span id="btn-txt">Enviar Reporte</span>
+    </button>
+  </div>
+
+  {% if form.errors %}
+  <div style="margin-top:14px;padding:12px 16px;border-radius:10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);font-size:.78rem;color:#fca5a5;">
+    <strong>⚠️ Por favor corrige los siguientes errores:</strong>
+    {{ form.errors }}
+  </div>
+  {% endif %}
+
+</form>
+</div>
+
+<script>
+/* ── Bloqueo de navegación atrás ── */
+history.pushState(null, '', location.href);
+window.addEventListener('popstate', function() {
+  history.pushState(null, '', location.href);
+});
+
+/* ── Urgencia ── */
+const INFOS = ['critico','alto','medio','bajo'];
+function onUrgChange(nivel) {
+  INFOS.forEach(n => {
+    const el = document.getElementById('info-' + n);
+    if (el) el.classList.toggle('show', n === nivel);
+  });
+  // Cambiar botón si es crítico
+  const btn = document.getElementById('btn-submit');
+  const txt = document.getElementById('btn-txt');
+  if (nivel === 'critico') {
+    btn.classList.add('critico');
+    txt.textContent = '🚨 Enviar Reporte CRÍTICO';
+  } else {
+    btn.classList.remove('critico');
+    txt.textContent = 'Enviar Reporte';
+  }
+}
+
+// Inicializar con el valor actual
+const currentVal = document.querySelector('input[name="nivel_urgencia"]:checked');
+if (currentVal) onUrgChange(currentVal.value);
+
+/* ── Checkbox llamar 911 ── */
+function toggleCall911() {
+  const cb  = document.getElementById('llamar_911');
+  const chk = document.getElementById('call911-chk');
+  cb.checked = !cb.checked;
+  chk.classList.toggle('checked', cb.checked);
+}
+
+/* ── Confirmación antes de salir si el form tiene datos ── */
+let formDirty = false;
+document.getElementById('reporte-form').addEventListener('input', () => formDirty = true);
+document.getElementById('reporte-form').addEventListener('submit', () => formDirty = false);
+window.addEventListener('beforeunload', function(e) {
+  if (formDirty) {
+    e.preventDefault();
+    e.returnValue = '¿Segura que deseas salir? Se perderán los datos del reporte.';
+  }
+});
+</script>
+{% endblock %}

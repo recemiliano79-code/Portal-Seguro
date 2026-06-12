@@ -1,0 +1,693 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portal Seguro · Sentinel v9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#7c3aed">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Portal Seguro">
+<link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/static/icons/icon-152.png">
+<link rel="apple-touch-icon" sizes="512x512" href="/static/icons/icon-512.png">
+<meta name="description" content="Portal seguro y confidencial para reportar acoso en CDMX. Sentinel v9.">
+<meta name="msapplication-TileColor" content="#7c3aed">
+<meta name="msapplication-TileImage" content="/static/icons/icon-144.png">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+button,input,select,textarea{font-family:inherit;font-size:inherit;background:none;border:none;outline:none;-webkit-appearance:none;appearance:none;color:inherit;cursor:pointer;background-color:transparent;}
+a{color:inherit;text-decoration:none;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:#7c3aed;border-radius:3px;}
+:root{
+  --bg:#04020f;--sb:#07051a;--sb2:#0c0a22;--surface:#0d0b1e;--s2:#12112a;--s3:#191635;
+  --brd:rgba(108,68,255,.08);--brd2:rgba(108,68,255,.18);--brd3:rgba(108,68,255,.38);
+  --pu:#7c3aed;--vi:#a78bfa;--ac:#3b82f6;--cy:#67e8f9;
+  --pk:#f472b6;--gr:#34d399;--ye:#fbbf24;--re:#f87171;--or:#fb923c;
+  --tx:#f0edff;--mu:#695d8c;--mu2:#948aaa;
+  --text:var(--tx);--muted:var(--mu2);--border:var(--brd);--border2:var(--brd2);--surface2:var(--s2);
+  --mono:'JetBrains Mono',monospace;--font:'Outfit',sans-serif;
+  --sbw:270px;--sbwc:60px;--sbtr:.26s cubic-bezier(.4,0,.2,1);
+}
+body{font-family:var(--font);background:var(--bg);color:var(--tx);display:flex;min-height:100vh;overflow-x:hidden;}
+#sb{width:var(--sbw);flex-shrink:0;background:linear-gradient(180deg,var(--sb) 0%,var(--sb2) 100%);border-right:1px solid var(--brd2);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:400;overflow:hidden;transition:width var(--sbtr),transform var(--sbtr);box-shadow:6px 0 32px rgba(0,0,0,.45);}
+#sb::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;opacity:.4;}
+#sb::after{content:'';position:absolute;top:0;left:0;bottom:0;width:2px;background:linear-gradient(180deg,transparent 0%,#7c3aed 30%,#3b82f6 70%,transparent 100%);opacity:.6;}
+#sb.col{width:var(--sbwc);}
+@media(max-width:900px){#sb{transform:translateX(-100%);}#sb.mob{transform:translateX(0);}#sb.col{width:var(--sbw);}}
+.sb-tog-wrap{position:absolute;top:18px;right:-14px;z-index:20;}
+.sb-tog{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#5b21b6)!important;border:2px solid var(--bg)!important;color:white;font-size:.58rem;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 12px rgba(124,58,237,.7),0 0 0 1px rgba(124,58,237,.2);transition:all .2s;}
+.sb-tog:hover{background:linear-gradient(135deg,#6d28d9,#4c1d95)!important;transform:scale(1.12);box-shadow:0 4px 18px rgba(124,58,237,.8);}
+@media(max-width:900px){.sb-tog-wrap{display:none;}}
+.sb-logo{padding:15px 13px 12px;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:11px;flex-shrink:0;min-height:60px;overflow:hidden;position:relative;z-index:1;}
+.sb-logo-shield{width:36px;height:36px;border-radius:10px;flex-shrink:0;background:linear-gradient(135deg,#7c3aed,#5b21b6);display:flex;align-items:center;justify-content:center;font-size:1rem;color:white;box-shadow:0 4px 14px rgba(124,58,237,.55);}
+.sb-logo-info{overflow:hidden;white-space:nowrap;transition:opacity var(--sbtr),width var(--sbtr);}
+.sb-logo-name{font-size:.9rem;font-weight:900;letter-spacing:-.1px;}
+.sb-logo-v{font-size:.5rem;font-family:var(--mono);color:var(--gr);letter-spacing:1.8px;text-transform:uppercase;margin-top:1px;display:flex;align-items:center;gap:4px;}
+.sb-logo-dot{width:4px;height:4px;border-radius:50%;background:var(--gr);box-shadow:0 0 6px var(--gr);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+.sb-user{margin:8px 8px 4px;border-radius:11px;padding:9px 10px;background:rgba(124,58,237,.07);border:1px solid rgba(124,58,237,.16);display:flex;align-items:center;gap:9px;flex-shrink:0;overflow:hidden;transition:all .18s;position:relative;z-index:1;}
+.sb-user:hover{background:rgba(124,58,237,.13);border-color:rgba(124,58,237,.28);}
+.sb-av{width:33px;height:33px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,rgba(124,58,237,.45),rgba(59,130,246,.28));border:1px solid rgba(124,58,237,.38);display:flex;align-items:center;justify-content:center;font-size:.84rem;font-weight:900;color:#c4b5fd;}
+.sb-user-info{overflow:hidden;white-space:nowrap;}
+.sb-uname{font-size:.79rem;font-weight:800;}
+.sb-urole{font-size:.55rem;color:var(--mu2);font-family:var(--mono);margin-top:1px;}
+.sb-nav{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 0 6px;position:relative;z-index:1;}
+.sb-nav::-webkit-scrollbar{width:2px;}
+.sb-nav::-webkit-scrollbar-thumb{background:rgba(124,58,237,.3);}
+.sb-grp{margin-bottom:0;}
+.sb-gh{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 4px;margin:0 5px;border-radius:7px;cursor:pointer;user-select:none;transition:background .14s;overflow:hidden;}
+.sb-gh:hover{background:rgba(124,58,237,.06);}
+.sb-gh-lbl{font-size:.5rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:var(--mu);white-space:nowrap;transition:opacity var(--sbtr);}
+.sb-gh-arr{font-size:.5rem;color:var(--mu);transition:transform .24s cubic-bezier(.4,0,.2,1),opacity var(--sbtr);flex-shrink:0;}
+.sb-grp.open .sb-gh-arr{transform:rotate(180deg);}
+.sb-gb{overflow:hidden;max-height:0;transition:max-height .3s cubic-bezier(.4,0,.2,1);}
+.sb-grp.open .sb-gb{max-height:900px;}
+#sb.col .sb-logo-info{opacity:0;width:0;}
+#sb.col .sb-user-info{opacity:0;width:0;}
+#sb.col .sb-gh-lbl,#sb.col .sb-gh-arr{opacity:0;pointer-events:none;}
+#sb.col .sb-gh{padding:10px 0 4px;justify-content:center;}
+#sb.col .sb-bot-txt{opacity:0;width:0;}
+#sb.col .sb-item{justify-content:center;padding:9px 0;width:calc(var(--sbwc) - 10px);margin:1px 5px;}
+#sb.col .sb-item-txt{opacity:0;width:0;overflow:hidden;}
+#sb.col .sb-item-badge{display:none;}
+#sb.col .sb-item{position:relative;}
+#sb.col .sb-item:hover::after{content:attr(data-tip);position:absolute;left:calc(var(--sbwc) - 2px);top:50%;transform:translateY(-50%);background:var(--s3);border:1px solid var(--brd2);color:var(--tx);font-size:.72rem;font-weight:700;padding:5px 12px;border-radius:8px;white-space:nowrap;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.55);pointer-events:none;font-family:var(--font);}
+.sb-item{display:flex;align-items:center;gap:9px;padding:8px 11px 8px 12px;border-radius:10px;margin:1px 7px;color:var(--mu2);border:1px solid transparent;transition:background .14s,color .14s,border-color .14s,padding .24s,margin .24s,width .24s;overflow:hidden;white-space:nowrap;background:transparent;background-color:transparent;width:calc(100% - 14px);text-align:left;-webkit-appearance:none;appearance:none;}
+.sb-item:hover{background:rgba(124,58,237,.11)!important;background-color:rgba(124,58,237,.11)!important;color:var(--tx);border-color:rgba(124,58,237,.2);}
+.sb-item.on{background:rgba(124,58,237,.2)!important;background-color:rgba(124,58,237,.2)!important;color:var(--vi);border-color:rgba(124,58,237,.32);}
+.sb-ico{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.84rem;flex-shrink:0;transition:box-shadow .15s;}
+.sb-item.on .sb-ico{box-shadow:0 0 10px rgba(124,58,237,.32);}
+.sb-item-txt{overflow:hidden;min-width:0;flex:1;transition:opacity var(--sbtr),width var(--sbtr);}
+.sb-lbl{font-size:.77rem;font-weight:700;display:flex;align-items:center;gap:5px;line-height:1.2;}
+.sb-desc{font-size:.59rem;color:var(--mu);margin-top:2px;line-height:1.35;white-space:normal;}
+.sb-item.on .sb-desc{color:rgba(167,139,250,.5);}
+.sb-item-badge{flex-shrink:0;}
+.nb{font-size:.52rem;font-weight:800;padding:1px 5px;border-radius:4px;}
+.nb-re{background:rgba(248,113,113,.16);border:1px solid rgba(248,113,113,.26);color:#f87171;animation:blink 2s infinite;}
+.nb-vi{background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.26);color:#a78bfa;}
+.nb-gr{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.22);color:#34d399;}
+.nb-ye{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.22);color:#fbbf24;}
+.sb-hr{height:1px;background:var(--brd);margin:4px 12px;}
+.sb-bot{padding:6px 7px;border-top:1px solid var(--brd);flex-shrink:0;position:relative;z-index:1;}
+.sb-bot-btn{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;cursor:pointer;color:var(--mu2);transition:all .14s;width:100%;text-align:left;overflow:hidden;white-space:nowrap;background:transparent;background-color:transparent;border:1px solid transparent;font-size:.77rem;font-weight:600;margin-bottom:3px;}
+.sb-bot-btn i{width:16px;text-align:center;font-size:.84rem;flex-shrink:0;}
+.sb-bot-btn:hover{background:rgba(255,255,255,.04)!important;background-color:rgba(255,255,255,.04)!important;color:var(--tx);}
+.sb-cam:hover{background:rgba(52,211,153,.07)!important;background-color:rgba(52,211,153,.07)!important;color:var(--gr)!important;}
+.sb-logout{background:rgba(239,68,68,.07)!important;background-color:rgba(239,68,68,.07)!important;border:1px solid rgba(239,68,68,.14)!important;color:#f87171!important;}
+.sb-logout:hover{background:rgba(239,68,68,.16)!important;background-color:rgba(239,68,68,.16)!important;}
+.sb-bot-txt{transition:opacity var(--sbtr),width var(--sbtr);overflow:hidden;}
+#main{margin-left:var(--sbw);flex:1;display:flex;flex-direction:column;min-width:0;min-height:100vh;transition:margin-left var(--sbtr);}
+#main.exp{margin-left:var(--sbwc);}
+@media(max-width:900px){#main{margin-left:0!important;}}
+.topbar{height:50px;background:var(--surface);border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:200;flex-shrink:0;}
+.tb-left{display:flex;align-items:center;gap:10px;}
+.tb-mob{display:none;color:var(--tx);font-size:1rem;padding:4px;background:transparent;background-color:transparent;}
+@media(max-width:900px){.tb-mob{display:flex;align-items:center;}}
+.tb-clk{font-family:var(--mono);font-size:.74rem;color:var(--cy);letter-spacing:2.5px;}
+.tb-sep{color:rgba(120,80,255,.22);font-size:.8rem;}
+.tb-pulse{display:flex;align-items:center;gap:5px;font-size:.65rem;color:var(--mu2);}
+.tp-dot{width:5px;height:5px;border-radius:50%;background:var(--gr);box-shadow:0 0 6px var(--gr);animation:blink 2s infinite;}
+.tb-right{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap;}
+.tpb{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:7px;font-size:.69rem;font-weight:700;cursor:pointer;border:1px solid;background:transparent;background-color:transparent;transition:all .13s;}
+.tpb-sos{background:rgba(239,68,68,.09)!important;border-color:rgba(239,68,68,.22);color:#f87171;}
+.tpb-sos:hover{background:rgba(239,68,68,.18)!important;}
+.tpb-ai{background:rgba(124,58,237,.09)!important;border-color:rgba(124,58,237,.22);color:#a78bfa;}
+.tpb-ai:hover{background:rgba(124,58,237,.18)!important;}
+.tpb-cam{background:rgba(52,211,153,.06)!important;border-color:rgba(52,211,153,.16);color:#34d399;}
+.tpb-cam:hover{background:rgba(52,211,153,.14)!important;}
+.tpb-msg{background:rgba(248,113,113,.09)!important;border-color:rgba(248,113,113,.22);color:#f87171;animation:blink 2s infinite;}
+.tpb-out{background:rgba(239,68,68,.07)!important;border-color:rgba(239,68,68,.16);color:#f87171;}
+.tpb-out:hover{background:rgba(239,68,68,.16)!important;}
+.page{flex:1;padding:22px 24px;}
+@media(max-width:600px){.page{padding:14px 12px;}}
+#sb-ov{display:none;position:fixed;inset:0;z-index:399;background:rgba(0,0,0,.65);backdrop-filter:blur(3px);}
+#sb-ov.show{display:block;}
+#ai-modal{position:fixed;inset:0;z-index:600;display:none;align-items:center;justify-content:flex-end;background:rgba(0,0,0,.55);backdrop-filter:blur(5px);}
+#ai-modal.open{display:flex;}
+.ai-pnl{width:420px;height:100vh;background:var(--surface);border-left:1px solid var(--brd2);display:flex;flex-direction:column;animation:slideR .2s ease-out;}
+@keyframes slideR{from{transform:translateX(100%);}to{transform:translateX(0);}}
+.ai-hd{padding:13px 16px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:rgba(0,0,0,.1);}
+.ai-title{font-size:.88rem;font-weight:800;display:flex;align-items:center;gap:7px;}
+.ai-close{color:var(--mu);font-size:.95rem;transition:color .12s;}
+.ai-close:hover{color:var(--re);}
+.ai-tabs{display:flex;gap:.3rem;padding:8px 10px;border-bottom:1px solid var(--brd);flex-wrap:wrap;flex-shrink:0;}
+.ai-tab{padding:5px 9px;border-radius:6px;font-size:.64rem;font-weight:700;cursor:pointer;border:1px solid var(--brd);color:var(--mu);background:transparent;background-color:transparent;transition:all .13s;}
+.ai-tab:hover,.ai-tab.on{background:rgba(124,58,237,.14)!important;border-color:rgba(124,58,237,.28);color:#a78bfa;}
+.ai-msgs{flex:1;padding:14px 15px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
+.ai-m{max-width:88%;padding:10px 13px;border-radius:12px;font-size:.81rem;line-height:1.65;}
+.ai-m.ai{background:linear-gradient(135deg,rgba(124,58,237,.14),rgba(59,130,246,.07));border:1px solid rgba(124,58,237,.17);border-bottom-left-radius:3px;align-self:flex-start;}
+.ai-m.u{background:rgba(255,255,255,.05);border:1px solid var(--brd);border-bottom-right-radius:3px;align-self:flex-end;}
+.ai-sender{font-size:.54rem;color:#a78bfa;font-weight:700;margin-bottom:5px;font-family:var(--mono);letter-spacing:.8px;}
+.ai-m.ai .msg-h{font-size:.78rem;font-weight:800;color:#c4b5fd;margin-bottom:5px;display:flex;align-items:center;gap:5px;}
+.ai-m.ai ul,.ai-m.ai ol{padding-left:14px;margin:5px 0;display:flex;flex-direction:column;gap:3px;}
+.ai-m.ai li{font-size:.79rem;line-height:1.6;color:var(--tx);}
+.ai-m.ai li strong,.ai-m.ai p strong{color:#e2d9ff;}
+.ai-m.ai p{font-size:.79rem;line-height:1.65;margin-bottom:4px;color:var(--tx);}
+.ai-m.ai .msg-divider{height:1px;background:rgba(124,58,237,.18);margin:8px 0;}
+.ai-m.ai .msg-warn{background:rgba(251,191,36,.08);border-left:2px solid #fbbf24;padding:6px 10px;border-radius:0 6px 6px 0;font-size:.76rem;color:#fbbf24;margin:5px 0;}
+.ai-m.ai .msg-alert{background:rgba(248,113,113,.08);border-left:2px solid #f87171;padding:6px 10px;border-radius:0 6px 6px 0;font-size:.76rem;color:#f87171;margin:5px 0;}
+.ai-m.ai .msg-tip{background:rgba(52,211,153,.07);border-left:2px solid #34d399;padding:6px 10px;border-radius:0 6px 6px 0;font-size:.76rem;color:#34d399;margin:5px 0;}
+.ai-typing{display:none;align-self:flex-start;padding:8px 12px;background:rgba(124,58,237,.08);border-radius:10px;gap:4px;}
+.ai-typing.show{display:flex;}
+.ai-typing span{width:5px;height:5px;border-radius:50%;background:#a78bfa;animation:tp .8s infinite;}
+.ai-typing span:nth-child(2){animation-delay:.14s;}
+.ai-typing span:nth-child(3){animation-delay:.28s;}
+@keyframes tp{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-5px);}}
+.ai-qbs{padding:7px 10px;display:flex;gap:.3rem;flex-wrap:wrap;border-top:1px solid var(--brd);flex-shrink:0;}
+.ai-qb{padding:4px 8px;border-radius:5px;font-size:.62rem;font-weight:700;cursor:pointer;border:1px solid rgba(124,58,237,.17);background:rgba(124,58,237,.07)!important;color:#a78bfa;transition:all .12s;}
+.ai-qb:hover{background:rgba(124,58,237,.17)!important;}
+.ai-inp-row{padding:9px 12px;border-top:1px solid var(--brd);display:flex;gap:.4rem;flex-shrink:0;}
+.ai-inp{flex:1;background:rgba(0,0,0,.32);border:1px solid rgba(108,68,255,.14);border-radius:9px;padding:9px 11px;color:var(--tx);font-size:.8rem;resize:none;height:40px;}
+.ai-inp:focus{border-color:#7c3aed;outline:none;}
+.ai-snd{width:38px;height:38px;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#5b21b6)!important;color:white;font-size:.8rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .14s;}
+.ai-snd:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(124,58,237,.45);}
+#wiki{display:none;position:fixed;inset:0;z-index:9000;background:#f8f9fa;flex-direction:column;overflow-y:auto;font-family:Georgia,'Times New Roman',serif;}
+.wk-bar{background:#fff;border-bottom:1px solid #a2a9b1;padding:0 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;min-height:46px;}
+.wk-logo{display:flex;align-items:center;gap:7px;font-size:1.2rem;color:#000;font-family:Linux Libertine,serif;}
+.wk-srch{display:flex;gap:3px;}
+.wk-srch input{padding:4px 8px;border:1px solid #a2a9b1;border-radius:2px;font-size:.82rem;width:190px;background:#fff;color:#000;}
+.wk-nav{background:#fff;border-bottom:2px solid #a2a9b1;padding:3px 16px;display:flex;overflow-x:auto;}
+.wk-tab{padding:5px 12px;font-size:.79rem;cursor:pointer;color:#3366cc;}
+.wk-tab.on{background:#f8f9fa;border:1px solid #a2a9b1;border-bottom-color:#f8f9fa;color:#000;margin-bottom:-2px;}
+.wk-body{max-width:960px;margin:0 auto;padding:16px 20px;display:grid;grid-template-columns:1fr 260px;gap:20px;}
+@media(max-width:680px){.wk-body{grid-template-columns:1fr;}}
+.wk-main h1{font-size:1.8rem;border-bottom:1px solid #a2a9b1;padding-bottom:3px;margin-bottom:10px;color:#000;font-weight:normal;}
+.wk-main p{font-size:.85rem;line-height:1.65;color:#202122;margin-bottom:11px;}
+.wk-main h2{font-size:1.2rem;border-bottom:1px solid #a2a9b1;padding-bottom:2px;margin:16px 0 8px;color:#000;font-weight:normal;}
+.wk-sb{background:#f8f9fa;border:1px solid #a2a9b1;font-size:.76rem;}
+.wk-sb-t{background:#cee0f2;padding:5px 9px;font-weight:bold;border-bottom:1px solid #a2a9b1;color:#000;font-family:sans-serif;}
+.wk-sb-r{padding:4px 9px;border-bottom:1px solid #eee;color:#202122;display:flex;gap:5px;font-family:sans-serif;}
+.wk-sb-l{font-weight:bold;min-width:70px;color:#000;}
+.wk-exit{position:fixed;bottom:14px;right:16px;z-index:9001;background:#1a1728;color:white;border:1px solid rgba(124,58,237,.4);padding:9px 14px;border-radius:10px;font-family:var(--font);font-size:.72rem;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.6);}
+.wk-exit-btn{background:#7c3aed!important;border:none;color:white;padding:5px 11px;border-radius:6px;cursor:pointer;font-size:.72rem;font-weight:700;font-family:var(--font);}
+#fcall{display:none;position:fixed;inset:0;z-index:8000;background:linear-gradient(180deg,#111,#1a1a1a);flex-direction:column;align-items:center;justify-content:space-between;padding:70px 28px 50px;}
+.fc-photo{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:2.5rem;}
+.fc-btns{display:flex;gap:40px;}
+.fc-btn{width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;}
+.fc-end{background:#ef4444!important;}
+.fc-mute{background:rgba(255,255,255,.14)!important;}
+#rsk{display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);align-items:center;justify-content:center;}
+.rsk-box{background:var(--surface);border:1px solid var(--brd2);border-radius:18px;padding:26px;max-width:460px;width:90%;max-height:82vh;overflow-y:auto;}
+#pwa-banner{display:none;position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1a1540;border:1px solid rgba(124,58,237,.35);border-radius:14px;padding:12px 18px;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.5);font-family:var(--font);font-size:.82rem;color:#f0edff;z-index:9999;white-space:nowrap;}
+#pwa-banner.show{display:flex;}
+#back-block-modal{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);align-items:center;justify-content:center;}
+#back-block-modal.show{display:flex;}
+.back-block-box{background:var(--surface);border:1.5px solid rgba(239,68,68,.35);border-radius:18px;padding:28px 24px;max-width:380px;width:90%;text-align:center;}
+.back-block-box .bb-icon{font-size:2.5rem;margin-bottom:14px;}
+.back-block-box h3{font-size:1rem;font-weight:900;margin-bottom:8px;}
+.back-block-box p{font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:18px;}
+.bb-btns{display:flex;gap:.6rem;justify-content:center;}
+.bb-btn{padding:9px 20px;border-radius:9px;font-size:.8rem;font-weight:700;cursor:pointer;border:1px solid;font-family:inherit;background:transparent;}
+.bb-stay{background:rgba(124,58,237,.15)!important;border-color:rgba(124,58,237,.3);color:#a78bfa;}
+.bb-leave{background:rgba(239,68,68,.1)!important;border-color:rgba(239,68,68,.25);color:#f87171;}
+#rt-toast{position:fixed;top:14px;right:14px;z-index:99999;max-width:340px;width:90%;background:linear-gradient(135deg,#7f1d1d,#991b1b);border:1.5px solid #ef4444;border-radius:16px;padding:16px 18px;box-shadow:0 8px 32px rgba(239,68,68,.5);display:none;animation:toastIn .3s cubic-bezier(.34,1.56,.64,1);}
+#rt-toast.show{display:block;}
+@keyframes toastIn{from{transform:translateX(110%);opacity:0;}to{transform:none;opacity:1;}}
+.rt-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.rt-title{font-size:.84rem;font-weight:900;color:#fca5a5;display:flex;align-items:center;gap:6px;}
+.rt-close{background:none;border:none;color:rgba(252,165,165,.5);cursor:pointer;font-size:1rem;padding:0;font-family:inherit;}
+.rt-body{font-size:.74rem;color:rgba(252,165,165,.75);line-height:1.5;margin-bottom:10px;}
+.rt-list{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;}
+.rt-item{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:7px 10px;font-size:.72rem;color:#fca5a5;}
+.rt-item a{color:#f87171;font-weight:700;text-decoration:none;}
+.rt-item a:hover{text-decoration:underline;}
+.rt-actions{display:flex;gap:.4rem;}
+.rt-btn{padding:6px 12px;border-radius:7px;font-size:.7rem;font-weight:800;cursor:pointer;text-decoration:none;border:none;font-family:inherit;}
+.rt-btn-p{background:rgba(239,68,68,.25);color:#fca5a5;border:1px solid rgba(239,68,68,.35);}
+.rt-btn-c{background:rgba(255,255,255,.07);color:rgba(252,165,165,.5);border:1px solid rgba(255,255,255,.09);}
+#usr-toast{position:fixed;bottom:20px;right:14px;z-index:99999;max-width:320px;width:90%;background:linear-gradient(135deg,#1e1144,#13103a);border:1.5px solid rgba(167,139,250,.35);border-radius:14px;padding:14px 16px;box-shadow:0 8px 28px rgba(124,58,237,.35);display:none;animation:toastIn .3s cubic-bezier(.34,1.56,.64,1);}
+#usr-toast.show{display:block;}
+.ut-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.ut-title{font-size:.8rem;font-weight:900;color:#c4b5fd;display:flex;align-items:center;gap:6px;}
+.ut-close{background:none;border:none;color:rgba(196,181,253,.4);cursor:pointer;font-size:1rem;font-family:inherit;}
+.ut-body{font-size:.73rem;color:rgba(196,181,253,.7);line-height:1.5;margin-bottom:8px;}
+.ut-link{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:800;color:#a78bfa;text-decoration:none;}
+.ut-link:hover{color:#67e8f9;}
+</style>
+</head>
+<body>
+<div id="sb-ov" onclick="closeMob()"></div>
+
+<nav id="sb">
+  <div class="sb-tog-wrap">
+    <button class="sb-tog" id="sb-tog" onclick="toggleSB()" title="Colapsar/expandir menú">
+      <i class="fa-solid fa-chevron-left" id="sb-tog-ic"></i>
+    </button>
+  </div>
+  <div class="sb-logo">
+    <div class="sb-logo-shield"><i class="fa-solid fa-shield-halved"></i></div>
+    <div class="sb-logo-info">
+      <div class="sb-logo-name">Portal Seguro</div>
+      <div class="sb-logo-v"><span class="sb-logo-dot"></span>Sentinel EN LÍNEA</div>
+    </div>
+  </div>
+  <div class="sb-user">
+    <div class="sb-av">{{ request.user.username|first|upper }}</div>
+    <div class="sb-user-info">
+      <div class="sb-uname">{{ request.user.username }}</div>
+      <div class="sb-urole">{% if is_admin %}⚡ Admin del sistema{% else %}🔒 Usuaria protegida{% endif %}</div>
+    </div>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-grp open" id="sg-gen">
+      <div class="sb-gh" onclick="toggleGrp('sg-gen')"><span class="sb-gh-lbl">General</span><i class="fa-solid fa-chevron-up sb-gh-arr"></i></div>
+      <div class="sb-gb">
+        <a href="{% url 'projects:home' %}" class="sb-item {% if request.resolver_match.url_name == 'home' %}on{% endif %}" data-tip="Dashboard">
+          <div class="sb-ico" style="background:rgba(124,58,237,.15);color:#a78bfa;"><i class="fa-solid fa-house"></i></div>
+          <div class="sb-item-txt"><div class="sb-lbl">Dashboard</div><div class="sb-desc">Resumen general de tu cuenta</div></div>
+        </a>
+      </div>
+    </div>
+    <div class="sb-grp open" id="sg-casos">
+      <div class="sb-gh" onclick="toggleGrp('sg-casos')"><span class="sb-gh-lbl">Mis Casos</span><i class="fa-solid fa-chevron-up sb-gh-arr"></i></div>
+      <div class="sb-gb">
+        <a href="{% url 'projects:reporte-create' %}" class="sb-item {% if request.resolver_match.url_name == 'reporte-create' %}on{% endif %}" data-tip="Nuevo Reporte">
+          <div class="sb-ico" style="background:rgba(248,113,113,.12);color:#f87171;"><i class="fa-solid fa-file-circle-plus"></i></div>
+          <div class="sb-item-txt"><div class="sb-lbl">Documentar Incidente</div><div class="sb-desc">Crea un reporte seguro y cifrado — confidencial</div></div>
+        </a>
+        <a href="{% url 'projects:reporte-list' %}" class="sb-item {% if request.resolver_match.url_name == 'reporte-list' or request.resolver_match.url_name == 'reporte-detail' %}on{% endif %}" data-tip="Historial">
+          <div class="sb-ico" style="background:rgba(167,139,250,.12);color:#a78bfa;"><i class="fa-solid fa-folder-open"></i></div>
+          <div class="sb-item-txt">
+            <div class="sb-lbl">Historial de Reportes {% if mis_reportes_count %}<span class="nb nb-vi sb-item-badge">{{ mis_reportes_count }}</span>{% endif %} {% if mensajes_no_leidos %}<span class="nb nb-re sb-item-badge">{{ mensajes_no_leidos }}</span>{% endif %}</div>
+            <div class="sb-desc">Todos tus incidentes y mensajes del equipo</div>
+          </div>
+        </a>
+      </div>
+    </div>
+    <div class="sb-grp open" id="sg-rec">
+      <div class="sb-gh" onclick="toggleGrp('sg-rec')"><span class="sb-gh-lbl">Recursos y Apoyo</span><i class="fa-solid fa-chevron-up sb-gh-arr"></i></div>
+      <div class="sb-gb">
+        <a href="{% url 'projects:tip-list' %}" class="sb-item {% if request.resolver_match.url_name == 'tip-list' %}on{% endif %}" data-tip="Tips">
+          <div class="sb-ico" style="background:rgba(251,191,36,.1);color:#fbbf24;"><i class="fa-solid fa-lightbulb"></i></div>
+          <div class="sb-item-txt"><div class="sb-lbl">Tips de Seguridad</div><div class="sb-desc">Consejos prácticos para protegerte en CDMX</div></div>
+        </a>
+        <a href="{% url 'projects:institucion-list' %}" class="sb-item {% if request.resolver_match.url_name == 'institucion-list' %}on{% endif %}" data-tip="Instituciones">
+          <div class="sb-ico" style="background:rgba(52,211,153,.1);color:#34d399;"><i class="fa-solid fa-building-ngo"></i></div>
+          <div class="sb-item-txt"><div class="sb-lbl">Instituciones Aliadas</div><div class="sb-desc">Directorio de apoyo legal y psicológico CDMX</div></div>
+        </a>
+        <a href="{% url 'projects:tipo-list' %}" class="sb-item {% if request.resolver_match.url_name == 'tipo-list' %}on{% endif %}" data-tip="Glosario">
+          <div class="sb-ico" style="background:rgba(103,232,249,.1);color:#67e8f9;"><i class="fa-solid fa-book-open"></i></div>
+          <div class="sb-item-txt"><div class="sb-lbl">Glosario Legal</div><div class="sb-desc">Definiciones de acoso reconocidas por la ley MX</div></div>
+        </a>
+        <a href="{% url 'projects:sugerencia-create' %}" class="sb-item {% if request.resolver_match.url_name == 'sugerencia-create' %}on{% endif %}" data-tip="Sugerir">
+          <div class="sb-ico" style="background:rgba(192,132,252,.1);color:#c084fc;"><i class="fa-solid fa-paper-plane"></i></div>
+          <div class="sb-item-txt"><div class="sb-lbl">Sugerir Contenido</div><div class="sb-desc">Propón tips o instituciones al equipo</div></div>
+        </a>
+      </div>
+    </div>
+    <div class="sb-grp open" id="sg-prot">
+      <div class="sb-gh" onclick="toggleGrp('sg-prot')"><span class="sb-gh-lbl">Protección Activa</span><i class="fa-solid fa-chevron-up sb-gh-arr"></i></div>
+      <div class="sb-gb">
+        <button class="sb-item" onclick="openAI('chat')" data-tip="Sentinel AI">
+          <div class="sb-ico" style="background:rgba(251,146,60,.1);color:#fb923c;"><i class="fa-solid fa-robot"></i></div>
+          <div class="sb-item-txt"><div class="sb-lbl">Sentinel AI <span class="nb nb-vi sb-item-badge">BETA</span></div><div class="sb-desc">Asistente IA: orientación, apoyo emocional y asesoría legal</div></div>
+        </button>
+        <button class="sb-item" onclick="startFakeCall()" data-tip="Llamada Falsa">
+          <div class="sb-ico" style="background:rgba(244,114,182,.1);color:#f472b6;"><i class="fa-solid fa-phone-flip"></i></div>
+          <div class="sb-item-txt"><div class="sb-lbl">Llamada de Evasión</div><div class="sb-desc">Pantalla de llamada falsa para escapar de situaciones</div></div>
+        </button>
+        <button class="sb-item" onclick="shareLocation()" data-tip="Ubicación SOS">
+          <div class="sb-ico" style="background:rgba(52,211,153,.1);color:#34d399;"><i class="fa-solid fa-location-dot"></i></div>
+          <div class="sb-item-txt"><div class="sb-lbl">SOS Ubicación</div><div class="sb-desc">Envía tu ubicación exacta por WhatsApp a alguien de confianza</div></div>
+        </button>
+        <button class="sb-item" onclick="showRiskModal()" data-tip="Test Riesgo">
+          <div class="sb-ico" style="background:rgba(239,68,68,.1);color:#f87171;"><i class="fa-solid fa-gauge-high"></i></div>
+          <div class="sb-item-txt"><div class="sb-lbl">Test de Riesgo</div><div class="sb-desc">6 preguntas para evaluar tu nivel de exposición</div></div>
+        </button>
+      </div>
+    </div>
+    {% if is_admin %}
+    <div class="sb-grp open" id="sg-adm">
+      <div class="sb-gh" onclick="toggleGrp('sg-adm')"><span class="sb-gh-lbl">Gestión Administrativa</span><i class="fa-solid fa-chevron-up sb-gh-arr"></i></div>
+      <div class="sb-gb">
+        <a href="{% url 'projects:sugerencias-admin' %}" class="sb-item {% if request.resolver_match.url_name == 'sugerencias-admin' %}on{% endif %}" data-tip="Bandeja">
+          <div class="sb-ico" style="background:rgba(251,191,36,.1);color:#fbbf24;"><i class="fa-solid fa-inbox"></i></div>
+          <div class="sb-item-txt"><div class="sb-lbl">Bandeja de Entrada {% if pendientes_global %}<span class="nb nb-re sb-item-badge">{{ pendientes_global }}</span>{% endif %}</div><div class="sb-desc">Revisar y aprobar sugerencias de usuarias</div></div>
+        </a>
+        <a href="{% url 'projects:tip-create' %}" class="sb-item" data-tip="Nuevo Tip">
+          <div class="sb-ico" style="background:rgba(251,191,36,.08);color:#fbbf24;font-size:.8rem;"><i class="fa-solid fa-plus"></i></div>
+          <div class="sb-item-txt"><div class="sb-lbl">Publicar Tip</div><div class="sb-desc">Nuevo consejo de seguridad</div></div>
+        </a>
+        <a href="{% url 'projects:institucion-create' %}" class="sb-item" data-tip="Nueva Inst.">
+          <div class="sb-ico" style="background:rgba(52,211,153,.08);color:#34d399;font-size:.8rem;"><i class="fa-solid fa-plus"></i></div>
+          <div class="sb-item-txt"><div class="sb-lbl">Agregar Institución</div><div class="sb-desc">Añadir al directorio CDMX</div></div>
+        </a>
+        <a href="{% url 'projects:tipo-create' %}" class="sb-item" data-tip="Nueva Def.">
+          <div class="sb-ico" style="background:rgba(103,232,249,.08);color:#67e8f9;font-size:.8rem;"><i class="fa-solid fa-plus"></i></div>
+          <div class="sb-item-txt"><div class="sb-lbl">Nueva Definición</div><div class="sb-desc">Ampliar glosario legal</div></div>
+        </a>
+        <a href="/admin/" target="_blank" class="sb-item" data-tip="Django Admin">
+          <div class="sb-ico" style="background:rgba(124,58,237,.1);color:#a78bfa;font-size:.8rem;"><i class="fa-solid fa-terminal"></i></div>
+          <div class="sb-item-txt"><div class="sb-lbl">Panel de Soporte</div><div class="sb-desc">Django Admin — configuración del sistema</div></div>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <div class="sb-bot">
+    <button class="sb-bot-btn sb-cam" onclick="toggleWiki()">
+      <i class="fa-solid fa-eye-slash"></i><span class="sb-bot-txt">Modo Camuflaje</span>
+    </button>
+    <form method="post" action="{% url 'logout' %}" style="width:100%;margin:0;">
+      {% csrf_token %}
+      <button type="submit" class="sb-bot-btn sb-logout">
+        <i class="fa-solid fa-right-from-bracket"></i><span class="sb-bot-txt">Cerrar Sesión</span>
+      </button>
+    </form>
+  </div>
+</nav>
+
+<div id="main">
+  <header class="topbar">
+    <div class="tb-left">
+      <button class="tb-mob" onclick="openMob()"><i class="fa-solid fa-bars"></i></button>
+      <span class="tb-clk" id="tb-clk">--:--:--</span>
+      <span class="tb-sep">|</span>
+      <span class="tb-pulse"><span class="tp-dot"></span>Sentinel activo</span>
+    </div>
+    <div class="tb-right">
+      {% if mensajes_no_leidos %}
+      <a href="{% url 'projects:reporte-list' %}" class="tpb tpb-msg">
+        <i class="fa-solid fa-comment-dots"></i> {{ mensajes_no_leidos }} nuevo{{ mensajes_no_leidos|pluralize:"s" }}
+      </a>
+      {% endif %}
+      <a href="tel:911" class="tpb tpb-sos"><i class="fa-solid fa-phone-volume"></i> 911</a>
+      <button class="tpb tpb-ai" onclick="openAI('chat')"><i class="fa-solid fa-robot"></i> AI</button>
+      <button class="tpb tpb-cam" onclick="toggleWiki()"><i class="fa-solid fa-eye-slash"></i> Camuflaje</button>
+      <form method="post" action="{% url 'logout' %}" style="display:inline;margin:0;">
+        {% csrf_token %}
+        <button type="submit" class="tpb tpb-out" title="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i></button>
+      </form>
+    </div>
+  </header>
+  <main class="page">
+    {% if messages %}
+    <div style="margin-bottom:16px;">
+      {% for msg in messages %}
+      <div style="padding:11px 16px;border-radius:10px;font-size:.82rem;font-weight:600;margin-bottom:7px;display:flex;align-items:center;gap:9px;{% if msg.tags == 'error' %}background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#f87171;{% elif msg.tags == 'warning' %}background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);color:#fbbf24;{% else %}background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);color:#34d399;{% endif %}">
+        <i class="fa-solid {% if msg.tags == 'error' %}fa-triangle-exclamation{% elif msg.tags == 'warning' %}fa-exclamation-circle{% else %}fa-circle-check{% endif %}"></i>
+        {{ msg }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% block dashboard_content %}{% endblock %}
+  </main>
+</div>
+
+<div id="back-block-modal">
+  <div class="back-block-box">
+    <div class="bb-icon">🔒</div>
+    <h3>Página protegida</h3>
+    <p>Esta sección es confidencial. ¿Deseas salir del portal completamente o quedarte en esta página?</p>
+    <div class="bb-btns">
+      <button class="bb-btn bb-stay" onclick="stayHere()"><i class="fa-solid fa-shield-halved"></i> Quedarme aquí</button>
+      <button class="bb-btn bb-leave" onclick="leavePortal()"><i class="fa-solid fa-right-from-bracket"></i> Salir del portal</button>
+    </div>
+  </div>
+</div>
+
+<div id="rt-toast">
+  <div class="rt-head">
+    <div class="rt-title">🚨 Alerta Crítica</div>
+    <button class="rt-close" onclick="closeRtToast()">✕</button>
+  </div>
+  <div class="rt-body" id="rt-body">Hay reportes críticos sin atender.</div>
+  <div class="rt-list" id="rt-list"></div>
+  <div class="rt-actions">
+    <a href="{% url 'projects:reporte-list' %}?nivel=critico&revisado=0" class="rt-btn rt-btn-p">Ver críticos</a>
+    <button class="rt-btn rt-btn-c" onclick="closeRtToast()">Cerrar</button>
+  </div>
+</div>
+
+<div id="usr-toast">
+  <div class="ut-head">
+    <div class="ut-title" id="ut-title">📢 Notificación</div>
+    <button class="ut-close" onclick="closeUsrToast()">✕</button>
+  </div>
+  <div class="ut-body" id="ut-body"></div>
+  <a href="#" class="ut-link" id="ut-link">Ver reporte →</a>
+</div>
+
+<div id="ai-modal" onclick="if(event.target===this)closeAI()">
+  <div class="ai-pnl">
+    <div class="ai-hd">
+      <div class="ai-title"><span class="tp-dot"></span><i class="fa-solid fa-robot" style="color:#fb923c;"></i>Sentinel AI<span style="background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.18);color:#fb923c;padding:1px 6px;border-radius:4px;font-size:.54rem;">BETA</span></div>
+      <button class="ai-close" onclick="closeAI()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="ai-tabs">
+      <button class="ai-tab on" onclick="swTab('chat',this)">💬 Chat</button>
+      <button class="ai-tab" onclick="swTab('orientacion',this)">🧭 Orientación</button>
+      <button class="ai-tab" onclick="swTab('emocional',this)">💙 Apoyo</button>
+      <button class="ai-tab" onclick="swTab('legal',this)">⚖️ Legal</button>
+      <button class="ai-tab" onclick="swTab('plan',this)">🛡 Plan</button>
+    </div>
+    <div class="ai-msgs" id="ai-msgs">
+      <div class="ai-m ai"><div class="ai-sender">SENTINEL AI · CONFIDENCIAL</div>Bienvenida a Sentinel. Todo lo que me comparta es estrictamente confidencial. Estoy aqui para orientarle con informacion clara y apoyo concreto sobre situaciones de acoso.</div>
+    </div>
+    <div class="ai-typing" id="ai-typing"><span></span><span></span><span></span></div>
+    <div class="ai-qbs" id="ai-qbs">
+      <button class="ai-qb" onclick="sq('Estoy en peligro ahora mismo')">🚨 Peligro</button>
+      <button class="ai-qb" onclick="sq('Como documento el acoso')">📄 Documentar</button>
+      <button class="ai-qb" onclick="sq('Cuales son mis derechos')">⚖️ Derechos</button>
+      <button class="ai-qb" onclick="sq('Necesito apoyo emocional')">💙 Apoyo</button>
+    </div>
+    <div class="ai-inp-row">
+      <textarea class="ai-inp" id="ai-inp" placeholder="Escribe tu pregunta…" onkeypress="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAI();}"></textarea>
+      <button class="ai-snd" onclick="sendAI()"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
+<div id="wiki">
+  <div class="wk-bar">
+    <div class="wk-logo">🌐 Wikipedia</div>
+    <div class="wk-srch"><input type="text" value="Ciudad de México"><button style="padding:4px 8px;border:1px solid #a2a9b1;background:#fff;cursor:pointer;font-size:.79rem;">Buscar</button></div>
+    <div style="font-size:.72rem;color:#54595d;display:flex;gap:10px;font-family:sans-serif;"><span style="color:#3366cc;">Crear cuenta</span><span style="color:#3366cc;">Acceder</span></div>
+  </div>
+  <div class="wk-nav"><span class="wk-tab on">Artículo</span><span class="wk-tab">Discusión</span><span class="wk-tab">Leer</span><span class="wk-tab">Editar</span></div>
+  <div class="wk-body">
+    <div class="wk-main">
+      <h1>Ciudad de México</h1>
+      <p><b>Ciudad de México</b> (<b>CDMX</b>) es la capital y ciudad más grande de los Estados Unidos Mexicanos, y el principal centro político, económico, cultural y educativo del país.</p>
+      <p>Con más de 9 millones de habitantes dentro de los límites de la entidad y alrededor de 22 millones en su zona metropolitana, es una de las aglomeraciones urbanas más grandes del hemisferio occidental.</p>
+      <h2>Historia</h2>
+      <p>Fundada por los mexicas en 1325 como <b>Tenochtitlán</b>. En 1521 fue conquistada y se convirtió en la capital de la Nueva España.</p>
+      <h2>Geografía</h2>
+      <p>Se ubica en el Valle de México, a 2,240 metros sobre el nivel del mar. El clima es templado subhúmedo con lluvias principalmente en verano.</p>
+    </div>
+    <div>
+      <div class="wk-sb">
+        <div class="wk-sb-t">Ciudad de México</div>
+        <div class="wk-sb-r"><span class="wk-sb-l">País:</span>México 🇲🇽</div>
+        <div class="wk-sb-r"><span class="wk-sb-l">Fundación:</span>13 mar. 1325</div>
+        <div class="wk-sb-r"><span class="wk-sb-l">Superficie:</span>1,495 km²</div>
+        <div class="wk-sb-r"><span class="wk-sb-l">Altitud:</span>2,240 msnm</div>
+        <div class="wk-sb-r"><span class="wk-sb-l">Población:</span>9,209,944</div>
+        <div class="wk-sb-r"><span class="wk-sb-l">Alcaldías:</span>16</div>
+      </div>
+    </div>
+  </div>
+  <div class="wk-exit"><span>Salir de Wikipedia:</span><button class="wk-exit-btn" onclick="toggleWiki()">← Volver al portal</button></div>
+</div>
+
+<div id="fcall">
+  <div style="text-align:center;">
+    <div class="fc-photo">👩</div>
+    <div style="font-size:1.3rem;font-weight:600;color:white;">Mamá</div>
+    <div style="font-size:.8rem;color:rgba(255,255,255,.45);margin-top:5px;">Llamada en curso…</div>
+    <div style="font-family:var(--mono);font-size:.88rem;color:rgba(255,255,255,.3);margin-top:3px;" id="fc-tmr">00:00</div>
+  </div>
+  <div class="fc-btns">
+    <button class="fc-btn fc-mute"><i class="fa-solid fa-microphone-slash" style="color:white;"></i></button>
+    <button class="fc-btn fc-end" onclick="endCall()"><i class="fa-solid fa-phone-hangup" style="color:white;"></i></button>
+  </div>
+</div>
+
+<div id="rsk">
+  <div class="rsk-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="font-size:.95rem;font-weight:800;display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-gauge-high" style="color:#ef4444;"></i>Test de Riesgo Sentinel</div>
+      <button onclick="document.getElementById('rsk').style.display='none'" style="color:var(--mu);font-size:.95rem;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="rsk-cnt"></div>
+  </div>
+</div>
+
+<div id="pwa-banner">
+  <span>📱 Instalar como app</span>
+  <button id="pwa-install-btn" onclick="installPWA()" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;color:white;padding:6px 14px;border-radius:8px;font-weight:800;font-size:.78rem;cursor:pointer;font-family:inherit;">Instalar</button>
+  <button onclick="document.getElementById('pwa-banner').classList.remove('show')" style="background:none;border:none;color:#9488b8;cursor:pointer;font-size:1rem;padding:0 4px;">✕</button>
+</div>
+
+<script>
+(function tick(){const e=document.getElementById('tb-clk');if(e)e.textContent=new Date().toLocaleTimeString('es-MX',{hour12:false});setTimeout(tick,1000);})();
+const SB=document.getElementById('sb'),MAIN=document.getElementById('main'),TOG_IC=document.getElementById('sb-tog-ic');
+function toggleSB(){const col=SB.classList.toggle('col');MAIN.classList.toggle('exp',col);if(TOG_IC)TOG_IC.className=col?'fa-solid fa-chevron-right':'fa-solid fa-chevron-left';try{localStorage.setItem('sb-col',col?'1':'0');}catch(e){}}
+(function(){try{if(localStorage.getItem('sb-col')==='1'){SB.classList.add('col');MAIN.classList.add('exp');if(TOG_IC)TOG_IC.className='fa-solid fa-chevron-right';}}catch(e){}})();
+function toggleGrp(id){const g=document.getElementById(id);g.classList.toggle('open');try{const s=JSON.parse(localStorage.getItem('sb-grps')||'{}');s[id]=g.classList.contains('open');localStorage.setItem('sb-grps',JSON.stringify(s));}catch(e){}}
+(function(){try{const s=JSON.parse(localStorage.getItem('sb-grps')||'{}');Object.entries(s).forEach(([id,open])=>{const g=document.getElementById(id);if(g)g.classList.toggle('open',open);});}catch(e){}})();
+const OV=document.getElementById('sb-ov');
+function openMob(){SB.classList.add('mob');OV.classList.add('show');}
+function closeMob(){SB.classList.remove('mob');OV.classList.remove('show');}
+
+{% if no_back %}
+(function(){
+  history.pushState({sentinel:true},'',window.location.href);
+  let blocked=false;
+  window.addEventListener('popstate',function(){
+    if(blocked)return;blocked=true;
+    history.pushState({sentinel:true},'',window.location.href);
+    document.getElementById('back-block-modal').classList.add('show');
+    setTimeout(()=>{blocked=false;},300);
+  });
+})();
+{% endif %}
+function stayHere(){document.getElementById('back-block-modal').classList.remove('show');}
+function leavePortal(){const f=document.querySelector('form[action*="logout"]');if(f)f.submit();else window.location.href='/accounts/login/';}
+
+const AI_QBS={chat:['Estoy en peligro ahora mismo','Como documento el acoso','Cuales son mis derechos','Necesito apoyo emocional'],orientacion:['Que hago si me amenazan','Como recopilo evidencias','Pasos para denunciar en CDMX'],emocional:['Me siento culpable','Como manejo el miedo','No se con quien hablar'],legal:['Que dice la ley mexicana','Es delito lo que vivi','Puedo denunciar anonimamente'],plan:['Crea mi plan de emergencia','Como guardo evidencia segura','A quien debo avisar primero']};
+const AI_GREET={chat:'Bienvenida a Sentinel. Todo lo que me comparta es estrictamente confidencial.',orientacion:'Modo Orientacion activo. Describa su situacion y le proporcionare una guia paso a paso.',emocional:'Entiendo que este es un momento dificil. Estoy aqui para escucharle.',legal:'Modo Asesoria Legal activo. Puedo orientarle sobre sus derechos y los procedimientos disponibles en Mexico.',plan:'Vamos a construir su plan de seguridad personalizado.'};
+let curMode='chat';
+function openAI(mode){document.getElementById('ai-modal').classList.add('open');if(mode&&mode!==curMode)swTab(mode);}
+function closeAI(){document.getElementById('ai-modal').classList.remove('open');}
+function swTab(mode,el){curMode=mode||'chat';document.querySelectorAll('.ai-tab').forEach(t=>t.classList.remove('on'));if(el)el.classList.add('on');addMsg(AI_GREET[curMode]||AI_GREET.chat,'ai');const qbs=document.getElementById('ai-qbs');qbs.innerHTML=(AI_QBS[curMode]||AI_QBS.chat).map(q=>`<button class="ai-qb" onclick="sq('${q.replace(/'/g,"&#39;")}')">${q}</button>`).join('');}
+function renderAI(txt){let html='';const lines=txt.split('\n');let inUl=false,inOl=false;const cl=()=>{if(inUl){html+='</ul>';inUl=false;}if(inOl){html+='</ol>';inOl=false;}};const fmt=s=>s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`(.+?)`/g,'<code style="background:rgba(124,58,237,.15);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:.75rem;">$1</code>');for(let i=0;i<lines.length;i++){const line=lines[i],t=line.trim();if(!t){cl();continue;}if(/^#{1,3}\s/.test(t)){cl();html+=`<div class="msg-h">${fmt(t.replace(/^#{1,3}\s/,''))}</div>`;continue;}if(t.startsWith('??')){cl();html+=`<div class="msg-warn">${fmt(t)}</div>`;continue;}if(/^[-???]\s/.test(t)){if(!inUl){cl();html+='<ul>';inUl=true;}html+=`<li>${fmt(t.replace(/^[-???]\s/,''))}</li>`;continue;}if(/^\d+\.\s/.test(t)){if(!inOl){cl();html+='<ol>';inOl=true;}html+=`<li>${fmt(t.replace(/^\d+\.\s/,''))}</li>`;continue;}if(/^---+$/.test(t)){cl();html+='<div class="msg-divider"></div>';continue;}cl();html+=`<p>${fmt(t)}</p>`;}cl();return html;}
+function addMsg(txt,role){const c=document.getElementById('ai-msgs');const d=document.createElement('div');d.className=`ai-m ${role}`;if(role==='ai'){d.innerHTML=`<div class="ai-sender">SENTINEL AI · CONFIDENCIAL</div><div class="msg-body">${renderAI(txt)}</div>`;}else{d.textContent=txt;}c.appendChild(d);c.scrollTop=c.scrollHeight;}
+async function sendAI(){const inp=document.getElementById('ai-inp');const txt=inp.value.trim();if(!txt)return;inp.value='';addMsg(txt,'u');const ty=document.getElementById('ai-typing');ty.classList.add('show');document.getElementById('ai-msgs').scrollTop=9999;try{const csrf=document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('csrftoken='))?.split('=')[1]||'';const r=await fetch('/ai/chat/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':csrf},body:JSON.stringify({message:txt,topic:curMode})});const d=await r.json();ty.classList.remove('show');addMsg(d.data?.response||d.response||'Lo siento, no pude procesar tu mensaje.','ai');}catch(e){ty.classList.remove('show');addMsg('Hubo un problema de conexion. Por favor intenta de nuevo.','ai');}}
+function sq(q){document.getElementById('ai-inp').value=q;sendAI();}
+function toggleWiki(){const w=document.getElementById('wiki');w.style.display=w.style.display==='flex'?'none':'flex';}
+let fcI;
+function startFakeCall(){document.getElementById('fcall').style.display='flex';let s=0;fcI=setInterval(()=>{s++;document.getElementById('fc-tmr').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');},1000);}
+function endCall(){document.getElementById('fcall').style.display='none';clearInterval(fcI);document.getElementById('fc-tmr').textContent='00:00';}
+function shareLocation(){if(!navigator.geolocation){alert('Geolocalizacion no disponible');return;}navigator.geolocation.getCurrentPosition(p=>{const url=`https://maps.google.com/?q=${p.coords.latitude},${p.coords.longitude}`;window.open(`https://wa.me/?text=${encodeURIComponent('Mi ubicacion segura: '+url+' - Portal Seguro')}`,'_blank');},()=>alert('No se pudo obtener tu ubicacion.'));}
+const RQS=[{q:'Has recibido comentarios sexuales, insultos o burlas que te incomodaron?',w:1},{q:'La situacion continua a pesar de que hayas pedido que pare?',w:2},{q:'Sientes miedo, ansiedad o estres relacionado con esta persona?',w:2},{q:'Ha habido contacto fisico no deseado?',w:3},{q:'Has recibido amenazas, directas o indirectas?',w:4},{q:'Sientes que tu seguridad fisica puede estar en riesgo ahora mismo?',w:5}];
+let RAS=[],RI=0;
+function showRiskModal(){RAS=[];RI=0;document.getElementById('rsk').style.display='flex';showRQ();}
+function showRQ(){const c=document.getElementById('rsk-cnt');if(RI>=RQS.length){const sc=RAS.reduce((a,b,i)=>a+(b?RQS[i].w:0),0),mx=RQS.reduce((a,q)=>a+q.w,0),pt=Math.round(sc/mx*100);let lv,cl,ms;if(pt<25){lv='BAJO';cl='#34d399';ms='Sin senales inmediatas de riesgo elevado. Sigue documentando cualquier incidente.';}else if(pt<50){lv='MODERADO';cl='#fbbf24';ms='Hay senales de alerta. Considera hablar con un especialista y documentar todo.';}else if(pt<75){lv='ALTO';cl='#fb923c';ms='Indicadores serios. Documenta todo y busca apoyo profesional urgente.';}else{lv='CRITICO';cl='#ef4444';ms='Tu seguridad puede estar en riesgo. Llama al 911 o Linea Mujeres ahora mismo.';}c.innerHTML=`<div style="text-align:center;"><div style="font-size:2.8rem;font-weight:900;color:${cl};line-height:1;">${pt}%</div><div style="font-size:.88rem;font-weight:800;color:${cl};margin:5px 0 10px;">Nivel ${lv}</div><div style="background:rgba(0,0,0,.2);border-radius:6px;height:7px;margin-bottom:14px;overflow:hidden;"><div style="height:100%;width:${pt}%;background:${cl};border-radius:6px;transition:width 1.2s;"></div></div><p style="font-size:.82rem;color:var(--mu2);line-height:1.65;margin-bottom:16px;">${ms}</p><div style="display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;"><a href="tel:911" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.22);color:#f87171;padding:7px 14px;border-radius:7px;text-decoration:none;font-size:.75rem;font-weight:700;">911</a><a href="tel:5556581111" style="background:rgba(244,114,182,.1);border:1px solid rgba(244,114,182,.2);color:#f472b6;padding:7px 14px;border-radius:7px;text-decoration:none;font-size:.75rem;font-weight:700;">Linea Mujeres</a><button onclick="document.getElementById('rsk').style.display='none'" style="background:rgba(255,255,255,.04)!important;border:1px solid rgba(110,70,255,.15);color:var(--mu2);padding:7px 14px;border-radius:7px;font-size:.75rem;">Cerrar</button></div></div>`;return;}const q=RQS[RI],pct=Math.round((RI/RQS.length)*100);c.innerHTML=`<div style="font-size:.64rem;color:var(--mu);margin-bottom:7px;font-family:var(--mono);">PREGUNTA ${RI+1} DE ${RQS.length}</div><div style="background:rgba(0,0,0,.2);border-radius:4px;height:3px;margin-bottom:14px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:#7c3aed;border-radius:4px;transition:width .3s;"></div></div><p style="font-size:.86rem;line-height:1.65;font-weight:600;margin-bottom:18px;">${q.q}</p><div style="display:flex;gap:.6rem;"><button onclick="RA(true)" style="flex:1;background:rgba(239,68,68,.09)!important;border:1px solid rgba(239,68,68,.2);color:#f87171;padding:12px;border-radius:9px;font-weight:800;font-size:.87rem;">Si</button><button onclick="RA(false)" style="flex:1;background:rgba(52,211,153,.09)!important;border:1px solid rgba(52,211,153,.2);color:#34d399;padding:12px;border-radius:9px;font-weight:800;font-size:.87rem;">No</button></div>`;}
+function RA(v){RAS.push(v);RI++;showRQ();}
+let deferredPrompt=null;
+if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{await navigator.serviceWorker.register('/service-worker.js',{scope:'/'});}catch(err){console.warn('[PWA]',err);}});}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;const b=document.getElementById('pwa-banner');if(b)b.classList.add('show');});
+async function installPWA(){if(!deferredPrompt)return;deferredPrompt.prompt();const{outcome}=await deferredPrompt.userChoice;deferredPrompt=null;document.getElementById('pwa-banner').classList.remove('show');}
+window.addEventListener('appinstalled',()=>{document.getElementById('pwa-banner').classList.remove('show');});
+window.addEventListener('DOMContentLoaded',()=>{if(new URLSearchParams(window.location.search).get('ai')==='1')setTimeout(()=>{if(typeof openAI==='function')openAI('chat');},600);});
+
+/* ══════════════════════════════════════════════
+   POLLING — ALERTAS EN TIEMPO REAL
+══════════════════════════════════════════════ */
+(function(){
+  var IS_ADMIN = {{ is_admin|yesno:"true,false" }};
+  var lastCriticoCount = {{ total_alertas_criticas|default:0 }};
+  var lastNotifCount   = 0;
+  var rtDismissed      = false;
+  var usrDismissed     = false;
+  var isFirstLoad      = true;   /* FIX: ignora el primer poll para no mostrar alertas ya conocidas */
+
+  /* Cierre de toasts (globales) */
+  window.closeRtToast  = function(){ rtDismissed=true; document.getElementById('rt-toast').classList.remove('show'); };
+  window.closeUsrToast = function(){ usrDismissed=true; document.getElementById('usr-toast').classList.remove('show'); };
+
+  /* Toast admin */
+  function showRtToast(total, alertas){
+    if(rtDismissed) return;
+    document.getElementById('rt-body').textContent = 'Hay ' + total + ' reporte' + (total>1?'s':'') + ' critico' + (total>1?'s':'') + ' sin atender.';
+    var list = document.getElementById('rt-list');
+    list.innerHTML = '';
+    (alertas||[]).slice(0,3).forEach(function(a){
+      var d=document.createElement('div'); d.className='rt-item';
+      d.innerHTML='<a href="'+a.url+'">#'+String(a.pk).padStart(4,'0')+'</a> · '+(a.nombre||'Anonimo')+' · '+a.creado_en+(a.llamar_911?' · <strong style="color:#f87171;">911</strong>':'');
+      list.appendChild(d);
+    });
+    document.getElementById('rt-toast').classList.add('show');
+    setTimeout(function(){ document.getElementById('rt-toast').classList.remove('show'); }, 15000);
+  }
+
+  /* FIX 1: Oculta banner de alertas criticas del dashboard cuando total=0 */
+  function updateCritBanner(total){
+    var banner = document.getElementById('critBanner');
+    if(!banner) return;
+    if(total === 0){
+      var wrap = banner.parentElement;
+      if(wrap) wrap.style.display = 'none';
+    }
+  }
+
+  /* Toast usuario */
+  function showUsrToast(notif){
+    if(usrDismissed) return;
+    document.getElementById('ut-title').textContent = notif.icon + ' ' + notif.label;
+    document.getElementById('ut-body').textContent  = notif.texto;
+    var link = document.getElementById('ut-link');
+    link.href = '/reportes/' + notif.pk + '/';
+    link.textContent = 'Ver reporte #' + String(notif.pk).padStart(4,'0') + ' ->';
+    document.getElementById('usr-toast').classList.add('show');
+    setTimeout(function(){
+      document.getElementById('usr-toast').classList.remove('show');
+      usrDismissed = false;
+    }, 10000);
+  }
+
+  /* Polling admin - cada 30s */
+  if(IS_ADMIN){
+    function pollAlertas(){
+      fetch('/reportes/api/alertas/')
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          /* FIX 1: ocultar banner si ya no hay criticos sin revisar */
+          updateCritBanner(d.total);
+
+          if(isFirstLoad){
+            /* Primera llamada: solo sincroniza el contador, NUNCA muestra toast */
+            lastCriticoCount = d.total;
+            isFirstLoad = false;
+            if(d.total === 0){ document.getElementById('rt-toast').classList.remove('show'); }
+            return;
+          }
+
+          /* FIX 2: solo mostrar toast si el conteo SUBIO respecto a la ultima vez */
+          if(d.total > 0 && d.total > lastCriticoCount){
+            showRtToast(d.total, d.alertas);
+          }
+          /* FIX 3: si bajo a 0, ocultar toast activo tambien */
+          if(d.total === 0){
+            document.getElementById('rt-toast').classList.remove('show');
+          }
+          lastCriticoCount = d.total;
+        })
+        .catch(function(){});
+    }
+    setTimeout(pollAlertas, 5000);
+    setInterval(pollAlertas, 30000);
+  }
+
+  /* Polling usuario - cada 30s */
+  if(!IS_ADMIN){
+    function pollNotifs(){
+      fetch('/reportes/api/notificaciones/')
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if(d.total > lastNotifCount && d.notificaciones && d.notificaciones.length > 0){
+            lastNotifCount = d.total;
+            showUsrToast(d.notificaciones[0]);
+          }
+        })
+        .catch(function(){});
+    }
+    setTimeout(pollNotifs, 8000);
+    setInterval(pollNotifs, 30000);
+  }
+
+})();
+</script>
+</body>
+</html>
