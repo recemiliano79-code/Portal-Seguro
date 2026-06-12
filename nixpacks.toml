@@ -5,4 +5,4 @@ nixPkgs = ["python311", "gcc", "pkg-config", "mariadb-connector-c"]
 cmds = ["pip install -r requirements.txt"]
 
 [start]
-cmd = "gunicorn proyecto_acoso.wsgi:application --bind 0.0.0.0:$PORT"
+cmd = "gunicorn proyecto_acoso.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
